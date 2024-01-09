@@ -10,6 +10,7 @@ class Loop{
         void run_game_loop(){
             while(run){
                 board.view_board();
+                std::cout << "clk " << board.get_hm_clock() << std::endl;
 
                 if(mode == PVP){
                     get_input_from_player();
@@ -33,9 +34,7 @@ class Loop{
             std::cout << ">> ";
             std::cin >> input;
 
-            std::regex pattern(MOVE_FORMAT);    
-
-            while(!std::regex_match(input, pattern) && input != "undo" && input != "quit"){
+            while(!std::regex_match(input, MOVE_FORMAT) && input != "undo" && input != "quit"){
                 std::cout << "Inputs are undo, quit or a chess move." << std::endl;
                 std::cout << "Type moves in long algebraic notation. " << std::endl;
                 std::cout << "Examples:  e2e4, e7e5, e1g1 (white short castling), e7e8q (for promotion)" << std::endl;
@@ -45,18 +44,18 @@ class Loop{
 
             if(input == "undo"){
                 board.undo_move();
+                //TODO: board.generate_moves();
             } else if(input == "quit"){
                 run = false;
-            } else if (std::regex_match(input, pattern)){
+            } else if (std::regex_match(input, MOVE_FORMAT)){
                 parse_player_move(input);
+                //TODO: board.generate_moves();
             } else {
                 std::cout << "Inputs are undo, quit or a chess move in long algebraic format" << std::endl;
             }
         }
 
         void parse_player_move(std::string& str_move){
-            std::tuple<std::string, std::string, std::string> move;
-
             auto move_size = str_move.size();
             std::string from(1, str_move[0]);
             from += str_move[1];
@@ -68,9 +67,7 @@ class Loop{
 
             if(move_size == 5){promo_piece = str_move[4];}
 
-            move = std::make_tuple(from, to, promo_piece);
-
-            make_player_move(move);
+            make_player_move(std::make_tuple(from, to, promo_piece));
         }
 
         bool move_is_valid(const Move& move){
@@ -78,7 +75,7 @@ class Loop{
             return true;
         }
 
-        void make_player_move(std::tuple<std::string, std::string, std::string>& str_move){
+        void make_player_move(const std::tuple<std::string, std::string, std::string>& str_move){
             auto move = convert_to_move(str_move);
             
             while(!move_is_valid(move)){
@@ -95,7 +92,7 @@ class Loop{
         /// If not present, the move wasn't valid
         /// This function allows users to make nonsense moves, but they won't be made since they won't exist in generated moves
         /// This simplifies this function which is nice
-        Move convert_to_move(std::tuple<std::string, std::string, std::string>& str_move){
+        Move convert_to_move(const std::tuple<std::string, std::string, std::string>& str_move){
             std::string from_str, to_str, promo_piece;
             unsigned int from, to, flags;
 

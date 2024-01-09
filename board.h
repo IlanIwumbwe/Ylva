@@ -54,7 +54,7 @@ class Board{
                     castle_queenside(from, from_piece_colour);
                 } else {
                     // quiet moves and double pawn pushes
-                    if(from_piece_name == P || from_piece_name == p){hm_clock = 0;} // pawn advance
+                    if(from_piece_name == P || from_piece_name == p){hm_clock_reset_history.push_back(hm_clock); hm_clock = 0;} // pawn advance
                     else{hm_clock++;}  // other quiet moves
                 }
             
@@ -65,9 +65,7 @@ class Board{
                 if(move.is_capture()){
                     // move is a promotion with capture move
                     capture_piece(to_piece_name, (1ULL << to));
-                } 
-
-                hm_clock = 0;  // promotion move always resets half move clock because it involves pawn push
+                } else {hm_clock = 0;} 
 
                 promo_piece_name = get_promo_piece(flags, from_piece_colour); // piece that we want to promote to
                 promotion_piece_bitboard = get_piece_bitboard(promo_piece_name);
@@ -114,16 +112,17 @@ class Board{
                         uncastle_queenside(from, from_piece_colour); 
                     } else {
                         // quiet moves and double pawn pushes
-                        if(from_piece_name == P || from_piece_name == p){hm_clock = 0;} // TODO: set half move to whatever it was before reset } // pawn advance
+                        if(from_piece_name == P || from_piece_name == p){hm_clock = hm_clock_reset_history.back(); hm_clock_reset_history.pop_back();} // pawn advance
                         else{hm_clock--;}  // other quiet moves
                     }
 
                 } else {
                     if(prev_move.is_capture()){
                         uncapture_piece(1ULL << to);
+                    } else {
+                        hm_clock = hm_clock_reset_history.back();
+                        hm_clock_reset_history.pop_back();
                     }
-
-                    // TODO: set half move clock to whatever the number was before it was reset
 
                     // remove piece that was promoted to
                     promo_piece_name = get_promo_piece(flags, from_piece_colour); // piece that we wanted to promote to
@@ -160,6 +159,7 @@ class Board{
             set_piece_bitboard(captured_piece_name, captured_piece_bitboard);
 
             captured_pieces.push_back(captured_piece_name);
+            hm_clock_reset_history.push_back(hm_clock);
             hm_clock = 0;
         }
 
@@ -182,7 +182,8 @@ class Board{
             set_piece_bitboard(captured_piece_name, captured_piece_bitboard);
 
             captured_pieces.pop_back();
-            hm_clock = 0;   // TODO: set half move clock to what it was before it was reset
+            hm_clock = hm_clock_reset_history.back();
+            hm_clock_reset_history.pop_back();
         }
 
         void castle_kingside(const unsigned int& king_square, const colour& king_colour){
@@ -236,6 +237,7 @@ class Board{
             set_piece_bitboard(to_piece_name, captured_piece_bitboard);
 
             captured_pieces.push_back(to_piece_name);
+            hm_clock_reset_history.push_back(hm_clock);
             hm_clock = 0;
         }
 
@@ -247,7 +249,8 @@ class Board{
             set_piece_bitboard(to_piece_name, captured_piece_bitboard);
 
             captured_pieces.pop_back();
-            // TODO: set half move clock to whatever the number was before it was reset
+            hm_clock = hm_clock_reset_history.back();
+            hm_clock_reset_history.pop_back();
         }
 
         piece_names get_promo_piece(const unsigned int& flags, const colour& from_piece_colour){
@@ -363,6 +366,8 @@ class Board{
 
         colour get_turn(){return turn;}
 
+        int get_hm_clock(){return hm_clock;}
+
         void change_turn(){turn = (colour)~turn;}
 
         piece_names get_piece_on_square(int square) const {
@@ -435,10 +440,17 @@ class Board{
         std::unordered_map<piece_names, uint64_t> bitboards{};
 
         // rook and king movements needed to validate castling
-        // 0 - r_left, 1 - k, 2 - r_right, 3 - R_left, 4 - K, 5 - R_right 
-        int counts[6] = {0};
-
+        std::unordered_map<std::string, int> move_counts{
+            {"rl",0},
+            {"k",0},
+            {"rr",0},
+            {"Rl",0},
+            {"K",0},
+            {"Rl",0},
+        };
+    
         std::vector<Move> move_history;
+        std::vector<int> hm_clock_reset_history;
         std::vector<piece_names> captured_pieces;
 };
 

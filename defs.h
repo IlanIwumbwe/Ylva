@@ -2,7 +2,7 @@
 #define DEFS_H
 
 #define STARTING_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-#define MOVE_FORMAT R"([a-h][1-8][a-h][1-8](q|r|n|b)?)"
+#define MOVE_FORMAT std::regex(R"([a-h][1-8][a-h][1-8](q|r|n|b)?)")
 
 #define CAPTURE_FLAG 0x4000
 #define PROMO_FLAG 0x8000
