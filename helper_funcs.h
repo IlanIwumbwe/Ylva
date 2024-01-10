@@ -87,6 +87,20 @@ inline bool isvalidNum(const std::string& numString){
     return std::regex_match(numString, pattern);
 }
 
+std::vector<unsigned int> get_set_bits(uint64_t& bitboard){
+    std::vector<unsigned int> set_bits;
+
+    while(bitboard){
+        set_bits.push_back(__builtin_ctzll(bitboard));
+
+        bitboard &= (bitboard-1);
+    }
+    
+    return set_bits;
+}
+
+
+
 /// Convert a base 10 or hex string into integer
 inline int stringtoint(const std::string& string){
     if(isvalidHex(string)){

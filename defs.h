@@ -7,7 +7,7 @@
 #define CAPTURE_FLAG 0x4000
 #define PROMO_FLAG 0x8000
 
-#define RANK(rank_num) (uint64_t)(0xff << (rank_num-1))
+#define RANK(rank_num) ((uint64_t)0xff << (rank_num-1)*8)
 #define A_FILE 0x8080808080808080
 #define H_FILE 0x0101010101010101
 

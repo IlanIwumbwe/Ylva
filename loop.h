@@ -6,7 +6,9 @@
 
 class Loop{
     public:
-        Loop(std::string& fen, game_modes mode) : board(fen), movegen(board), mode(mode) {}
+        Loop(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(mode) {
+            movegen.generate_moves();  // generate valid moves for starting state
+        }
     
         void run_game_loop(){
             while(run){
@@ -72,13 +74,13 @@ class Loop{
         void make_player_move(const std::tuple<std::string, std::string, std::string>& str_move){
             auto move = convert_to_move(str_move);
             
-            if(!board.move_is_valid(move)){
-                std::cout << "Move entered is not valid " << std::endl;
-                get_input_from_player();
-            } else {
+            if(board.move_is_valid(move)){
                 board.make_move(move);   
                 board.change_turn();
                 movegen.generate_moves();
+            } else {
+                std::cout << "Move entered is not valid " << std::endl;
+                get_input_from_player();
             }
         }
 
@@ -110,7 +112,7 @@ class Loop{
                     if(moving_piece == P || moving_piece == p){
                         if(abs(diff) == 9 || abs(diff) == 7){
                             flags = 5;
-                        } else if(diff == 2 || diff == -2){
+                        } else if(diff == 16 || diff == -16){
                             flags = 1;
                         } else {
                             flags = 0;

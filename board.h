@@ -135,6 +135,8 @@ class Board{
                 from_piece_bitboard |= (1ULL << from);
                 set_piece_bitboard(from_piece_name, from_piece_bitboard);
 
+                change_turn();
+
                 return 0;
             } else {
                 std::cout << "Cannot undo, no move has been made yet" << std::endl;
@@ -409,13 +411,19 @@ class Board{
             std::cout << "   a  b  c  d  e  f  g  h" << std::endl;
         }
 
-        bool move_is_valid(const Move& move){
+        bool move_is_valid(Move& move){
             //TODO
-            //auto it = std::find(valid_moves.begin(), valid_moves.end(), move);
+            std::cout << move;
+            
+            std::cout << "Valids" << std::endl;
+            for(Move& v_move : valid_moves){
+                std::cout << v_move;
+                if(v_move == move){return true;}
+            }
+            
+            return false;
 
-            //return it != valid_moves.end(); 
-
-            return true;
+            //return true;
         }
 
         inline bool is_square_occupied(unsigned int& square){
@@ -474,8 +482,12 @@ class Board{
             return blacks;
         }
 
-        void set_valid_moves(const std::vector<Move>& _valid_moves){
-            valid_moves = _valid_moves;
+        void add_valid_move(const Move& valid_move){
+            valid_moves.push_back(valid_move);
+        }
+
+        void clear_valid_moves(){
+            valid_moves.clear();
         }
 
         std::vector<Move> get_valid_moves(){
@@ -492,7 +504,7 @@ class Board{
         // piece bitboards
         std::unordered_map<piece_names, uint64_t> bitboards{};
 
-        // rook and king movements needed to validate castling
+        /// TODO: rook and king movements needed to validate castling
         std::unordered_map<std::string, int> move_counts{
             {"rl",0},
             {"k",0},
