@@ -2,15 +2,16 @@
 #define LOOP_H
 
 #include "board.h"
+#include "movegen.h"
 
 class Loop{
     public:
-        Loop(std::string& fen, game_modes mode) : board(fen), mode(mode) {}
+        Loop(std::string& fen, game_modes mode) : board(fen), movegen(board), mode(mode) {}
     
         void run_game_loop(){
             while(run){
                 board.view_board();
-                std::cout << "clk " << board.get_hm_clock() << std::endl;
+                std::cout << "Half move clock: " << board.get_hm_clock() << std::endl;
 
                 if(mode == PVP){
                     get_input_from_player();
@@ -43,13 +44,11 @@ class Loop{
             }
 
             if(input == "undo"){
-                board.undo_move();
-                //TODO: board.generate_moves();
+                if(board.undo_move() == 0){movegen.generate_moves();}
             } else if(input == "quit"){
                 run = false;
             } else if (std::regex_match(input, MOVE_FORMAT)){
                 parse_player_move(input);
-                //TODO: board.generate_moves();
             } else {
                 std::cout << "Inputs are undo, quit or a chess move in long algebraic format" << std::endl;
             }
@@ -70,22 +69,17 @@ class Loop{
             make_player_move(std::make_tuple(from, to, promo_piece));
         }
 
-        bool move_is_valid(const Move& move){
-            //TODO
-            return true;
-        }
-
         void make_player_move(const std::tuple<std::string, std::string, std::string>& str_move){
             auto move = convert_to_move(str_move);
             
-            while(!move_is_valid(move)){
-                std::cout << "Move entered is not a valid chess move " << std::endl;
+            if(!board.move_is_valid(move)){
+                std::cout << "Move entered is not valid " << std::endl;
                 get_input_from_player();
-                auto move = convert_to_move(str_move);
+            } else {
+                board.make_move(move);   
+                board.change_turn();
+                movegen.generate_moves();
             }
-
-            board.make_move(move);   
-            board.change_turn();
         }
 
         /// Convert to move turns use string input into 'Move' object. This is checked for validity by searching in generated moves 
@@ -144,6 +138,7 @@ class Loop{
 
     private:
         Board board;
+        MoveGen movegen;
         game_modes mode;
         bool run = true;
 };

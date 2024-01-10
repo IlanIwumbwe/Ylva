@@ -34,8 +34,9 @@ class Board{
             const auto from_piece_name = get_piece_on_square(from);
             const auto to_piece_name = get_piece_on_square(to);
 
+            assert(from_piece_name != None);
+
             uint64_t from_piece_bitboard = get_piece_bitboard(from_piece_name);
-            const colour from_piece_colour = (from_piece_name & 0x8) ? BLACK : WHITE;
 
             piece_names promo_piece_name;
             uint64_t promotion_piece_bitboard;
@@ -47,11 +48,11 @@ class Board{
                 if(flags == 4){
                     capture_piece(to_piece_name, (1ULL << to));
                 } else if(flags == 5){
-                    ep_capture(from_piece_colour, to);
+                    ep_capture(get_piece_colour(from_piece_name), to);
                 } else if(flags == 2){
-                    castle_kingside(from, from_piece_colour);
+                    castle_kingside(from, get_piece_colour(from_piece_name));
                 } else if(flags == 3){
-                    castle_queenside(from, from_piece_colour);
+                    castle_queenside(from, get_piece_colour(from_piece_name));
                 } else {
                     // quiet moves and double pawn pushes
                     if(from_piece_name == P || from_piece_name == p){hm_clock_reset_history.push_back(hm_clock); hm_clock = 0;} // pawn advance
@@ -67,7 +68,7 @@ class Board{
                     capture_piece(to_piece_name, (1ULL << to));
                 } else {hm_clock = 0;} 
 
-                promo_piece_name = get_promo_piece(flags, from_piece_colour); // piece that we want to promote to
+                promo_piece_name = get_promo_piece(flags, get_piece_colour(from_piece_name)); // piece that we want to promote to
                 promotion_piece_bitboard = get_piece_bitboard(promo_piece_name);
                 promotion_piece_bitboard |= (1ULL << to);
                 set_piece_bitboard(promo_piece_name, promotion_piece_bitboard);
@@ -81,7 +82,7 @@ class Board{
             move_history.push_back(move);
         }
 
-        void undo_move(){
+        int undo_move(){
             if(move_history.size() != 0){  
                 auto prev_move = move_history.back();
                 move_history.pop_back();
@@ -91,7 +92,6 @@ class Board{
                 const auto flags = prev_move.get_flags();
 
                 const auto from_piece_name = get_piece_on_square(to);
-                const colour from_piece_colour = (from_piece_name & 0x8) ? BLACK : WHITE;
 
                 piece_names promo_piece_name;
                 uint64_t promotion_piece_bitboard;
@@ -105,11 +105,11 @@ class Board{
                     if(flags == 4){
                         uncapture_piece(1ULL << to);
                     } else if(flags == 5){
-                        ep_uncapture(from_piece_colour, to);  
+                        ep_uncapture(get_piece_colour(from_piece_name), to);  
                     } else if(flags == 2){
-                        uncastle_kingside(from, from_piece_colour); 
+                        uncastle_kingside(from, get_piece_colour(from_piece_name)); 
                     } else if(flags == 3){
-                        uncastle_queenside(from, from_piece_colour); 
+                        uncastle_queenside(from, get_piece_colour(from_piece_name)); 
                     } else {
                         // quiet moves and double pawn pushes
                         if(from_piece_name == P || from_piece_name == p){hm_clock = hm_clock_reset_history.back(); hm_clock_reset_history.pop_back();} // pawn advance
@@ -125,7 +125,7 @@ class Board{
                     }
 
                     // remove piece that was promoted to
-                    promo_piece_name = get_promo_piece(flags, from_piece_colour); // piece that we wanted to promote to
+                    promo_piece_name = get_promo_piece(flags, get_piece_colour(from_piece_name)); // piece that we wanted to promote to
                     promotion_piece_bitboard = get_piece_bitboard(promo_piece_name);
                     promotion_piece_bitboard &= ~(1ULL << to);
                     set_piece_bitboard(promo_piece_name, promotion_piece_bitboard);
@@ -134,11 +134,13 @@ class Board{
                 // put piece at initial square in its bitboard, then set the bitboard
                 from_piece_bitboard |= (1ULL << from);
                 set_piece_bitboard(from_piece_name, from_piece_bitboard);
-                
+
+                return 0;
             } else {
                 std::cout << "Cannot undo, no move has been made yet" << std::endl;
+                return -1;
             }
-        }
+        } 
 
         /// Perform en-passant capture
         void ep_capture(const colour& pawn_colour, const unsigned int& to){
@@ -366,9 +368,9 @@ class Board{
 
         colour get_turn(){return turn;}
 
-        int get_hm_clock(){return hm_clock;}
+        inline int get_hm_clock(){return hm_clock;}
 
-        void change_turn(){turn = (colour)~turn;}
+        inline void change_turn(){turn = (colour)~turn;}
 
         piece_names get_piece_on_square(int square) const {
             auto square_bitboard = 1ULL << square;
@@ -407,15 +409,28 @@ class Board{
             std::cout << "   a  b  c  d  e  f  g  h" << std::endl;
         }
 
-        bool is_square_occupied(unsigned int& square){
+        bool move_is_valid(const Move& move){
+            //TODO
+            //auto it = std::find(valid_moves.begin(), valid_moves.end(), move);
+
+            //return it != valid_moves.end(); 
+
+            return true;
+        }
+
+        inline bool is_square_occupied(unsigned int& square){
             return (get_entire_bitboard() & (1ULL << square)) != 0;
         }   
 
-        void set_piece_bitboard(const piece_names& piece_name, const uint64_t& bitboard) {
+        inline void set_piece_bitboard(const piece_names& piece_name, const uint64_t& bitboard) {
             bitboards[piece_name] = bitboard;
         }
 
-        uint64_t get_piece_bitboard(const piece_names& piece_name) {
+        inline colour get_piece_colour(const piece_names& piece_name){
+            return (colour)(piece_name > 7);
+        }
+
+        inline uint64_t get_piece_bitboard(const piece_names& piece_name) {
             return bitboards[piece_name];
         }
 
@@ -427,6 +442,44 @@ class Board{
             }
             
             return full_board;
+        }
+
+        uint64_t get_capturable_bitboard() const {
+            uint64_t full_board = 0;
+
+            for(auto p : bitboards){
+                if(p.first != K && p.first != k){full_board |= p.second;}
+            }
+            
+            return full_board;
+        }
+
+        uint64_t get_whites(){
+            uint64_t whites = 0;
+
+            for(auto p : bitboards){
+                if(p.first < 7){whites |= p.second;}
+            }
+            
+            return whites;
+        }
+
+        uint64_t get_blacks(){
+            uint64_t blacks = 0;
+
+            for(auto p : bitboards){
+                if(p.first > 7){blacks |= p.second;}
+            }
+            
+            return blacks;
+        }
+
+        void set_valid_moves(const std::vector<Move>& _valid_moves){
+            valid_moves = _valid_moves;
+        }
+
+        std::vector<Move> get_valid_moves(){
+            return valid_moves;
         }
 
     private:        
@@ -452,6 +505,8 @@ class Board{
         std::vector<Move> move_history;
         std::vector<int> hm_clock_reset_history;
         std::vector<piece_names> captured_pieces;
+
+        std::vector<Move> valid_moves;
 };
 
 #endif
