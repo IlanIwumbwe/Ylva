@@ -66,4 +66,7 @@ std::unordered_map<std::string, unsigned int> promo_flags = {
     {"bc", 13}
 };
 
+unsigned int p_flags[4] = {8,9,10,11};
+unsigned int pc_flags[4] = {12,13,14,15};
+
 #endif

@@ -24,7 +24,6 @@ int main(int argc, char* argv[]){
     }
 
     Loop game_loop(fen, PVP);
-    game_loop.run_game_loop();
 
     return 0;
 }

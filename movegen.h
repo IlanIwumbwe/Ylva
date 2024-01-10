@@ -19,8 +19,9 @@ class MoveGen{
             whites = board->get_whites();
             blacks = board->get_blacks();
             occupied = board->get_entire_bitboard();
-            board->clear_valid_moves();
             turn = board->get_turn();
+
+            board->clear_valid_moves();
 
             attacked = 0;
             push_mask = ULLONG_MAX;
@@ -54,6 +55,25 @@ class MoveGen{
                 attacked |= tos;
             }
 
+            // left captures
+            tos = (white_pawns << 9) & ~RANK(8) & ~H_FILE & occupied & capture_mask;
+            if(turn == WHITE){
+                add_valid_moves(tos,-9,4); 
+            } else {
+                attacked |= tos;
+            }
+
+            // promotion forward 1
+            if(turn == WHITE){
+                tos = (white_pawns << 8) & RANK(8) & ~occupied & push_mask;
+                for(int i = 0; i < 4; ++i){
+                    add_valid_moves(tos,-8,p_flags[i]);
+                }
+            }
+
+            // promotion right captures
+
+
 
         }
 
@@ -79,11 +99,27 @@ class MoveGen{
             } else {
                 attacked |= tos;
             }
+
+            // left captures
+            tos = (black_pawns >> 7) & ~RANK(1) & ~H_FILE & occupied & capture_mask;
+            if(turn == BLACK){
+                add_valid_moves(tos,7,4); 
+            } else {
+                attacked |= tos;
+            }
+
+            // promotion forward 1
+            if(turn == BLACK){
+                tos = (black_pawns >> 8) & RANK(1) & ~occupied & push_mask;
+                for(int i = 0; i < 4; ++i){
+                    add_valid_moves(tos,8,p_flags[i]);
+                }
+            }
         }
 
         /// Given a bitboard of destination squares, a pointer to the board state, an offset of calculate from square, and a flag to 
         /// indicate move type, add that move to the list of valid moves in board state
-        void add_valid_moves(uint64_t& bitboard, int offset, unsigned int flag){
+        void add_valid_moves(uint64_t bitboard, int offset, unsigned int flag){
             while(bitboard){
                 unsigned int to = __builtin_ctzll(bitboard);
 
@@ -98,7 +134,6 @@ class MoveGen{
         Board* board;
         uint64_t occupied, whites, blacks, push_mask, capture_mask, attacked;
         colour turn;
-
         // push mask sets all bits in positions on the board where we are allowed to move
         // capture mask sets all bits in positions on the board where we are allowed to capture
 

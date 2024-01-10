@@ -8,31 +8,43 @@ class Loop{
     public:
         Loop(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(mode) {
             movegen.generate_moves();  // generate valid moves for starting state
-        }
-    
-        void run_game_loop(){
-            while(run){
-                board.view_board();
-                std::cout << "Half move clock: " << board.get_hm_clock() << std::endl;
 
-                if(mode == PVP){
+            if(mode == PVP){
+                run_PVP();
+            } else if(mode == PVE){
+                run_PVE();
+            } else if(mode == EVE) {
+                run_EVE();
+            } else {
+                std::cerr << "Unexpected mode " << mode << std::endl;
+            }
+        }
+
+        void run_PVP(){
+            while (run){
+                get_input_from_player();
+            }
+        }
+
+        void run_PVE(){
+            while(run){
+                if(board.get_turn() == WHITE){
                     get_input_from_player();
-                } else if(mode == PVE){
-                    if(board.get_turn() == WHITE){get_input_from_player();}
-                    else {
-                        //TODO make_engine_move(); 
-                        std::cout << "Engine move; " << std::endl;
-                    }
-                } else if(mode == EVE){
-                    //TODO make_engine_move(); 
-                    std::cout << "Engine move; " << std::endl;
-                } else {
-                    std::cerr << "Unexpected mode " << mode << std::endl;
+                }else{
+                    /// TODO: make_engine_move();
                 }
             }
         }
 
+        void run_EVE(){
+            while(run){
+                /// TODO: make_engine_move();
+            }
+        }
+
         void get_input_from_player(){
+            board.view_board();
+
             std::string input;
             std::cout << ">> ";
             std::cin >> input;
@@ -76,7 +88,6 @@ class Loop{
             
             if(board.move_is_valid(move)){
                 board.make_move(move);   
-                board.change_turn();
                 movegen.generate_moves();
             } else {
                 std::cout << "Move entered is not valid " << std::endl;

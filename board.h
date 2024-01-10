@@ -34,6 +34,8 @@ class Board{
             const auto from_piece_name = get_piece_on_square(from);
             const auto to_piece_name = get_piece_on_square(to);
 
+            auto from_piece_colour = get_piece_colour(from_piece_name);
+
             assert(from_piece_name != None);
 
             uint64_t from_piece_bitboard = get_piece_bitboard(from_piece_name);
@@ -48,11 +50,11 @@ class Board{
                 if(flags == 4){
                     capture_piece(to_piece_name, (1ULL << to));
                 } else if(flags == 5){
-                    ep_capture(get_piece_colour(from_piece_name), to);
+                    ep_capture(from_piece_colour, to);
                 } else if(flags == 2){
-                    castle_kingside(from, get_piece_colour(from_piece_name));
+                    castle_kingside(from, from_piece_colour);
                 } else if(flags == 3){
-                    castle_queenside(from, get_piece_colour(from_piece_name));
+                    castle_queenside(from, from_piece_colour);
                 } else {
                     // quiet moves and double pawn pushes
                     if(from_piece_name == P || from_piece_name == p){hm_clock_reset_history.push_back(hm_clock); hm_clock = 0;} // pawn advance
@@ -68,7 +70,7 @@ class Board{
                     capture_piece(to_piece_name, (1ULL << to));
                 } else {hm_clock = 0;} 
 
-                promo_piece_name = get_promo_piece(flags, get_piece_colour(from_piece_name)); // piece that we want to promote to
+                promo_piece_name = get_promo_piece(flags, from_piece_colour); // piece that we want to promote to
                 promotion_piece_bitboard = get_piece_bitboard(promo_piece_name);
                 promotion_piece_bitboard |= (1ULL << to);
                 set_piece_bitboard(promo_piece_name, promotion_piece_bitboard);
@@ -80,6 +82,8 @@ class Board{
 
             // add move to move history
             move_history.push_back(move);
+
+            change_turn();
         }
 
         int undo_move(){
@@ -91,25 +95,27 @@ class Board{
                 const auto to = prev_move.get_to();
                 const auto flags = prev_move.get_flags();
 
-                const auto from_piece_name = get_piece_on_square(to);
-
                 piece_names promo_piece_name;
                 uint64_t promotion_piece_bitboard;
 
-                uint64_t from_piece_bitboard = get_piece_bitboard(from_piece_name);
+                piece_names from_piece_name;
+                colour from_piece_colour;
+                uint64_t from_piece_bitboard;
 
                 if(!prev_move.is_promo()){
                     // remove piece from to square on its bitboard if not a promotion move
-                    from_piece_bitboard &= ~(1ULL << to);
+                    from_piece_name = get_piece_on_square(to);
+                    from_piece_bitboard = get_piece_bitboard(from_piece_name) & ~(1ULL << to);
+                    from_piece_colour = get_piece_colour(from_piece_name);
 
                     if(flags == 4){
                         uncapture_piece(1ULL << to);
                     } else if(flags == 5){
-                        ep_uncapture(get_piece_colour(from_piece_name), to);  
+                        ep_uncapture(from_piece_colour, to);  
                     } else if(flags == 2){
-                        uncastle_kingside(from, get_piece_colour(from_piece_name)); 
+                        uncastle_kingside(from, from_piece_colour); 
                     } else if(flags == 3){
-                        uncastle_queenside(from, get_piece_colour(from_piece_name)); 
+                        uncastle_queenside(from, from_piece_colour); 
                     } else {
                         // quiet moves and double pawn pushes
                         if(from_piece_name == P || from_piece_name == p){hm_clock = hm_clock_reset_history.back(); hm_clock_reset_history.pop_back();} // pawn advance
@@ -123,12 +129,15 @@ class Board{
                         hm_clock = hm_clock_reset_history.back();
                         hm_clock_reset_history.pop_back();
                     }
-
+                    
                     // remove piece that was promoted to
-                    promo_piece_name = get_promo_piece(flags, get_piece_colour(from_piece_name)); // piece that we wanted to promote to
-                    promotion_piece_bitboard = get_piece_bitboard(promo_piece_name);
-                    promotion_piece_bitboard &= ~(1ULL << to);
+                    promo_piece_name = get_piece_on_square(to); // piece that we wanted to promote to
+                    promotion_piece_bitboard = get_piece_bitboard(promo_piece_name) & ~(1ULL << to);
                     set_piece_bitboard(promo_piece_name, promotion_piece_bitboard);
+
+                    // get correct pawn bitboard
+                    from_piece_name = get_piece_colour(promo_piece_name) ? p : P;
+                    from_piece_bitboard = get_piece_bitboard(from_piece_name);
                 }
 
                 // put piece at initial square in its bitboard, then set the bitboard
@@ -304,6 +313,7 @@ class Board{
             init_castling_availability(parts[2]);
             init_enpassant_square(parts[3]);
             init_halfmove_clock(parts[4]);
+            init_fullmoves(parts[5]);
         }
 
         /// Initialise all bitboards and piece lists
@@ -364,8 +374,12 @@ class Board{
             hm_clock = std::stoi(str_hm_clock);
         }
 
+        void init_fullmoves(const std::string& str_fullmoves){
+            fullmoves = std::stoi(str_fullmoves);
+        }
+
         int get_fullmoves(){
-            return floor(move_history.size() / 2);
+            return floor(move_history.size() / 2) + fullmoves;
         }
 
         colour get_turn(){return turn;}
@@ -386,6 +400,7 @@ class Board{
 
         void view_board(){
             std::cout << ((turn == WHITE) ? "white" : "black") << " to move" << std::endl; 
+            std::cout << "Half move clock: " << hm_clock << std::endl;
             std::cout << "  =======================" << std::endl;
                                                     
             char letter;
@@ -499,6 +514,7 @@ class Board{
         colour turn;
         int castling_availability = 0;          
         int hm_clock;
+        int fullmoves;
         int ep_square;
 
         // piece bitboards
