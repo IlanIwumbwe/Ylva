@@ -23,6 +23,8 @@ int main(int argc, char* argv[]){
         return 1;
     }
 
+    populate_attack_sets();
+
     Loop game_loop(fen, PVP);
 
     return 0;

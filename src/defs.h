@@ -9,6 +9,8 @@
 
 #define RANK(rank_num) ((uint64_t)0xff << (rank_num-1)*8)
 #define A_FILE 0x8080808080808080
+#define B_FILE 0x4040404040404040
+#define G_FILE 0x0202020202020202
 #define H_FILE 0x0101010101010101
 
 #include "helper_funcs.h"
@@ -68,5 +70,16 @@ std::unordered_map<std::string, unsigned int> promo_flags = {
 
 unsigned int p_flags[4] = {8,9,10,11};
 unsigned int pc_flags[4] = {12,13,14,15};
+
+// attack sets
+uint64_t knight_attack_set[64];
+uint64_t king_attack_set[64];
+
+void populate_attack_sets(){
+    for(int i = 0; i < 64; ++i){
+        knight_attacks((1ULL << i), knight_attack_set[i]);
+        king_attacks((1ULL << i), king_attack_set[i]);
+    }
+}
 
 #endif

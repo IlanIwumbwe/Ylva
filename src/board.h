@@ -10,7 +10,7 @@ class Board{
     public:
         Board (const std::string& _fen){
             // parse FEN string
-            std::vector<std::string>parts = splitString((_fen == "") ? STARTING_FEN : _fen, ' ');
+            std::vector<std::string>parts = splitString((_fen == "") ? STARTING_FEN : removeWhiteSpace(_fen), ' ');
 
             std::cout << "Fen size: " << _fen.size() << std::endl;
 
@@ -86,6 +86,15 @@ class Board{
             change_turn();
         }
 
+        int get_prev_move(Move& prev_move){
+            if(move_history.size() != 0){
+                prev_move = move_history.back();
+                return 0;
+            } else {
+                return -1;
+            }
+        }
+
         int undo_move(){
             if(move_history.size() != 0){  
                 auto prev_move = move_history.back();
@@ -123,21 +132,25 @@ class Board{
                     }
 
                 } else {
+                    // remove piece that was promoted to
+                    promo_piece_name = get_piece_on_square(to); // piece that we wanted to promote to
+                    promotion_piece_bitboard = get_piece_bitboard(promo_piece_name) & ~(1ULL << to);
+                    set_piece_bitboard(promo_piece_name, promotion_piece_bitboard);
+
                     if(prev_move.is_capture()){
                         uncapture_piece(1ULL << to);
                     } else {
                         hm_clock = hm_clock_reset_history.back();
                         hm_clock_reset_history.pop_back();
                     }
-                    
-                    // remove piece that was promoted to
-                    promo_piece_name = get_piece_on_square(to); // piece that we wanted to promote to
-                    promotion_piece_bitboard = get_piece_bitboard(promo_piece_name) & ~(1ULL << to);
-                    set_piece_bitboard(promo_piece_name, promotion_piece_bitboard);
-
+                
                     // get correct pawn bitboard
                     from_piece_name = get_piece_colour(promo_piece_name) ? p : P;
                     from_piece_bitboard = get_piece_bitboard(from_piece_name);
+
+                    std::cout << "from: " << name_to_char(from_piece_name) << std::endl;
+                    std::cout << "promo: " << name_to_char(promo_piece_name) << std::endl;
+                    printbitboard(promotion_piece_bitboard); 
                 }
 
                 // put piece at initial square in its bitboard, then set the bitboard
@@ -308,12 +321,17 @@ class Board{
         }
 
         void init_from_fen(const std::vector<std::string>& parts){
-            init_board_state(parts[0]);
-            init_turn(parts[1]);
-            init_castling_availability(parts[2]);
-            init_enpassant_square(parts[3]);
-            init_halfmove_clock(parts[4]);
-            init_fullmoves(parts[5]);
+            if(parts.size() != 6){
+                std::cerr << "Fen string format incorrect" << std::endl;
+                exit(0);
+            } else {
+                init_board_state(parts[0]);
+                init_turn(parts[1]);
+                init_castling_availability(parts[2]);
+                init_enpassant_square(parts[3]);
+                init_halfmove_clock(parts[4]);
+                init_fullmoves(parts[5]);
+            }
         }
 
         /// Initialise all bitboards and piece lists
@@ -362,11 +380,19 @@ class Board{
             }
         }
 
+        /// Given the enpassant square, add the relevant move to move history that would've led to that enpassant square, which will be used to 
+        /// validate possible enpassant captures by an enemy piece
         void init_enpassant_square(const std::string& str_ep_square){
             if(str_ep_square == "-"){
                 ep_square = 0;
             } else {
                 ep_square = alg_to_int(str_ep_square);
+
+                if(turn == WHITE){
+                    move_history.push_back(Move(ep_square+8,ep_square-8,1));
+                } else {
+                    move_history.push_back(Move(ep_square-8,ep_square+8,1));
+                }
             }
         }
 
@@ -467,6 +493,7 @@ class Board{
             return full_board;
         }
 
+        /// Get bitboard of all pieces on the board except the kings, as they can't be captured
         uint64_t get_capturable_bitboard() const {
             uint64_t full_board = 0;
 

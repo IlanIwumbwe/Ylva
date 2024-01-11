@@ -59,34 +59,6 @@ int alg_to_int(const std::string& square){
     return 8*((square[1]-'0')-1) + (104-square[0]);
 }
 
-std::string to_lower(const std::string input){
-    std::string input_lower = input;
-
-    for (auto& x : input_lower){
-        x = (char)tolower(x);
-    }
-    return input_lower;
-}
-
-inline int hexstringtoint(const std::string& hexString) {
-    std::istringstream iss(hexString);
-    int result;
-    iss >> std::hex >> result;
-    return result;
-}
-
-inline bool isvalidHex(const std::string& hexString){
-    auto pattern = std::regex(R"(0x([0-9a-fA-F])+)");
-
-    return std::regex_match(hexString, pattern);
-}
-
-inline bool isvalidNum(const std::string& numString){
-    auto pattern = std::regex(R"(0x([0-9a-fA-F])+|\-?([0-9])+)");
-
-    return std::regex_match(numString, pattern);
-}
-
 std::vector<unsigned int> get_set_bits(uint64_t& bitboard){
     std::vector<unsigned int> set_bits;
 
@@ -99,15 +71,32 @@ std::vector<unsigned int> get_set_bits(uint64_t& bitboard){
     return set_bits;
 }
 
+/// Produce bitboard of all attacked squares by a knight at given square
+void knight_attacks(uint64_t bitboard, uint64_t& output){
+    output = 0;
 
+    output |= (bitboard & ~(G_FILE | H_FILE | RANK(8))) << 6;
+    output |= (bitboard & ~(RANK(7) | RANK(8) | H_FILE)) << 15;
+    output |= (bitboard & ~(A_FILE | B_FILE | RANK(8))) << 10;
+    output |= (bitboard & ~(A_FILE | RANK(7) | RANK(8))) << 17;
+    output |= (bitboard & ~(G_FILE | H_FILE | RANK(1))) >> 10;
+    output |= (bitboard & ~(H_FILE | RANK(1) | RANK(2))) >> 17;
+    output |= (bitboard & ~(A_FILE | B_FILE | RANK(1))) >> 6;
+    output |= (bitboard & ~(A_FILE | RANK(1) | RANK(2))) >> 15;
+}
 
-/// Convert a base 10 or hex string into integer
-inline int stringtoint(const std::string& string){
-    if(isvalidHex(string)){
-        return hexstringtoint(string);
-    } else {
-        return std::stoi(string);
-    }
+/// Produce bitboard of all attacked squares by a king at given square
+void king_attacks(uint64_t bitboard, uint64_t& output){
+    output = 0;
+    
+    output |= (bitboard & ~RANK(8)) << 8;
+    output |= (bitboard & ~H_FILE) >> 1;
+    output |= (bitboard & ~A_FILE) << 1;
+    output |= (bitboard & ~RANK(1)) >> 8;
+    output |= (bitboard & ~(RANK(8) | H_FILE)) << 7;
+    output |= (bitboard & ~(RANK(8) | A_FILE)) << 9;
+    output |= (bitboard & ~(RANK(1) | H_FILE)) >> 9;
+    output |= (bitboard & ~(RANK(1) | A_FILE)) >> 7;
 }
 
 #endif
