@@ -59,16 +59,14 @@ int alg_to_int(const std::string& square){
     return 8*((square[1]-'0')-1) + (104-square[0]);
 }
 
-std::vector<unsigned int> get_set_bits(uint64_t& bitboard){
-    std::vector<unsigned int> set_bits;
-
-    while(bitboard){
-        set_bits.push_back(__builtin_ctzll(bitboard));
-
-        bitboard &= (bitboard-1);
-    }
+unsigned int count_set_bits(uint64_t bitboard){
+    unsigned int count = 0;
     
-    return set_bits;
+    for(; bitboard; ++count){
+        bitboard &= bitboard-1;
+    }
+
+    return count;
 }
 
 /// Produce bitboard of all attacked squares by a knight at given square

@@ -45,10 +45,10 @@ class Board{
 
             if(!move.is_promo()){
                 // place piece at to square if not promotion move
-                from_piece_bitboard |= (1ULL << to);
+                from_piece_bitboard |= set_bit(to);
                 
                 if(flags == 4){
-                    capture_piece(to_piece_name, (1ULL << to));
+                    capture_piece(to_piece_name, set_bit(to));
                 } else if(flags == 5){
                     ep_capture(from_piece_colour, to);
                 } else if(flags == 2){
@@ -67,17 +67,17 @@ class Board{
 
                 if(move.is_capture()){
                     // move is a promotion with capture move
-                    capture_piece(to_piece_name, (1ULL << to));
+                    capture_piece(to_piece_name, set_bit(to));
                 } else {hm_clock = 0;} 
 
                 promo_piece_name = get_promo_piece(flags, from_piece_colour); // piece that we want to promote to
                 promotion_piece_bitboard = get_piece_bitboard(promo_piece_name);
-                promotion_piece_bitboard |= (1ULL << to);
+                promotion_piece_bitboard |= set_bit(to);
                 set_piece_bitboard(promo_piece_name, promotion_piece_bitboard);
             }
 
             // remove piece from initial square in its bitboard, then set the bitboard
-            from_piece_bitboard &= ~(1ULL << from);
+            from_piece_bitboard &= ~set_bit(from);
             set_piece_bitboard(from_piece_name, from_piece_bitboard);
 
             // add move to move history
@@ -114,11 +114,11 @@ class Board{
                 if(!prev_move.is_promo()){
                     // remove piece from to square on its bitboard if not a promotion move
                     from_piece_name = get_piece_on_square(to);
-                    from_piece_bitboard = get_piece_bitboard(from_piece_name) & ~(1ULL << to);
+                    from_piece_bitboard = get_piece_bitboard(from_piece_name) & ~set_bit(to);
                     from_piece_colour = get_piece_colour(from_piece_name);
 
                     if(flags == 4){
-                        uncapture_piece(1ULL << to);
+                        uncapture_piece(set_bit(to));
                     } else if(flags == 5){
                         ep_uncapture(from_piece_colour, to);  
                     } else if(flags == 2){
@@ -134,11 +134,11 @@ class Board{
                 } else {
                     // remove piece that was promoted to
                     promo_piece_name = get_piece_on_square(to); // piece that we wanted to promote to
-                    promotion_piece_bitboard = get_piece_bitboard(promo_piece_name) & ~(1ULL << to);
+                    promotion_piece_bitboard = get_piece_bitboard(promo_piece_name) & ~set_bit(to);
                     set_piece_bitboard(promo_piece_name, promotion_piece_bitboard);
 
                     if(prev_move.is_capture()){
-                        uncapture_piece(1ULL << to);
+                        uncapture_piece(set_bit(to));
                     } else {
                         hm_clock = hm_clock_reset_history.back();
                         hm_clock_reset_history.pop_back();
@@ -154,7 +154,7 @@ class Board{
                 }
 
                 // put piece at initial square in its bitboard, then set the bitboard
-                from_piece_bitboard |= (1ULL << from);
+                from_piece_bitboard |= set_bit(from);
                 set_piece_bitboard(from_piece_name, from_piece_bitboard);
 
                 change_turn();
@@ -181,7 +181,7 @@ class Board{
             }
 
             captured_piece_bitboard = get_piece_bitboard(captured_piece_name);
-            captured_piece_bitboard &= ~(1ULL << captured_piece_square);
+            captured_piece_bitboard &= ~set_bit(captured_piece_square);
             set_piece_bitboard(captured_piece_name, captured_piece_bitboard);
 
             captured_pieces.push_back(captured_piece_name);
@@ -204,7 +204,7 @@ class Board{
             }
 
             captured_piece_bitboard = get_piece_bitboard(captured_piece_name);
-            captured_piece_bitboard |= (1ULL << captured_piece_square);
+            captured_piece_bitboard |= set_bit(captured_piece_square);
             set_piece_bitboard(captured_piece_name, captured_piece_bitboard);
 
             captured_pieces.pop_back();
@@ -217,8 +217,8 @@ class Board{
             uint64_t rook_bitboard = get_piece_bitboard(rook_type);
 
             // remove rook from initial square, put at new square
-            rook_bitboard &= ~(1ULL << (king_square - 3));
-            rook_bitboard |= (1ULL << (king_square - 1));
+            rook_bitboard &= ~set_bit(king_square - 3);
+            rook_bitboard |= set_bit(king_square - 1);
             set_piece_bitboard(rook_type, rook_bitboard); 
             hm_clock++;
         }
@@ -228,8 +228,8 @@ class Board{
             uint64_t rook_bitboard = get_piece_bitboard(rook_type);
 
             // remove rook from new square, put at initial square
-            rook_bitboard |= (1ULL << (king_square - 3));
-            rook_bitboard &= ~(1ULL << (king_square - 1));
+            rook_bitboard |= set_bit(king_square - 3);
+            rook_bitboard &= set_bit(king_square - 1);
             set_piece_bitboard(rook_type, rook_bitboard); 
             hm_clock--;
         }
@@ -239,8 +239,8 @@ class Board{
             uint64_t rook_bitboard = get_piece_bitboard(rook_type);
 
             // remove rook from initial square, put at new square
-            rook_bitboard &= ~(1ULL << (king_square + 4));
-            rook_bitboard |= (1ULL << (king_square + 1));
+            rook_bitboard &= set_bit(king_square + 4);
+            rook_bitboard |= set_bit(king_square + 1);
             set_piece_bitboard(rook_type, rook_bitboard); 
             hm_clock++;
         }   
@@ -250,8 +250,8 @@ class Board{
             uint64_t rook_bitboard = get_piece_bitboard(rook_type);
 
             // remove rook from initial square, put at new square
-            rook_bitboard |= (1ULL << (king_square + 4));
-            rook_bitboard &= ~(1ULL << (king_square + 1));
+            rook_bitboard |= set_bit(king_square + 4);
+            rook_bitboard &= ~set_bit(king_square + 1);
             set_piece_bitboard(rook_type, rook_bitboard); 
             hm_clock--;
         }   
@@ -345,7 +345,7 @@ class Board{
                 if(isalpha(c)){
                     piece_names piece_name = char_to_name(c);
 
-                    set_piece_bitboard(piece_name, get_piece_bitboard(piece_name) | (1ULL << current_square));
+                    set_piece_bitboard(piece_name, get_piece_bitboard(piece_name) | set_bit(current_square));
 
                     current_square--;
  
@@ -415,10 +415,8 @@ class Board{
         inline void change_turn(){turn = (colour)~turn;}
 
         piece_names get_piece_on_square(int square) const {
-            auto square_bitboard = 1ULL << square;
-
             for(auto p: bitboards){
-                if(p.second & square_bitboard){return p.first;}
+                if(p.second & set_bit(square)){return p.first;}
             }
             
             return None;
@@ -468,7 +466,7 @@ class Board{
         }
 
         inline bool is_square_occupied(unsigned int& square){
-            return (get_entire_bitboard() & (1ULL << square)) != 0;
+            return (get_entire_bitboard() & set_bit(square)) != 0;
         }   
 
         inline void set_piece_bitboard(const piece_names& piece_name, const uint64_t& bitboard) {

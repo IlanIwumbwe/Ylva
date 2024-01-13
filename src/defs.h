@@ -13,6 +13,14 @@
 #define G_FILE 0x0202020202020202
 #define H_FILE 0x0101010101010101
 
+#define K_castle 0xf000
+#define Q_castle 0x0f00
+#define k_castle 0x00f0
+#define q_castle 0x000f
+
+#define get_lsb(bitboard) __builtin_ctzll(bitboard)
+#define set_bit(i) (1ULL << (i))
+
 #include "helper_funcs.h"
 
 typedef enum {
@@ -77,8 +85,8 @@ uint64_t king_attack_set[64];
 
 void populate_attack_sets(){
     for(int i = 0; i < 64; ++i){
-        knight_attacks((1ULL << i), knight_attack_set[i]);
-        king_attacks((1ULL << i), king_attack_set[i]);
+        knight_attacks(set_bit(i), knight_attack_set[i]);
+        king_attacks(set_bit(i), king_attack_set[i]);
     }
 }
 
