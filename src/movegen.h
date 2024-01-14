@@ -55,9 +55,6 @@ class MoveGen{
 
             if(turn == WHITE){king_moves(K);}
             else {king_moves(k);}
-
-            //printbitboard(get_attackers(1,BLACK));
-            //std::cout << "Num of checkers " << checkers_count << std::endl; 
         }
 
         /// only call if in check by one piece
