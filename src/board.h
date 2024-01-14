@@ -38,10 +38,23 @@ class Board{
 
             assert(from_piece_name != None);
 
-            uint64_t from_piece_bitboard = get_piece_bitboard(from_piece_name);
+            U64 from_piece_bitboard = get_piece_bitboard(from_piece_name);
 
             piece_names promo_piece_name;
-            uint64_t promotion_piece_bitboard;
+            U64 promotion_piece_bitboard;
+
+            castling_rights_history.push_back(castling_rights);
+
+            // remove castling rights if king or rook moves
+            if((from_piece_name == R && from == 0) || from_piece_name == K){
+                castling_rights &= ~K_castle;
+            }else if((from_piece_name == R && from == 7) || from_piece_name == K){
+                castling_rights &= ~Q_castle;
+            } else if((from_piece_name == r && from == 56) || from_piece_name == k){
+                castling_rights &= ~k_castle;
+            } else if((from_piece_name == r && from == 63) || from_piece_name == k){
+                castling_rights &= ~q_castle;
+            }
 
             if(!move.is_promo()){
                 // place piece at to square if not promotion move
@@ -105,11 +118,11 @@ class Board{
                 const auto flags = prev_move.get_flags();
 
                 piece_names promo_piece_name;
-                uint64_t promotion_piece_bitboard;
+                U64 promotion_piece_bitboard;
 
                 piece_names from_piece_name;
                 colour from_piece_colour;
-                uint64_t from_piece_bitboard;
+                U64 from_piece_bitboard;
 
                 if(!prev_move.is_promo()){
                     // remove piece from to square on its bitboard if not a promotion move
@@ -159,6 +172,11 @@ class Board{
 
                 change_turn();
 
+                castling_rights = castling_rights_history.back();
+                castling_rights_history.pop_back();
+
+                std::cout << std::to_string(castling_rights) << std::endl;
+
                 return 0;
             } else {
                 std::cout << "Cannot undo, no move has been made yet" << std::endl;
@@ -168,7 +186,7 @@ class Board{
 
         /// Perform en-passant capture
         void ep_capture(const colour& pawn_colour, const unsigned int& to){
-            uint64_t captured_piece_bitboard = 0;
+            U64 captured_piece_bitboard = 0;
             piece_names captured_piece_name;
             unsigned int captured_piece_square;
 
@@ -191,7 +209,7 @@ class Board{
 
         /// Revert en-passant capture
         void ep_uncapture(const colour& pawn_colour, const unsigned int& to){
-            uint64_t captured_piece_bitboard = 0;
+            U64 captured_piece_bitboard = 0;
             piece_names captured_piece_name;
             unsigned int captured_piece_square;
 
@@ -214,7 +232,7 @@ class Board{
 
         void castle_kingside(const unsigned int& king_square, const colour& king_colour){
             auto rook_type = (king_colour) ? r : R;
-            uint64_t rook_bitboard = get_piece_bitboard(rook_type);
+            U64 rook_bitboard = get_piece_bitboard(rook_type);
 
             // remove rook from initial square, put at new square
             rook_bitboard &= ~set_bit(king_square - 3);
@@ -225,21 +243,21 @@ class Board{
 
         void uncastle_kingside(const unsigned int& king_square, const colour& king_colour){
             auto rook_type = (king_colour) ? r : R;
-            uint64_t rook_bitboard = get_piece_bitboard(rook_type);
+            U64 rook_bitboard = get_piece_bitboard(rook_type);
 
             // remove rook from new square, put at initial square
             rook_bitboard |= set_bit(king_square - 3);
-            rook_bitboard &= set_bit(king_square - 1);
+            rook_bitboard &= ~set_bit(king_square - 1);
             set_piece_bitboard(rook_type, rook_bitboard); 
             hm_clock--;
         }
 
         void castle_queenside(const unsigned int& king_square, const colour& king_colour){
             auto rook_type = (king_colour) ? r : R;
-            uint64_t rook_bitboard = get_piece_bitboard(rook_type);
+            U64 rook_bitboard = get_piece_bitboard(rook_type);
 
             // remove rook from initial square, put at new square
-            rook_bitboard &= set_bit(king_square + 4);
+            rook_bitboard &= ~set_bit(king_square + 4);
             rook_bitboard |= set_bit(king_square + 1);
             set_piece_bitboard(rook_type, rook_bitboard); 
             hm_clock++;
@@ -247,7 +265,7 @@ class Board{
 
         void uncastle_queenside(const unsigned int& king_square, const colour& king_colour){
             auto rook_type = (king_colour) ? r : R;
-            uint64_t rook_bitboard = get_piece_bitboard(rook_type);
+            U64 rook_bitboard = get_piece_bitboard(rook_type);
 
             // remove rook from initial square, put at new square
             rook_bitboard |= set_bit(king_square + 4);
@@ -257,7 +275,7 @@ class Board{
         }   
         
         /// Perform normal capture
-        void capture_piece(const piece_names& to_piece_name, const uint64_t& square_bitboard){
+        void capture_piece(const piece_names& to_piece_name, const U64& square_bitboard){
             auto captured_piece_bitboard = get_piece_bitboard(to_piece_name);
             captured_piece_bitboard &= ~square_bitboard;
             set_piece_bitboard(to_piece_name, captured_piece_bitboard);
@@ -268,15 +286,23 @@ class Board{
         }
 
         /// Revert normal capture
-        void uncapture_piece(const uint64_t& square_bitboard){
+        void uncapture_piece(const U64& square_bitboard){
             auto to_piece_name = captured_pieces.back();
             auto captured_piece_bitboard = get_piece_bitboard(to_piece_name);
             captured_piece_bitboard |= square_bitboard;
             set_piece_bitboard(to_piece_name, captured_piece_bitboard);
 
             captured_pieces.pop_back();
-            hm_clock = hm_clock_reset_history.back();
+            hm_clock = hm_clock_reset_history.back();   
             hm_clock_reset_history.pop_back();
+        }
+
+        bool has_castling_rights(int flag) const {
+            return (castling_rights & flag) != 0;
+        }
+
+        bool is_occupied(unsigned int square){
+            return get_bit(get_entire_bitboard(), square);
         }
 
         piece_names get_promo_piece(const unsigned int& flags, const colour& from_piece_colour){
@@ -327,7 +353,7 @@ class Board{
             } else {
                 init_board_state(parts[0]);
                 init_turn(parts[1]);
-                init_castling_availability(parts[2]);
+                init_castling_rights(parts[2]);
                 init_enpassant_square(parts[3]);
                 init_halfmove_clock(parts[4]);
                 init_fullmoves(parts[5]);
@@ -366,18 +392,20 @@ class Board{
             }
         }
 
-        void init_castling_availability(const std::string& str_castling){
+        void init_castling_rights(const std::string& str_castling){
             if(str_castling == "-"){
-                castling_availability = 0;
+                castling_rights = 0;
             } else {
                 for(auto c : str_castling){
-                    if(c == 'K'){castling_availability |= (K << 12);}
-                    else if(c == 'Q'){castling_availability |= (Q << 8);}
-                    else if(c == 'k'){castling_availability |= (k << 4);}
-                    else if(c == 'q'){castling_availability |= q;}
+                    if(c == 'K'){castling_rights |= 8;}
+                    else if(c == 'Q'){castling_rights |= 4;}
+                    else if(c == 'k'){castling_rights |= 2;}
+                    else if(c == 'q'){castling_rights |= 1;}
                     else{std::cout << "What? Castling availability flag in fen string " << str_castling << " is unexpected" << std::endl; exit(0);}
                 }
             }
+
+            std::cout << "Init c " << str_castling << " " << std::to_string(castling_rights) << std::endl;
         }
 
         /// Given the enpassant square, add the relevant move to move history that would've led to that enpassant square, which will be used to 
@@ -465,11 +493,7 @@ class Board{
             //return true;
         }
 
-        inline bool is_square_occupied(unsigned int& square){
-            return (get_entire_bitboard() & set_bit(square)) != 0;
-        }   
-
-        inline void set_piece_bitboard(const piece_names& piece_name, const uint64_t& bitboard) {
+        inline void set_piece_bitboard(const piece_names& piece_name, const U64& bitboard) {
             bitboards[piece_name] = bitboard;
         }
 
@@ -477,12 +501,12 @@ class Board{
             return (colour)(piece_name > 7);
         }
 
-        inline uint64_t get_piece_bitboard(const piece_names& piece_name) {
+        inline U64 get_piece_bitboard(const piece_names& piece_name) {
             return bitboards[piece_name];
         }
 
-        uint64_t get_entire_bitboard() const {
-            uint64_t full_board = 0;
+        U64 get_entire_bitboard() const {
+            U64 full_board = 0;
 
             for(auto p : bitboards){
                 full_board |= p.second;
@@ -491,29 +515,18 @@ class Board{
             return full_board;
         }
 
-        /// Get bitboard of all pieces on the board except the kings, as they can't be captured
-        uint64_t get_capturable_bitboard() const {
-            uint64_t full_board = 0;
-
-            for(auto p : bitboards){
-                if(p.first != K && p.first != k){full_board |= p.second;}
-            }
-            
-            return full_board;
-        }
-
-        uint64_t get_whites(){
-            uint64_t whites = 0;
+        U64 get_whites(){
+            U64 whites = 0;
 
             for(auto p : bitboards){
                 if(p.first < 7){whites |= p.second;}
             }
-            
+
             return whites;
         }
 
-        uint64_t get_blacks(){
-            uint64_t blacks = 0;
+        U64 get_blacks(){
+            U64 blacks = 0;
 
             for(auto p : bitboards){
                 if(p.first > 7){blacks |= p.second;}
@@ -537,23 +550,15 @@ class Board{
     private:        
         // informaton from fen string
         colour turn;
-        int castling_availability = 0;          
+        uint8_t castling_rights;          
         int hm_clock;
         int fullmoves;
         int ep_square;
 
         // piece bitboards
-        std::unordered_map<piece_names, uint64_t> bitboards{};
+        std::unordered_map<piece_names, U64> bitboards{};
 
-        /// TODO: rook and king movements needed to validate castling
-        std::unordered_map<std::string, int> move_counts{
-            {"rl",0},
-            {"k",0},
-            {"rr",0},
-            {"Rl",0},
-            {"K",0},
-            {"Rl",0},
-        };
+        std::vector<uint8_t> castling_rights_history;
     
         std::vector<Move> move_history;
         std::vector<int> hm_clock_reset_history;

@@ -34,13 +34,13 @@ inline std::string removeWhiteSpace(std::string str){
     return std::regex_replace(str, pattern, "");
 }
 
-inline auto numtobin(const uint64_t& number){
+inline auto numtobin(const U64& number){
     std::bitset<64> binaryRepresentation(number);
 
     return binaryRepresentation;
 }
 
-inline void printbitboard(const uint64_t& number){
+inline void printbitboard(const U64& number){
     auto bin = numtobin(number);
     std::cout << "  ------------------------" << std::endl;
     for(int i = 0; i < 64; ++i){
@@ -59,7 +59,7 @@ int alg_to_int(const std::string& square){
     return 8*((square[1]-'0')-1) + (104-square[0]);
 }
 
-unsigned int count_set_bits(uint64_t bitboard){
+unsigned int count_set_bits(U64 bitboard){
     unsigned int count = 0;
     
     for(; bitboard; ++count){
@@ -70,7 +70,7 @@ unsigned int count_set_bits(uint64_t bitboard){
 }
 
 /// Produce bitboard of all attacked squares by a knight at given square
-void knight_attacks(uint64_t bitboard, uint64_t& output){
+void knight_attacks(U64 bitboard, U64& output){
     output = 0;
 
     output |= (bitboard & ~(G_FILE | H_FILE | RANK(8))) << 6;
@@ -84,7 +84,7 @@ void knight_attacks(uint64_t bitboard, uint64_t& output){
 }
 
 /// Produce bitboard of all attacked squares by a king at given square
-void king_attacks(uint64_t bitboard, uint64_t& output){
+void king_attacks(U64 bitboard, U64& output){
     output = 0;
     
     output |= (bitboard & ~RANK(8)) << 8;

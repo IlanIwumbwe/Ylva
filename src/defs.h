@@ -7,19 +7,22 @@
 #define CAPTURE_FLAG 0x4000
 #define PROMO_FLAG 0x8000
 
-#define RANK(rank_num) ((uint64_t)0xff << (rank_num-1)*8)
+typedef uint64_t U64;
+
+#define RANK(rank_num) ((U64)0xff << (rank_num-1)*8)
 #define A_FILE 0x8080808080808080
 #define B_FILE 0x4040404040404040
 #define G_FILE 0x0202020202020202
 #define H_FILE 0x0101010101010101
 
-#define K_castle 0xf000
-#define Q_castle 0x0f00
-#define k_castle 0x00f0
-#define q_castle 0x000f
+#define K_castle 0x8
+#define Q_castle 0x4
+#define k_castle 0x2
+#define q_castle 0x1        
 
 #define get_lsb(bitboard) __builtin_ctzll(bitboard)
 #define set_bit(i) (1ULL << (i))
+#define get_bit(bitboard, i) (bitboard & set_bit(i))
 
 #include "helper_funcs.h"
 
@@ -80,8 +83,8 @@ unsigned int p_flags[4] = {8,9,10,11};
 unsigned int pc_flags[4] = {12,13,14,15};
 
 // attack sets
-uint64_t knight_attack_set[64];
-uint64_t king_attack_set[64];
+U64 knight_attack_set[64];
+U64 king_attack_set[64];
 
 void populate_attack_sets(){
     for(int i = 0; i < 64; ++i){

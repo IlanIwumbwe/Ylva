@@ -117,7 +117,7 @@ class Loop{
             if(promo_piece == ""){
                 // no promotion
 
-                if(board.is_square_occupied(to)){
+                if(board.is_occupied(to)){
                     flags = 4;
                 } else {
                     if(moving_piece == P || moving_piece == p){
@@ -143,7 +143,7 @@ class Loop{
 
             } else {
                 // wants to promote
-                flags = (board.is_square_occupied(to)) ? promo_flags[promo_piece+"c"] : promo_flags[promo_piece];
+                flags = (board.is_occupied(to)) ? promo_flags[promo_piece+"c"] : promo_flags[promo_piece];
             }
 
             return Move(from,to,flags);
