@@ -24,6 +24,7 @@ int main(int argc, char* argv[]){
     }
 
     populate_attack_sets();
+    populate_rays();
 
     Loop game_loop(fen, PVP);
 

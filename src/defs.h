@@ -4,16 +4,16 @@
 #define STARTING_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define MOVE_FORMAT std::regex(R"([a-h][1-8][a-h][1-8](q|r|n|b)?)")
 
+typedef uint64_t U64;
+
 #define CAPTURE_FLAG 0x4000
 #define PROMO_FLAG 0x8000
 
-typedef uint64_t U64;
-
-#define RANK(rank_num) ((U64)0xff << (rank_num-1)*8)
 #define A_FILE 0x8080808080808080
 #define B_FILE 0x4040404040404040
 #define G_FILE 0x0202020202020202
 #define H_FILE 0x0101010101010101
+#define RANK(rank_num) ((U64)0xff << (rank_num-1)*8)
 
 #define K_castle 0x8
 #define Q_castle 0x4
@@ -21,6 +21,7 @@ typedef uint64_t U64;
 #define q_castle 0x1        
 
 #define get_lsb(bitboard) __builtin_ctzll(bitboard)
+#define get_msb(bitboard) 64 - (__builtin_clzll(bitboard)+1)
 #define set_bit(i) (1ULL << (i))
 #define get_bit(bitboard, i) (bitboard & set_bit(i))
 
@@ -52,6 +53,27 @@ typedef enum{
     EVE,
     PVP
 } game_modes;
+typedef enum{
+    north,
+    east,
+    west,
+    south,
+    noEa,
+    soEa,
+    noWe,
+    soWe
+} dirs;
+
+std::vector<std::tuple<dirs, int, U64>> dir_info = {
+    {north, 8, RANK(8)},
+    {noEa, 7, H_FILE | RANK(8)},
+    {west, 1, A_FILE},
+    {noWe, 9, A_FILE  | RANK(8)},
+    {east, -1, H_FILE},
+    {soEa, -9, H_FILE | RANK(1)},
+    {south, -8, RANK(1)},
+    {soWe, -7, A_FILE | RANK(1)}    
+};
 
 std::vector<std::pair<char, piece_names>> namecharint = {
     {'P', P},
@@ -90,6 +112,33 @@ void populate_attack_sets(){
     for(int i = 0; i < 64; ++i){
         knight_attacks(set_bit(i), knight_attack_set[i]);
         king_attacks(set_bit(i), king_attack_set[i]);
+    }
+}
+
+U64 RAYS[8][64];
+
+void populate_rays(){
+    dirs dir;
+    U64 bound;
+    int offset;
+
+    for(auto info : dir_info){
+        std::tie(dir, offset, bound) = info;
+        for(int i = 0; i < 64; ++i){
+            U64 out = 0;
+            int mult = 0;
+
+            out |= set_bit(i);
+
+            while((out & bound) == 0){
+                mult ++;
+                out |= set_bit(i + mult * offset);
+            }
+
+            out &= ~set_bit(i);
+
+            RAYS[dir][i] = out;
+        }
     }
 }
 

@@ -32,13 +32,14 @@ class MoveGen{
         }
 
         void get_legal_moves(){
-            auto checkers_count = get_checkers();
+            U64 ally_king = (turn) ? black_king : white_king;
+            auto checkers_count = get_checkers(ally_king);
 
             if(checkers_count <= 1){
                 // modify push and capture mask if king is in check
                 if(checkers_count == 1){
                     capture_mask = checkers;
-                    set_push_mask(); 
+                    set_push_mask(ally_king); 
                 } else {
                     capture_mask = ULLONG_MAX;
                     push_mask = ULLONG_MAX;
@@ -47,24 +48,41 @@ class MoveGen{
                 if(turn == WHITE){
                     P_moves();
                     knight_moves(N);
+                    rook_moves(R);
+                    bishop_moves(B);
+                    queen_moves(Q);
                 } else {
                     p_moves();
                     knight_moves(n);
+                    rook_moves(r);
+                    bishop_moves(b);
+                    queen_moves(q);
                 }
             }
 
             if(turn == WHITE){king_moves(K);}
             else {king_moves(k);}
+
+        }
+
+        void set_pinned_mask(U64& ally_king){ 
+            // TODO
         }
 
         /// only call if in check by one piece
         /// If in check by a slider, push mask is squares between ally king and enemy slider
         /// If in check by non slider, push mask is 0
-        void set_push_mask(){
-            auto checker = board->get_piece_on_square(get_lsb(checkers));
+        void set_push_mask(U64& ally_king){
+            unsigned int ally_king_sq = get_lsb(ally_king);
+            auto checker_sq = get_lsb(checkers);
+            auto checker = board->get_piece_on_square(checker_sq);
 
             if(slider_piece(checker)){
                 // TODO 
+                auto checker_set = get_queen_attacks(occupied, checker_sq);
+                auto king_set = get_queen_attacks(occupied, ally_king_sq);
+
+                push_mask = checker_set & king_set;
             } else {
                 push_mask = 0;
             }
@@ -75,15 +93,17 @@ class MoveGen{
         }
 
         /// Given a king attack set, look through it and return a bitboard of those squares in the attack set that are attacked by enemy piece
-        void set_king_danger_squares(uint64_t attack_set, int king_colour){
+        void set_king_danger_squares(U64 attack_set, int king_colour){
             king_danger_squares = 0;
-            int lsb;
+            unsigned int lsb;
+            U64 lsb_bitboard;
 
             while(attack_set){
                 lsb = get_lsb(attack_set);
+                lsb_bitboard = get_bit(attack_set, lsb);
 
                 if(get_attackers(lsb, ~king_colour)){
-                    king_danger_squares |= lsb;
+                    king_danger_squares |= lsb_bitboard;
                 }
 
                 attack_set &= attack_set-1;
@@ -99,20 +119,22 @@ class MoveGen{
                 out |= set_bit(square+7) & ~A_FILE & black_pawns;
                 out |= set_bit(square+9) & ~H_FILE & black_pawns;
                 // TODO: rays from square to check for slider pieces giving check (white king should not be in blockers bitboard)
+                out |= get_queen_attacks(whites_minus_king | blacks, square) & (board->get_piece_bitboard(q) | board->get_piece_bitboard(r) | board->get_piece_bitboard(b));                
             } else {
                 out |= (knight_attack_set[square] & board->get_piece_bitboard(N));
                 out |= set_bit(square-9) & ~A_FILE & white_pawns;
                 out |= set_bit(square-7) & ~H_FILE & white_pawns;
                 // TODO: rays from square to check for slider pieces giving check (black king should not be in blockers bitboard)
+                out |= get_queen_attacks(blacks_minus_king | whites, square) & (board->get_piece_bitboard(Q) | board->get_piece_bitboard(R) | board->get_piece_bitboard(B));    
             }
 
             return (out);
         }
 
         /// Produce bitboard of all pieces giving ally king check, and return the number of checkers
-        unsigned int get_checkers(){
-            unsigned int king_square = get_lsb((turn) ? black_king : white_king);
-            checkers = get_attackers(king_square, ~turn);
+        unsigned int get_checkers(U64& ally_king){
+            unsigned int ally_king_sq = get_lsb(ally_king);
+            checkers = get_attackers(ally_king_sq, ~turn);
             return count_set_bits(checkers);
         }
 
@@ -214,7 +236,7 @@ class MoveGen{
                     pawn_bitboard &= capture_mask | (push_mask << 8);
 
                     // capture by black pawn to the right
-                    tos = ((black_pawns & (pawn_bitboard >> 1)) >> 7);
+                    tos = (black_pawns & (pawn_bitboard >> 1)) >> 7;
                     make_pawn_moves(tos,7,5);
 
                     // capture by black pawn to the left
@@ -252,7 +274,7 @@ class MoveGen{
             unsigned int from;
             king_danger_squares = 0;
 
-            from =  get_lsb(king);
+            from = get_lsb(king);
             attack_set = king_attack_set[from];
 
             // filter out king danger squares
@@ -292,9 +314,100 @@ class MoveGen{
                     make_other_moves(set_bit(61), 59, 3);
                 }
             }
-
         }
 
+        void rook_moves(piece_names rook_name){
+            auto rooks = board->get_piece_bitboard(rook_name);
+            unsigned int from;
+            U64 attack_set;
+            int rook_c = rook_name > 7;
+
+            while(rooks){
+                from = get_lsb(rooks);
+
+                if(rook_c){
+                    attack_set = get_rook_attacks(occupied, from) & ~blacks;
+
+                    // rook captures
+                    tos = attack_set & whites_minus_king & capture_mask;
+                } else {
+                    attack_set = get_rook_attacks(occupied, from) & ~whites;
+
+                    // rook captures
+                    tos = attack_set & blacks_minus_king & capture_mask;
+                }
+
+                make_other_moves(tos, from, 4);
+
+                // rook quiet moves
+                tos = attack_set & ~occupied & push_mask;
+                make_other_moves(tos, from, 0);
+
+                rooks &= rooks - 1;
+            }
+        }
+
+        void bishop_moves(piece_names bishop_name){
+            auto bishops = board->get_piece_bitboard(bishop_name);
+            unsigned int from;
+            U64 attack_set;
+            int bishop_c = bishop_name > 7;
+
+            while(bishops){
+                from = get_lsb(bishops);
+
+                if(bishop_c){
+                    attack_set = get_bishop_attacks(occupied, from) & ~blacks;
+
+                    // bishop captures
+                    tos = attack_set & whites_minus_king & capture_mask;
+                } else {
+                    attack_set = get_bishop_attacks(occupied, from) & ~whites;
+
+                    // bishop captures
+                    tos = attack_set & blacks_minus_king & capture_mask;
+                }
+
+                make_other_moves(tos, from, 4);
+
+                // rook quiet moves
+                tos = attack_set & ~occupied & push_mask;
+                make_other_moves(tos, from, 0);
+
+                bishops &= bishops - 1;
+            }
+        }
+
+        void queen_moves(piece_names queen_name){
+            auto queens = board->get_piece_bitboard(queen_name);
+            unsigned int from;
+            U64 attack_set;
+            int queen_c = queen_name > 7;
+
+            while(queens){
+                from = get_lsb(queens);
+
+                if(queen_c){
+                    attack_set = get_queen_attacks(occupied, from) & ~blacks;
+
+                    // queen captures
+                    tos = attack_set & whites_minus_king & capture_mask;
+                } else {
+                    attack_set = get_queen_attacks(occupied, from) & ~whites;
+
+                    // queen captures
+                    tos = attack_set & blacks_minus_king & capture_mask;
+                }
+
+                make_other_moves(tos, from, 4);
+
+                // queen quiet moves
+                tos = attack_set & ~occupied & push_mask;
+                make_other_moves(tos, from, 0);
+
+                queens &= queens - 1;
+            }
+        }
 
         /// Given a bitboard of destination squares, a pointer to the board state, an offset of calculate from square, and a flag to 
         /// indicate move type, add that move to the list of valid moves in board state
@@ -321,11 +434,59 @@ class MoveGen{
             }
         }
 
+        U64 get_positive_ray_attacks(U64 occupied, dirs dir, unsigned int square){
+            auto attacks = RAYS[dir][square];
+            auto blockers = occupied & attacks;
+
+            square = get_lsb(blockers | 0x8000000000000000);
+            attacks ^= RAYS[dir][square];
+
+            return attacks;
+        }
+
+        U64 get_negative_ray_attacks(U64 occupied, dirs dir, unsigned int square){
+            auto attacks = RAYS[dir][square];
+            auto blockers = occupied & attacks;
+
+            square = get_msb(blockers | 1ULL);
+            attacks ^= RAYS[dir][square];
+
+            return attacks;
+        }
+
+        U64 get_file_attacks(U64 occupied, unsigned int square){
+            return get_positive_ray_attacks(occupied, north, square) | get_negative_ray_attacks(occupied, south, square);
+        }
+
+        U64 get_rank_attacks(U64 occupied, unsigned int square){
+            return get_positive_ray_attacks(occupied, west, square) | get_negative_ray_attacks(occupied, east, square);
+        }
+
+        U64 get_diagonal_attacks(U64 occupied, unsigned int square){
+            return get_positive_ray_attacks(occupied, noEa, square) | get_negative_ray_attacks(occupied, soWe, square);
+        }
+
+        U64 get_antidiagonal_attacks(U64 occupied, unsigned int square){
+            return get_positive_ray_attacks(occupied, noWe, square) | get_negative_ray_attacks(occupied, soEa, square);
+        }
+
+        U64 get_rook_attacks(U64 occupied, unsigned int square){
+            return get_file_attacks(occupied, square) | get_rank_attacks(occupied, square);
+        }
+
+        U64 get_bishop_attacks(U64 occupied, unsigned int square){
+            return get_diagonal_attacks(occupied, square) | get_antidiagonal_attacks(occupied, square);
+        }
+
+        U64 get_queen_attacks(U64 occupied, unsigned int square){
+            return get_rook_attacks(occupied, square) | get_bishop_attacks(occupied, square);
+        }
+
     private:
         U64 tos;
         Board* board;
         U64 occupied, whites, blacks, whites_minus_king, blacks_minus_king;
-        U64 king_danger_squares, checkers, push_mask, capture_mask;
+        U64 king_danger_squares, checkers, push_mask, capture_mask, pinned_mask;
         U64 white_pawns, black_pawns, white_king, black_king;
         colour turn;
 
