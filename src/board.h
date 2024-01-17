@@ -163,7 +163,7 @@ class Board{
 
                     std::cout << "from: " << name_to_char(from_piece_name) << std::endl;
                     std::cout << "promo: " << name_to_char(promo_piece_name) << std::endl;
-                    printbitboard(promotion_piece_bitboard); 
+                    //printbitboard(promotion_piece_bitboard); 
                 }
 
                 // put piece at initial square in its bitboard, then set the bitboard

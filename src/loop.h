@@ -100,10 +100,9 @@ class Loop{
         /// This function allows users to make nonsense moves, but they won't be made since they won't exist in generated moves
         /// This simplifies this function which is nice
         Move convert_to_move(const std::tuple<std::string, std::string, std::string>& str_move){
-            std::string from_str, to_str, promo_piece;
             unsigned int from, to, flags;
 
-            std::tie(from_str, to_str, promo_piece) = str_move;
+            auto [from_str, to_str, promo_piece] = str_move;
 
             int diff = 0;
             piece_names moving_piece;
