@@ -42,6 +42,9 @@ class MoveGen{
 
             checkers_count = get_checkers();
 
+            std::cout << "checkers" << std::endl;
+            printbitboard(checkers);
+
             get_pinned_pieces();
             std::cout << "pinned" << std::endl;
             printbitboard(pinned_pieces);
@@ -72,7 +75,8 @@ class MoveGen{
             }
         }
 
-        /// For all squares that contain a pinned piece, set that mask in pinned masks vector
+        /// Setup a bitboard of all pinned pieces on the board. This mask is used to remove pinned pieces when such that moves aren't generated for them
+        /// in main move generator. Instead, pinned pieces' moves are generated separately at right after king moves are generated
         void get_pinned_pieces(){ 
             // TODO
             U64 enemy_sliders, possible_pin, ally_pieces, pinned_bitboard;
@@ -102,7 +106,6 @@ class MoveGen{
                         std::cout << "gen pinned" << std::endl;
                         pinned_moves(king_sq, slider_sq, possible_pin, pinned_bitboard);
                     }
-
                 }
 
                 enemy_sliders &= enemy_sliders-1;       
@@ -136,7 +139,7 @@ class MoveGen{
                 make_pawn_moves(tos, -8, 0);
                 
                 tos = ((pinned_bitboard & RANK(2)) << 16) & possible_pin;
-                make_pawn_moves(tos, -16, 0);
+                make_pawn_moves(tos, -16, 1);
 
                 // right / left captures
                 tos = (pinned_bitboard << 7) & set_bit(slider_sq);
@@ -151,7 +154,7 @@ class MoveGen{
                 make_pawn_moves(tos, 8, 0);
                 
                 tos = ((pinned_bitboard & RANK(7)) >> 16) & possible_pin;
-                make_pawn_moves(tos, 16, 0);
+                make_pawn_moves(tos, 16, 1);
 
                 // right / left captures
                 tos = (pinned_bitboard >> 9) & set_bit(slider_sq);
@@ -196,15 +199,15 @@ class MoveGen{
         }
 
         bool is_bishop(const piece_names& piece){
-            return (piece & 6) != 0;
+            return (piece == B) | (piece == b) ;
         }
 
         bool is_rook(const piece_names& piece){
-            return (piece & 4) != 0;
+            return (piece == R) | (piece == r);
         }
 
         bool is_queen(const piece_names& piece){
-            return (piece & 3) != 0;
+            return (piece == Q) | (piece == q);
         }
 
         /// Given a king attack set, look through it and return a bitboard of those squares in the attack set that are attacked by enemy piece
@@ -232,13 +235,17 @@ class MoveGen{
                 out |= set_bit(square+7) & ~A_FILE & black_pawns;
                 out |= set_bit(square+9) & ~H_FILE & black_pawns;
                 // TODO: rays from square to check for slider pieces giving check (white king should not be in blockers bitboard)
-                out |= get_queen_attacks(whites_minus_king | blacks, square) & (board->get_piece_bitboard(q) | board->get_piece_bitboard(r) | board->get_piece_bitboard(b));                
+                out |= get_queen_attacks(whites_minus_king | blacks, square) & board->get_piece_bitboard(q);
+                out |= get_rook_attacks(whites_minus_king | blacks, square) & board->get_piece_bitboard(r);
+                out |= get_bishop_attacks(whites_minus_king | blacks, square) & board->get_piece_bitboard(b);                
             } else {
                 out |= (knight_attack_set[square] & board->get_piece_bitboard(N));
                 out |= set_bit(square-9) & ~A_FILE & white_pawns;
                 out |= set_bit(square-7) & ~H_FILE & white_pawns;
                 // TODO: rays from square to check for slider pieces giving check (black king should not be in blockers bitboard)
-                out |= get_queen_attacks(blacks_minus_king | whites, square) & (board->get_piece_bitboard(Q) | board->get_piece_bitboard(R) | board->get_piece_bitboard(B));    
+                out |= get_queen_attacks(blacks_minus_king | whites, square) & board->get_piece_bitboard(Q);
+                out |= get_rook_attacks(blacks_minus_king | whites, square) & board->get_piece_bitboard(R);
+                out |= get_bishop_attacks(blacks_minus_king | whites, square) & board->get_piece_bitboard(B);    
             }
 
             return (out);
