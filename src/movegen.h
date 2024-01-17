@@ -42,9 +42,6 @@ class MoveGen{
 
             checkers_count = get_checkers();
 
-            if(turn == WHITE){king_moves(K);}
-            else {king_moves(k);}
-
             get_pinned_pieces();
             std::cout << "pinned" << std::endl;
             printbitboard(pinned_pieces);
