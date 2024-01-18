@@ -7,7 +7,7 @@ int main(int argc, char* argv[]){
 
     int opt;
 
-    while ((opt = getopt(argc, argv, "f:")) != -1) {
+    while ((opt = getopt(argc, argv, "f:m:")) != -1) {
         switch (opt) {
             case 'f':
                 fen = optarg;
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
     populate_attack_sets();
     populate_rays();
 
-    Loop game_loop(fen, PVP);
+    Loop game_loop(fen, PERFT);
 
     return 0;
 }

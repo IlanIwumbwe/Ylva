@@ -26,7 +26,7 @@ class Move{
         bool operator!=(Move a) const {return move != a.get_move();}
 
         friend std::ostream& operator<<(std::ostream& os, Move& move) {
-            return os << "from " << move.get_from() << " to " << move.get_to() << " flags " << move.get_flags() << std::endl;
+            return os << int_to_alg(move.get_from()) << int_to_alg(move.get_to());
         }
 
     private:

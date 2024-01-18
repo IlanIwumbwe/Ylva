@@ -42,12 +42,12 @@ class MoveGen{
 
             checkers_count = get_checkers();
 
-            std::cout << "checkers" << std::endl;
-            printbitboard(checkers);
+            //std::cout << "checkers" << std::endl;
+            //printbitboard(checkers);
 
             get_pinned_pieces();
-            std::cout << "pinned" << std::endl;
-            printbitboard(pinned_pieces);
+            //std::cout << "pinned" << std::endl;
+            //printbitboard(pinned_pieces);
 
             if(checkers_count <= 1){
                 // modify push and capture mask if king is in check
@@ -103,7 +103,7 @@ class MoveGen{
                     pinned_pieces |= pinned_bitboard;
 
                     if(checkers_count == 0){
-                        std::cout << "gen pinned" << std::endl;
+                        // std::cout << "gen pinned" << std::endl;
                         pinned_moves(king_sq, slider_sq, possible_pin, pinned_bitboard);
                     }
                 }
@@ -114,7 +114,6 @@ class MoveGen{
 
         bool valid_slider_pin(U64& possible_pin, unsigned int& king_sq, piece_names& pinned_piece){
             if(is_queen(pinned_piece)){
-                std::cout << "queen" << std::endl;
                 return true;
             } else if(is_bishop(pinned_piece))
                 return (get_bishop_attacks(0, king_sq) & possible_pin) != 0;
@@ -404,8 +403,8 @@ class MoveGen{
             // filter out king danger squares
             set_king_danger_squares(attack_set, (king_name == k) ? BLACK : WHITE);
 
-            std::cout << "danger" << std::endl;
-            printbitboard(king_danger_squares);
+            //std::cout << "danger" << std::endl;
+            //printbitboard(king_danger_squares);
 
             can_capture = ((king_name == K) ? blacks_minus_king : whites_minus_king) & ~king_danger_squares;
             can_push = ~occupied & ~king_danger_squares;

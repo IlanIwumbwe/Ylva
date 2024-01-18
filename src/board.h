@@ -161,8 +161,8 @@ class Board{
                     from_piece_name = get_piece_colour(promo_piece_name) ? p : P;
                     from_piece_bitboard = get_piece_bitboard(from_piece_name);
 
-                    std::cout << "from: " << name_to_char(from_piece_name) << std::endl;
-                    std::cout << "promo: " << name_to_char(promo_piece_name) << std::endl;
+                    //std::cout << "from: " << name_to_char(from_piece_name) << std::endl;
+                    //std::cout << "promo: " << name_to_char(promo_piece_name) << std::endl;
                     //printbitboard(promotion_piece_bitboard); 
                 }
 
@@ -174,8 +174,6 @@ class Board{
 
                 castling_rights = castling_rights_history.back();
                 castling_rights_history.pop_back();
-
-                std::cout << std::to_string(castling_rights) << std::endl;
 
                 return 0;
             } else {
@@ -404,8 +402,6 @@ class Board{
                     else{std::cout << "What? Castling availability flag in fen string " << str_castling << " is unexpected" << std::endl; exit(0);}
                 }
             }
-
-            std::cout << "Init c " << str_castling << " " << std::to_string(castling_rights) << std::endl;
         }
 
         /// Given the enpassant square, add the relevant move to move history that would've led to that enpassant square, which will be used to 
@@ -479,18 +475,15 @@ class Board{
         }
 
         bool move_is_valid(Move& move){
-            //TODO
-            std::cout << move;
+            //std::cout << move;
             
-            std::cout << "Valids" << std::endl;
+            //std::cout << "Valids" << std::endl;
             for(Move& v_move : valid_moves){
-                std::cout << v_move;
+                //std::cout << v_move;
                 if(v_move == move){return true;}
             }
             
             return false;
-
-            //return true;
         }
 
         inline void set_piece_bitboard(const piece_names& piece_name, const U64& bitboard) {

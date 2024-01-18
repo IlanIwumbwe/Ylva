@@ -51,7 +51,8 @@ typedef enum{
 typedef enum{
     PVE,    
     EVE,
-    PVP
+    PVP,
+    PERFT
 } game_modes;
 
 typedef enum{

@@ -3,6 +3,8 @@
 
 #include "board.h"
 #include "movegen.h"
+#include <chrono>
+using namespace std::chrono;
 
 class Loop{
     public:
@@ -15,6 +17,8 @@ class Loop{
                 run_PVE();
             } else if(mode == EVE) {
                 run_EVE();
+            } else if(mode == PERFT){
+                run_perft();
             } else {
                 std::cerr << "Unexpected mode " << mode << std::endl;
             }
@@ -40,6 +44,47 @@ class Loop{
             while(run){
                 /// TODO: make_engine_move();
             }
+        }
+
+        void run_perft(){
+            std::string depth;
+
+            board.view_board();
+
+            std::cout << "Run perft test " << std::endl;
+            std::cout << "Depth: ";
+            std::cin >> depth;
+
+            auto start = high_resolution_clock::now();
+            int num_pos = movegenTest(std::stoi(depth));
+            auto end = high_resolution_clock::now();
+
+            auto duration = duration_cast<milliseconds>(end-start);
+            
+            std::cout << "Time taken: " << std::to_string(duration.count()) << " ms" << std::endl;
+            std::cout << "Total positions: " << std::to_string(num_pos) << std::endl;
+        }
+
+        int movegenTest(int depth, bool root = true){
+            if(depth == 0){
+                return 1;
+            }
+
+            int pos_per_node, num_nodes = 0;    
+            auto moves = board.get_valid_moves();
+
+            for(auto move : moves){
+                board.make_move(move);
+                movegen.generate_moves();
+
+                pos_per_node = movegenTest(depth-1, false);
+                num_nodes += pos_per_node;
+                if(root){std::cout << move << ": " << pos_per_node << std::endl;}
+                
+                board.undo_move();
+            }
+
+            return num_nodes;
         }
 
         void get_input_from_player(){
