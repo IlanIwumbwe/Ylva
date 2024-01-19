@@ -79,24 +79,37 @@ class MoveGen{
         /// in main move generator. Instead, pinned pieces' moves are generated separately at right after king moves are generated
         void get_pinned_pieces(){ 
             // TODO
-            U64 enemy_sliders, possible_pin, ally_pieces, pinned_bitboard;
+            U64 enemy_rooks, enemy_queens, enemy_bishops, ally_pieces;
             pinned_pieces = 0;
-            unsigned int slider_sq, king_sq = get_lsb(ally_king);
+            unsigned int king_sq = get_lsb(ally_king);
 
             if(ally_king == white_king){
-                enemy_sliders = board->get_piece_bitboard(r) | board->get_piece_bitboard(q) | board->get_piece_bitboard(b);
+                enemy_rooks = board->get_piece_bitboard(r);
+                enemy_queens =  board->get_piece_bitboard(q); 
+                enemy_bishops = board->get_piece_bitboard(b);
                 ally_pieces = whites;
             } else {
-                enemy_sliders = board->get_piece_bitboard(R) | board->get_piece_bitboard(Q) | board->get_piece_bitboard(B);
+                enemy_rooks = board->get_piece_bitboard(R);
+                enemy_queens =  board->get_piece_bitboard(Q);
+                enemy_bishops = board->get_piece_bitboard(B);
                 ally_pieces = blacks;
             }
 
-            enemy_sliders &= get_queen_attacks(enemy_sliders, king_sq);
+            get_queen_attacks(enemy_queens | enemy_bishops | enemy_rooks, king_sq);
             
+            search_pinned_pieces(enemy_rooks, ally_pieces, king_sq, 0, 3);
+            search_pinned_pieces(enemy_bishops, ally_pieces, king_sq, 0, 7);
+            search_pinned_pieces(enemy_rooks, ally_pieces, king_sq, 4, 7);
+        }
+    
+        void search_pinned_pieces(U64& enemy_sliders, U64& ally_pieces, unsigned int& king_sq, int dir_start, int dir_end){
+            unsigned int slider_sq;
+            U64 pinned_bitboard, possible_pin;
+
             while(enemy_sliders){
                 slider_sq = get_lsb(enemy_sliders);
 
-                possible_pin = mask_opposing_rays(king_sq, slider_sq);
+                possible_pin = mask_opposing_rays(king_sq, slider_sq, dir_start, dir_end);
                 pinned_bitboard = possible_pin & ally_pieces;
 
                 if(count_set_bits(pinned_bitboard) == 1){
@@ -172,18 +185,22 @@ class MoveGen{
             auto checker_sq = get_lsb(checkers);
             auto checker = board->get_piece_on_square(checker_sq);
 
-            if(slider_piece(checker)){               
-                push_mask = mask_opposing_rays(checker_sq, ally_king_sq);
+            if(is_bishop(checker)){               
+                push_mask = mask_opposing_rays(checker_sq, ally_king_sq, 4, 7);
+            } else if(is_queen(checker)){
+                push_mask = mask_opposing_rays(checker_sq, ally_king_sq, 0, 7);
+            } else if(is_rook(checker)){
+                push_mask = mask_opposing_rays(checker_sq, ally_king_sq, 0, 3);
             } else {
                 push_mask = 0;
             }
         }
 
-        U64 mask_opposing_rays(unsigned int sq1, unsigned int sq2){
+        U64 mask_opposing_rays(unsigned int sq1, unsigned int sq2, int start, int end){
             U64 sq1set, sq2set, mask;
             mask = 0;
 
-            for(int i = 0; (i < 8) && (mask == 0); ++i){
+            for(int i = start; (i < end) && (mask == 0); ++i){
                 sq1set = RAYS[dir_info[i].dir][sq1];
                 sq2set = RAYS[dir_info[i].opp_dir][sq2];
 

@@ -75,12 +75,12 @@ struct dirInfo {
 
 dirInfo dir_info[8] = {
     {north, 8, RANK(8), south},
-    {noEa, 7, H_FILE | RANK(8), soWe},
-    {west, 1, A_FILE, east},
-    {noWe, 9, A_FILE  | RANK(8), soEa},
     {east, -1, H_FILE, west},
-    {soEa, -9, H_FILE | RANK(1), noWe},
+    {west, 1, A_FILE, east},
     {south, -8, RANK(1), north},
+    {noEa, 7, H_FILE | RANK(8), soWe},
+    {noWe, 9, A_FILE  | RANK(8), soEa},
+    {soEa, -9, H_FILE | RANK(1), noWe},
     {soWe, -7, A_FILE | RANK(1), noEa}    
 };
 
