@@ -66,6 +66,11 @@ typedef enum{
     soWe
 } dirs;
 
+typedef enum {
+    diag,
+    nondiag
+} ray_type;
+
 struct dirInfo {
     dirs dir;
     int offset;
