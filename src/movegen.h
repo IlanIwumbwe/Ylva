@@ -21,6 +21,14 @@ class MoveGen{
             white_king = board->get_piece_bitboard(K);
             black_king = board->get_piece_bitboard(k);
 
+            white_bishops = board->get_piece_bitboard(B);
+            white_queens = board->get_piece_bitboard(Q);
+            white_rooks = board->get_piece_bitboard(R);
+
+            black_bishops = board->get_piece_bitboard(b);
+            black_queens = board->get_piece_bitboard(q);
+            black_rooks = board->get_piece_bitboard(r);
+
             occupied = whites | blacks;
             blacks_minus_king = blacks & ~black_king;
             whites_minus_king = whites & ~white_king;
@@ -37,8 +45,8 @@ class MoveGen{
             if(turn == WHITE){
                 ally_king = white_king;
                 ally_pieces = whites_minus_king;
-                diag_pinners = board->get_piece_bitboard(b) | board->get_piece_bitboard(q);
-                nondiag_pinners = board->get_piece_bitboard(r) | board->get_piece_bitboard(q);
+                diag_pinners = black_bishops | black_queens;
+                nondiag_pinners = black_rooks | black_queens;
 
                 checkers_count = get_checkers();
 
@@ -46,8 +54,8 @@ class MoveGen{
             } else {
                 ally_king = black_king;
                 ally_pieces = blacks_minus_king;
-                diag_pinners = board->get_piece_bitboard(B) | board->get_piece_bitboard(Q);
-                nondiag_pinners = board->get_piece_bitboard(R) | board->get_piece_bitboard(Q);
+                diag_pinners = white_bishops | white_queens;
+                nondiag_pinners = white_rooks | white_queens;
 
                 checkers_count = get_checkers();
 
@@ -250,21 +258,23 @@ class MoveGen{
                 out |= set_bit(square+7) & ~A_FILE & black_pawns;
                 out |= set_bit(square+9) & ~H_FILE & black_pawns;
                 // TODO: rays from square to check for slider pieces giving check (white king should not be in blockers bitboard)
-                out |= get_queen_attacks(whites_minus_king | blacks, square) & board->get_piece_bitboard(q);
-                out |= get_rook_attacks(whites_minus_king | blacks, square) & board->get_piece_bitboard(r);
-                out |= get_bishop_attacks(whites_minus_king | blacks, square) & board->get_piece_bitboard(b);                
+                out |= get_queen_attacks(whites_minus_king | blacks, square) & black_queens;
+                out |= get_rook_attacks(whites_minus_king | blacks, square) & black_rooks;
+                out |= get_bishop_attacks(whites_minus_king | blacks, square) & black_bishops;                
             } else {
                 out |= (knight_attack_set[square] & board->get_piece_bitboard(N));
                 out |= set_bit(square-9) & ~A_FILE & white_pawns;
                 out |= set_bit(square-7) & ~H_FILE & white_pawns;
                 // TODO: rays from square to check for slider pieces giving check (black king should not be in blockers bitboard)
-                out |= get_queen_attacks(blacks_minus_king | whites, square) & board->get_piece_bitboard(Q);
-                out |= get_rook_attacks(blacks_minus_king | whites, square) & board->get_piece_bitboard(R);
-                out |= get_bishop_attacks(blacks_minus_king | whites, square) & board->get_piece_bitboard(B);    
+                out |= get_queen_attacks(blacks_minus_king | whites, square) & white_queens;
+                out |= get_rook_attacks(blacks_minus_king | whites, square) & white_rooks;
+                out |= get_bishop_attacks(blacks_minus_king | whites, square) & white_bishops;    
             }
 
             return (out);
         }
+
+    
 
         /// Produce bitboard of all pieces giving ally king check, and return the number of checkers
         unsigned int get_checkers(){
@@ -315,17 +325,22 @@ class MoveGen{
             if(board->get_prev_move(prev_move) == 0 && (prev_move.get_flags() == 1)){
                 pawn_bitboard = set_bit(prev_move.get_to());
 
-                if((pawn_bitboard & whites) == 0){
+                if(!(pawn_bitboard & whites)){
                     // black pawn made the double pawn push, maybe we can capture it via enpassant
                     pawn_bitboard &= capture_mask | (push_mask >> 8);
 
-                    // capture by white pawn to the right
-                    tos = (white_pawns & (pawn_bitboard >> 1)) << 9;
-                    create_pawn_moves(tos,-9,5);
+                    if(!ep_discovered_check(pawn_bitboard | (pawn_bitboard >> 1), black_rooks, black_queens)){
+                        // capture by white pawn to the right
+                        tos = (white_pawns & (pawn_bitboard >> 1)) << 9;
+                        create_pawn_moves(tos,-9,5);
+                    }
 
-                    // capture by white pawn to the left
-                    tos = (white_pawns & (pawn_bitboard << 1)) << 7;
-                    create_pawn_moves(tos,-7,5);
+                    if(!ep_discovered_check(pawn_bitboard | (pawn_bitboard << 1), black_rooks, black_queens)){
+                        // capture by white pawn to the left
+                        tos = (white_pawns & (pawn_bitboard << 1)) << 7;
+                        create_pawn_moves(tos,-7,5);
+                    }
+
                 }
             }      
         }
@@ -370,20 +385,31 @@ class MoveGen{
             if(board->get_prev_move(prev_move) == 0 && (prev_move.get_flags() == 1)){
                 pawn_bitboard = set_bit(prev_move.get_to());
 
-                if((pawn_bitboard & blacks) == 0){
+                if(!(pawn_bitboard & blacks)){
                     // white pawn made the double pawn push, maybe we can capture it via enpassant
-                    pawn_bitboard &= capture_mask | (push_mask << 8);
+                    pawn_bitboard &= (capture_mask | (push_mask << 8));
 
-                    // capture by black pawn to the right
-                    tos = (black_pawns & (pawn_bitboard >> 1)) >> 7;
-                    create_pawn_moves(tos,7,5);
+                    if(!ep_discovered_check(pawn_bitboard | (pawn_bitboard >> 1), white_rooks, white_queens)){
+                        // capture by black pawn to the right
+                        tos = (black_pawns & (pawn_bitboard >> 1)) >> 7;
+                        create_pawn_moves(tos,7,5);
+                    }
 
-                    // capture by black pawn to the left
-                    tos = (black_pawns & (pawn_bitboard << 1)) >> 9;
-                    create_pawn_moves(tos,9,5);
+                    if(!ep_discovered_check(pawn_bitboard | (pawn_bitboard << 1), white_rooks, white_queens)){
+                        // capture by black pawn to the left
+                        tos = (black_pawns & (pawn_bitboard << 1)) >> 9;
+                        create_pawn_moves(tos,9,5);
+                    }
                 }
 
             }
+        }
+
+        bool ep_discovered_check(U64 ep_mask, U64 enemy_rooks, U64 enemy_queens){
+            auto ally_king_sq = get_lsb(ally_king);
+            auto occupancy = occupied & ~ep_mask;
+
+            return ((get_rook_attacks(occupancy, ally_king_sq) & enemy_rooks) | (get_queen_attacks(occupancy, ally_king_sq) & enemy_queens)) != 0;
         }
 
         void knight_moves(piece_names knight_name){
@@ -629,6 +655,7 @@ class MoveGen{
         U64 occupied, whites, blacks, whites_minus_king, blacks_minus_king;
         U64 king_danger_squares, checkers, push_mask, capture_mask;
         U64 white_pawns, black_pawns, white_king, black_king, ally_king, ally_pieces;
+        U64 white_bishops, black_bishops, white_queens, black_queens, white_rooks, black_rooks;
         U64 diag_pinners, nondiag_pinners, pinned_pieces = 0;
         colour turn;
 
