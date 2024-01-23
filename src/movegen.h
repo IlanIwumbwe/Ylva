@@ -29,25 +29,30 @@ class MoveGen{
             board->clear_valid_moves();
             pinned_pieces = 0;
             
-            get_legal_moves();
+            get_legal_moves();         
         }
 
         void get_legal_moves(){
+
             if(turn == WHITE){
-                king_moves(K);
                 ally_king = white_king;
                 ally_pieces = whites_minus_king;
                 diag_pinners = board->get_piece_bitboard(b) | board->get_piece_bitboard(q);
                 nondiag_pinners = board->get_piece_bitboard(r) | board->get_piece_bitboard(q);
+
+                checkers_count = get_checkers();
+
+                king_moves(K);
             } else {
-                king_moves(k);
                 ally_king = black_king;
                 ally_pieces = blacks_minus_king;
                 diag_pinners = board->get_piece_bitboard(B) | board->get_piece_bitboard(Q);
                 nondiag_pinners = board->get_piece_bitboard(R) | board->get_piece_bitboard(Q);
-            }
 
-            checkers_count = get_checkers();
+                checkers_count = get_checkers();
+
+                king_moves(k);
+            }
 
             if(checkers_count <= 1){
                 get_pinned_pieces();
@@ -88,7 +93,7 @@ class MoveGen{
             pins_along_nondiag(potential_pin, pinner_sq, ally_king_sq);
         }
 
-        void pins_along_diag(U64& potential_pin, unsigned int& pinner_sq, unsigned int& ally_king_sq){
+        void pins_along_diag(U64& potential_pin, unsigned int& pinner_sq, const unsigned int& ally_king_sq){
             U64 pinned_piece;
 
             while(diag_pinners){
@@ -106,7 +111,7 @@ class MoveGen{
             }
         }
 
-        void pins_along_nondiag(U64& potential_pin, unsigned int& pinner_sq, unsigned int& ally_king_sq){
+        void pins_along_nondiag(U64& potential_pin, unsigned int& pinner_sq, const unsigned int& ally_king_sq){
             U64 pinned_piece;
 
             while(nondiag_pinners){
@@ -128,7 +133,7 @@ class MoveGen{
             if(is_queen(pinned_piece_name)){
                 return true;
             } else {
-                return (is_bishop(pinned_piece_name) && (_ray_type == diag)) | (is_rook(pinned_piece_name) && (_ray_type == nondiag));
+                return (is_bishop(pinned_piece_name) && (_ray_type == diag)) || (is_rook(pinned_piece_name) && (_ray_type == nondiag));
             }
         }
 
@@ -138,7 +143,7 @@ class MoveGen{
             auto pinned_piece_name = board->get_piece_on_square(pinned_sq);
 
             if(valid_slider_pin(pinned_piece_name, _ray_type)){
-                create_other_moves(possible_pin, pinned_sq, 0);
+                create_other_moves(possible_pin & ~pinned_bitboard, pinned_sq, 0);
                 create_other_moves(set_bit(pinner_sq), pinned_sq, 4);
             } else if (pinned_piece_name == P){
                 // quiet moves
@@ -192,14 +197,13 @@ class MoveGen{
         }
 
         U64 mask_opposing_rays(unsigned int sq1, unsigned int sq2, int start, int end){
-            U64 sq1set, sq2set, mask;
-            mask = 0;
+            U64 mask = 0;
+            dirInfo info;
 
-            for(int i = start; (i < end) && (mask == 0); ++i){
-                sq1set = RAYS[dir_info[i].dir][sq1];
-                sq2set = RAYS[dir_info[i].opp_dir][sq2];
-
-                mask = sq2set & sq1set;
+            while((mask == 0) && (start <= end)){
+                info = dir_info[start];
+                mask = RAYS[info.dir][sq1] & RAYS[info.opp_dir][sq2];
+                start ++;
             }
 
             return mask;
@@ -210,7 +214,7 @@ class MoveGen{
         }
 
         bool is_bishop(const piece_names& piece){
-            return (piece == B) | (piece == b) ;
+            return (piece == B) | (piece == b);
         }
 
         bool is_rook(const piece_names& piece){
@@ -429,27 +433,27 @@ class MoveGen{
             tos = (attack_set & can_push);
             create_other_moves(tos, from, 0);
 
-            if(checkers_count != 0){
+            if(checkers_count == 0){
                 if(king_name == K && board->has_castling_rights(K_castle)){
-                    if(!get_bit(occupied,2) && !get_bit(occupied,1) && !get_attackers(3,BLACK) && !get_attackers(2,BLACK) && !get_attackers(1,BLACK)){
+                    if(!get_bit(occupied,2) && !get_bit(occupied,1) && !get_attackers(2,BLACK) && !get_attackers(1,BLACK)){
                         create_other_moves(set_bit(1), 3, 2);
                     }
                 }
 
                 if(king_name == k && board->has_castling_rights(k_castle)){
-                    if(!get_bit(occupied,58) && !get_bit(occupied,57) && !get_attackers(59,WHITE) && !get_attackers(58,WHITE) && !get_attackers(57,WHITE)){
+                    if(!get_bit(occupied,58) && !get_bit(occupied,57) && !get_attackers(58,WHITE) && !get_attackers(57,WHITE)){
                         create_other_moves(set_bit(57), 59, 2);
                     }
                 }
 
                 if(king_name == K && board->has_castling_rights(Q_castle)){
-                    if(!get_bit(occupied,4) && !get_bit(occupied,5) && !get_bit(occupied,6) && !get_attackers(3,BLACK) && !get_attackers(4,BLACK) && !get_attackers(5,BLACK)){
+                    if(!get_bit(occupied,4) && !get_bit(occupied,5) && !get_bit(occupied,6) && !get_attackers(4,BLACK) && !get_attackers(5,BLACK)){
                         create_other_moves(set_bit(5), 3, 3);
                     }
                 }
 
                 if(king_name == k && board->has_castling_rights(q_castle)){
-                    if(!get_bit(occupied,60) && !get_bit(occupied,61) && !get_bit(occupied,62) && !get_attackers(59,WHITE) && !get_attackers(60,WHITE) && !get_attackers(61,WHITE)){
+                    if(!get_bit(occupied,60) && !get_bit(occupied,61) && !get_bit(occupied,62) && !get_attackers(60,WHITE) && !get_attackers(61,WHITE)){
                         create_other_moves(set_bit(61), 59, 3);
                     }
                 }
@@ -464,7 +468,7 @@ class MoveGen{
             while(rooks){
                 from = get_lsb(rooks);
 
-                if(rook_name > 7){
+                if(rook_name == r){
                     attack_set = get_rook_attacks(occupied, from) & ~blacks;
 
                     // rook captures
@@ -494,7 +498,7 @@ class MoveGen{
             while(bishops){
                 from = get_lsb(bishops);
 
-                if(bishop_name > 7){
+                if(bishop_name == b){
                     attack_set = get_bishop_attacks(occupied, from) & ~blacks;
 
                     // bishop captures

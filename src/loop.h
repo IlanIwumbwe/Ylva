@@ -129,14 +129,20 @@ class Loop{
         }
 
         void make_player_move(const std::tuple<std::string, std::string, std::string>& str_move){
-            auto move = convert_to_move(str_move);
+            Move move(0,0,0);
+
+            auto check = convert_to_move(str_move, move);
             
-            if(board.move_is_valid(move)){
-                board.make_move(move);   
-                movegen.generate_moves();
+            if(check != 0){
+                std::cout << "There's no piece at the square chosen"<< std::endl;
             } else {
-                std::cout << "Move entered is not valid " << std::endl;
-                get_input_from_player();
+                if(board.move_is_valid(move)){
+                    board.make_move(move);   
+                    movegen.generate_moves();
+                } else {
+                    std::cout << "Move entered is not valid " << std::endl;
+                    get_input_from_player();
+                }
             }
         }
 
@@ -144,7 +150,7 @@ class Loop{
         /// If not present, the move wasn't valid
         /// This function allows users to make nonsense moves, but they won't be made since they won't exist in generated moves
         /// This simplifies this function which is nice
-        Move convert_to_move(const std::tuple<std::string, std::string, std::string>& str_move){
+        int convert_to_move(const std::tuple<std::string, std::string, std::string>& str_move, Move& move){
             unsigned int from, to, flags;
 
             auto [from_str, to_str, promo_piece] = str_move;
@@ -158,39 +164,44 @@ class Loop{
 
             moving_piece = board.get_piece_on_square(from);
 
-            if(promo_piece == ""){
-                // no promotion
+            if(moving_piece == None){
+                return -1;
+            } else {
+                if(promo_piece == ""){
+                    // no promotion
 
-                if(board.is_occupied(to)){
-                    flags = 4;
-                } else {
-                    if(moving_piece == P || moving_piece == p){
-                        if(abs(diff) == 9 || abs(diff) == 7){
-                            flags = 5;
-                        } else if(diff == 16 || diff == -16){
-                            flags = 1;
+                    if(board.is_occupied(to)){
+                        flags = 4;
+                    } else {
+                        if(moving_piece == P || moving_piece == p){
+                            if(abs(diff) == 9 || abs(diff) == 7){
+                                flags = 5;
+                            } else if(diff == 16 || diff == -16){
+                                flags = 1;
+                            } else {
+                                flags = 0;
+                            }
+                        } else if(moving_piece == K || moving_piece == k){
+                            if(diff == 2){
+                                flags = 2;
+                            } else if(diff == -2){
+                                flags = 3;
+                            } else {
+                                flags = 0;
+                            } 
                         } else {
                             flags = 0;
                         }
-                    } else if(moving_piece == K || moving_piece == k){
-                        if(diff == 2){
-                            flags = 2;
-                        } else if(diff == -2){
-                            flags = 3;
-                        } else {
-                            flags = 0;
-                        } 
-                    } else {
-                        flags = 0;
                     }
+
+                } else {
+                    // wants to promote
+                    flags = (board.is_occupied(to)) ? promo_flags[promo_piece+"c"] : promo_flags[promo_piece];
                 }
 
-            } else {
-                // wants to promote
-                flags = (board.is_occupied(to)) ? promo_flags[promo_piece+"c"] : promo_flags[promo_piece];
+                move = Move(from,to,flags);
+                return 0;
             }
-
-            return Move(from,to,flags);
         }
 
     private:

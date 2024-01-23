@@ -36,7 +36,7 @@ class Board{
 
             auto from_piece_colour = get_piece_colour(from_piece_name);
 
-            assert(from_piece_name != None);
+            //assert(from_piece_name != None);
 
             U64 from_piece_bitboard = get_piece_bitboard(from_piece_name);
 
@@ -46,13 +46,17 @@ class Board{
             castling_rights_history.push_back(castling_rights);
 
             // remove castling rights if king or rook moves
-            if((from_piece_name == R && from == 0) || from_piece_name == K){
+            if(from_piece_name == K){
+                castling_rights &= ~(K_castle | Q_castle);
+            } else if(from_piece_name == k){
+                castling_rights &= ~(k_castle | q_castle);
+            } else if(from_piece_name == R && from == 0){
                 castling_rights &= ~K_castle;
-            }else if((from_piece_name == R && from == 7) || from_piece_name == K){
+            } else if(from_piece_name == R && from == 7){
                 castling_rights &= ~Q_castle;
-            } else if((from_piece_name == r && from == 56) || from_piece_name == k){
+            } else if(from_piece_name == r && from == 56){
                 castling_rights &= ~k_castle;
-            } else if((from_piece_name == r && from == 63) || from_piece_name == k){
+            } else if (from_piece_name == r && from == 63){
                 castling_rights &= ~q_castle;
             }
 
@@ -475,11 +479,11 @@ class Board{
         }
 
         bool move_is_valid(Move& move){
-            //std::cout << move;
+            std::cout << move.get_move() << std::endl;
             
-            //std::cout << "Valids" << std::endl;
-            for(Move& v_move : valid_moves){
-                //std::cout << v_move;
+            std::cout << "Valids" << std::endl;
+            for(auto v_move : valid_moves){
+                std::cout << v_move.get_move() << std::endl;
                 if(v_move == move){return true;}
             }
             
