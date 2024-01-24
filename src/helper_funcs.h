@@ -34,6 +34,17 @@ inline std::string removeWhiteSpace(std::string str){
     return std::regex_replace(str, pattern, "");
 }
 
+bool isStringDigit(std::string& input){
+    for(auto c : input){
+        if(!isdigit(c)){
+            return false;
+        }
+    }
+
+    return true;
+
+}
+
 inline auto numtobin(const U64& number){
     std::bitset<64> binaryRepresentation(number);
 

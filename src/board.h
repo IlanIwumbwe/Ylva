@@ -11,16 +11,6 @@ class Board{
         Board (const std::string& _fen){
             // parse FEN string
             std::vector<std::string>parts = splitString((_fen == "") ? STARTING_FEN : removeWhiteSpace(_fen), ' ');
-
-            std::cout << "Fen size: " << _fen.size() << std::endl;
-
-            for(auto i : parts){
-                std::cout << i << std::endl;
-            }
-
-            std::cout << "=================================\n";
-            std::cout << "              CHESS              \n";
-            std::cout << "=================================" << std::endl;
             
             init_from_fen(parts);
         }

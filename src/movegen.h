@@ -9,7 +9,8 @@
 /// Given a board state, generate all valid moves in that state
 class MoveGen{
     public:
-        MoveGen(Board* current_state) : board(current_state), prev_move(0,0,0) {}
+        MoveGen(Board* current_state) : board(current_state), prev_move(0,0,0) {
+        }
 
         void generate_moves(){
             // initialisations

@@ -1,15 +1,15 @@
-#ifndef LOOP_H
-#define LOOP_H
+#ifndef RUN_H
+#define RUN_H
 
 #include "board.h"
 #include "movegen.h"
 #include <chrono>
 using namespace std::chrono;
 
-class Loop{
+class Run{
     public:
-        Loop(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(mode) {
-            movegen.generate_moves();  // generate valid moves for starting state
+        Run(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(mode) {
+            movegen.generate_moves();
 
             if(mode == PVP){
                 run_PVP();
@@ -19,6 +19,7 @@ class Loop{
                 run_EVE();
             } else if(mode == PERFT){
                 run_perft();
+
             } else {
                 std::cerr << "Unexpected mode " << mode << std::endl;
             }
@@ -47,16 +48,12 @@ class Loop{
         }
 
         void run_perft(){
-            std::string depth;
-
             board.view_board();
 
-            std::cout << "Run perft test " << std::endl;
-            std::cout << "Depth: ";
-            std::cin >> depth;
+            int depth = get_perft_depth();
 
             auto start = high_resolution_clock::now();
-            int num_pos = movegenTest(std::stoi(depth));
+            int num_pos = movegenTest(depth);
             auto end = high_resolution_clock::now();
 
             auto duration = duration_cast<milliseconds>(end-start);
@@ -110,6 +107,23 @@ class Loop{
                 parse_player_move(input);
             } else {
                 std::cout << "Inputs are undo, quit or a chess move in long algebraic format" << std::endl;
+            }
+        }
+
+        int get_perft_depth(){
+            std::string input;
+            std::cout << ">>: ";
+            std::cin >> input;
+
+            while(!isStringDigit(input) && input != "quit"){
+                std::cin >> input;
+            }
+
+            if(input == "quit"){
+                run = false;
+                return 0;
+            } else {
+                return std::stoi(input);
             }
         }
 
@@ -210,8 +224,5 @@ class Loop{
         game_modes mode;
         bool run = true;
 };
-
-
-
 
 #endif
