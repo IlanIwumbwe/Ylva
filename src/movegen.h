@@ -93,14 +93,14 @@ class MoveGen{
         /// in main move generator. Instead, pinned pieces' moves are generated separately at right after king moves are generated
         void get_pinned_pieces(){ 
             // TODO
-            unsigned int ally_king_sq = get_lsb(ally_king), pinner_sq;
+            uint ally_king_sq = get_lsb(ally_king), pinner_sq;
             U64 potential_pin;
 
             pins_along_diag(potential_pin, pinner_sq, ally_king_sq);
             pins_along_nondiag(potential_pin, pinner_sq, ally_king_sq);
         }
 
-        void pins_along_diag(U64& potential_pin, unsigned int& pinner_sq, const unsigned int& ally_king_sq){
+        void pins_along_diag(U64& potential_pin, uint& pinner_sq, const uint& ally_king_sq){
             U64 pinned_piece;
 
             while(diag_pinners){
@@ -118,7 +118,7 @@ class MoveGen{
             }
         }
 
-        void pins_along_nondiag(U64& potential_pin, unsigned int& pinner_sq, const unsigned int& ally_king_sq){
+        void pins_along_nondiag(U64& potential_pin, uint& pinner_sq, const uint& ally_king_sq){
             U64 pinned_piece;
 
             while(nondiag_pinners){
@@ -145,7 +145,7 @@ class MoveGen{
         }
 
         /// Generate all valid moved for pinned pieces on the board
-        void pinned_moves(unsigned int& pinner_sq, U64& possible_pin, const U64& pinned_bitboard, ray_type _ray_type){
+        void pinned_moves(uint& pinner_sq, U64& possible_pin, const U64& pinned_bitboard, ray_type _ray_type){
             auto pinned_sq = get_lsb(pinned_bitboard);
             auto pinned_piece_name = board->get_piece_on_square(pinned_sq);
 
@@ -188,7 +188,7 @@ class MoveGen{
         /// If in check by a slider, push mask is squares between ally king and enemy slider
         /// If in check by non slider, push mask is 0
         void set_push_mask(){
-            unsigned int ally_king_sq = get_lsb(ally_king);
+            uint ally_king_sq = get_lsb(ally_king);
             auto checker_sq = get_lsb(checkers);
             auto checker = board->get_piece_on_square(checker_sq);
 
@@ -203,7 +203,7 @@ class MoveGen{
             }
         }
 
-        U64 mask_opposing_rays(unsigned int sq1, unsigned int sq2, int start, int end){
+        U64 mask_opposing_rays(uint sq1, uint sq2, int start, int end){
             U64 mask = 0;
             dirInfo info;
 
@@ -235,7 +235,7 @@ class MoveGen{
         /// Given a king attack set, look through it and return a bitboard of those squares in the attack set that are attacked by enemy piece
         void set_king_danger_squares(U64 attack_set, int king_colour){
             king_danger_squares = 0;
-            unsigned int lsb;
+            uint lsb;
 
             while(attack_set){
                 lsb = get_lsb(attack_set);
@@ -249,7 +249,7 @@ class MoveGen{
         }
 
         /// Given a square, and a piece colour, return a bitboard of all pieces of that colour attacking that square
-        U64 get_attackers(unsigned int square, const int colour){
+        U64 get_attackers(uint square, const int colour){
             U64 out = 0;
 
             if(colour){
@@ -276,8 +276,8 @@ class MoveGen{
     
 
         /// Produce bitboard of all pieces giving ally king check, and return the number of checkers
-        unsigned int get_checkers(){
-            unsigned int ally_king_sq = get_lsb(ally_king);
+        uint get_checkers(){
+            uint ally_king_sq = get_lsb(ally_king);
             checkers = get_attackers(ally_king_sq, ~turn);
 
             return count_set_bits(checkers);
@@ -321,7 +321,7 @@ class MoveGen{
             }
 
             // enpassant captures
-            if(board->get_prev_move(prev_move) == 0 && (prev_move.get_flags() == 1)){
+            if((board->get_prev_move(prev_move) == 0) && (prev_move.get_flags() == 1)){
                 pawn_bitboard = set_bit(prev_move.get_to());
 
                 if(!(pawn_bitboard & whites)){
@@ -381,7 +381,7 @@ class MoveGen{
             }
 
             // enpassant captures
-            if(board->get_prev_move(prev_move) == 0 && (prev_move.get_flags() == 1)){
+            if((board->get_prev_move(prev_move) == 0) && (prev_move.get_flags() == 1)){
                 pawn_bitboard = set_bit(prev_move.get_to());
 
                 if(!(pawn_bitboard & blacks)){
@@ -414,7 +414,7 @@ class MoveGen{
         void N_moves(){
             auto knights = white_knights & ~pinned_pieces;
             U64 attack_set;
-            unsigned int from;
+            uint from;
 
             while(knights){
                 from =  get_lsb(knights);
@@ -435,7 +435,7 @@ class MoveGen{
         void n_moves(){
             auto knights = black_knights & ~pinned_pieces;
             U64 attack_set;
-            unsigned int from;
+            uint from;
 
             while(knights){
                 from =  get_lsb(knights);
@@ -458,7 +458,7 @@ class MoveGen{
 
             auto king = white_king;
             U64 attack_set, can_capture, can_push;
-            unsigned int from;
+            uint from;
             king_danger_squares = 0;
 
             from = get_lsb(king);
@@ -498,7 +498,7 @@ class MoveGen{
 
             auto king = black_king;
             U64 attack_set, can_capture, can_push;
-            unsigned int from;
+            uint from;
             king_danger_squares = 0;
 
             from = get_lsb(king);
@@ -535,7 +535,7 @@ class MoveGen{
 
         void R_moves(){
             auto rooks = white_rooks & ~pinned_pieces;
-            unsigned int from;
+            uint from;
             U64 attack_set;
 
             while(rooks){
@@ -558,7 +558,7 @@ class MoveGen{
 
         void r_moves(){
             auto rooks = black_rooks & ~pinned_pieces;
-            unsigned int from;
+            uint from;
             U64 attack_set;
 
             while(rooks){
@@ -581,7 +581,7 @@ class MoveGen{
 
         void B_moves(){
             auto bishops = white_bishops & ~pinned_pieces;
-            unsigned int from;
+            uint from;
             U64 attack_set;
 
             while(bishops){
@@ -604,7 +604,7 @@ class MoveGen{
 
         void b_moves(){
             auto bishops = black_bishops & ~pinned_pieces;
-            unsigned int from;
+            uint from;
             U64 attack_set;
 
             while(bishops){
@@ -627,7 +627,7 @@ class MoveGen{
 
         void Q_moves(){
             auto queens = white_queens & ~pinned_pieces;
-            unsigned int from;
+            uint from;
             U64 attack_set;
 
             while(queens){
@@ -651,7 +651,7 @@ class MoveGen{
 
         void q_moves(){
             auto queens = black_queens & ~pinned_pieces;
-            unsigned int from;
+            uint from;
             U64 attack_set;
 
             while(queens){
@@ -675,8 +675,8 @@ class MoveGen{
 
         /// Given a bitboard of destination squares, a pointer to the board state, an offset of calculate from square, and a flag to 
         /// indicate move type, add that move to the list of valid moves in board state
-        void create_pawn_moves(U64 tos, int offset, unsigned int flag){
-            unsigned int to;
+        void create_pawn_moves(U64 tos, int offset, uint flag){
+            uint to;
             while(tos){
                 to =  get_lsb(tos);
 
@@ -687,8 +687,8 @@ class MoveGen{
         }
 
         /// This receives the actual from square, as its the same for all tos that are passed to it
-        void create_other_moves(U64 tos, unsigned int from, unsigned int flag){
-            unsigned int to;
+        void create_other_moves(U64 tos, uint from, uint flag){
+            uint to;
             while(tos){
                 to =  get_lsb(tos);
 
@@ -698,7 +698,7 @@ class MoveGen{
             }
         }
 
-        U64 get_positive_ray_attacks(U64 occupied, dirs dir, unsigned int square){
+        U64 get_positive_ray_attacks(U64 occupied, dirs dir, uint square){
             auto attacks = RAYS[dir][square];
             auto blockers = occupied & attacks;
 
@@ -708,7 +708,7 @@ class MoveGen{
             return attacks;
         }
 
-        U64 get_negative_ray_attacks(U64 occupied, dirs dir, unsigned int square){
+        U64 get_negative_ray_attacks(U64 occupied, dirs dir, uint square){
             auto attacks = RAYS[dir][square];
             auto blockers = occupied & attacks;
 
@@ -718,31 +718,31 @@ class MoveGen{
             return attacks;
         }
 
-        U64 get_file_attacks(U64 occupied, unsigned int square){
+        U64 get_file_attacks(U64 occupied, uint square){
             return get_positive_ray_attacks(occupied, north, square) | get_negative_ray_attacks(occupied, south, square);
         }
 
-        U64 get_rank_attacks(U64 occupied, unsigned int square){
+        U64 get_rank_attacks(U64 occupied, uint square){
             return get_positive_ray_attacks(occupied, west, square) | get_negative_ray_attacks(occupied, east, square);
         }
 
-        U64 get_diagonal_attacks(U64 occupied, unsigned int square){
+        U64 get_diagonal_attacks(U64 occupied, uint square){
             return get_positive_ray_attacks(occupied, noEa, square) | get_negative_ray_attacks(occupied, soWe, square);
         }
 
-        U64 get_antidiagonal_attacks(U64 occupied, unsigned int square){
+        U64 get_antidiagonal_attacks(U64 occupied, uint square){
             return get_positive_ray_attacks(occupied, noWe, square) | get_negative_ray_attacks(occupied, soEa, square);
         }
 
-        U64 get_rook_attacks(U64 occupied, unsigned int square){
+        U64 get_rook_attacks(U64 occupied, uint square){
             return get_file_attacks(occupied, square) | get_rank_attacks(occupied, square);
         }
 
-        U64 get_bishop_attacks(U64 occupied, unsigned int square){
+        U64 get_bishop_attacks(U64 occupied, uint square){
             return get_diagonal_attacks(occupied, square) | get_antidiagonal_attacks(occupied, square);
         }
 
-        U64 get_queen_attacks(U64 occupied, unsigned int square){
+        U64 get_queen_attacks(U64 occupied, uint square){
             return get_rook_attacks(occupied, square) | get_bishop_attacks(occupied, square);
         }
 

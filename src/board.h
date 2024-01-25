@@ -173,10 +173,10 @@ class Board{
         } 
 
         /// Perform en-passant capture
-        void ep_capture(const colour& pawn_colour, const unsigned int& to){
+        void ep_capture(const colour& pawn_colour, const uint& to){
             U64 captured_piece_bitboard = 0;
             piece_names captured_piece_name;
-            unsigned int captured_piece_square;
+            uint captured_piece_square;
 
             if(pawn_colour == WHITE){
                 captured_piece_name = p;
@@ -196,10 +196,10 @@ class Board{
         }
 
         /// Revert en-passant capture
-        void ep_uncapture(const colour& pawn_colour, const unsigned int& to){
+        void ep_uncapture(const colour& pawn_colour, const uint& to){
             U64 captured_piece_bitboard = 0;
             piece_names captured_piece_name;
-            unsigned int captured_piece_square;
+            uint captured_piece_square;
 
             if(pawn_colour == WHITE){
                 captured_piece_name = p;
@@ -218,7 +218,7 @@ class Board{
             hm_clock_reset_history.pop_back();
         }
 
-        void castle_kingside(const unsigned int& king_square, const colour& king_colour){
+        void castle_kingside(const uint& king_square, const colour& king_colour){
             auto rook_type = (king_colour) ? r : R;
             U64 rook_bitboard = get_piece_bitboard(rook_type);
 
@@ -229,7 +229,7 @@ class Board{
             hm_clock++;
         }
 
-        void uncastle_kingside(const unsigned int& king_square, const colour& king_colour){
+        void uncastle_kingside(const uint& king_square, const colour& king_colour){
             auto rook_type = (king_colour) ? r : R;
             U64 rook_bitboard = get_piece_bitboard(rook_type);
 
@@ -240,7 +240,7 @@ class Board{
             hm_clock--;
         }
 
-        void castle_queenside(const unsigned int& king_square, const colour& king_colour){
+        void castle_queenside(const uint& king_square, const colour& king_colour){
             auto rook_type = (king_colour) ? r : R;
             U64 rook_bitboard = get_piece_bitboard(rook_type);
 
@@ -251,7 +251,7 @@ class Board{
             hm_clock++;
         }   
 
-        void uncastle_queenside(const unsigned int& king_square, const colour& king_colour){
+        void uncastle_queenside(const uint& king_square, const colour& king_colour){
             auto rook_type = (king_colour) ? r : R;
             U64 rook_bitboard = get_piece_bitboard(rook_type);
 
@@ -289,11 +289,11 @@ class Board{
             return (castling_rights & flag) != 0;
         }
 
-        bool is_occupied(unsigned int square){
+        bool is_occupied(uint square){
             return get_bit(get_entire_bitboard(), square);
         }
 
-        piece_names get_promo_piece(const unsigned int& flags, const colour& from_piece_colour){
+        piece_names get_promo_piece(const uint& flags, const colour& from_piece_colour){
             if(flags == 12 || flags == 8){
                 return (from_piece_colour == WHITE) ? N : n;
             } else if(flags == 13 || flags == 9){
@@ -404,7 +404,7 @@ class Board{
 
         piece_names get_piece_on_square(int square) const {
             for(auto p: bitboards){
-                if(p.second & set_bit(square)){return p.first;}
+                if((p.second & set_bit(square)) != 0){return p.first;}
             }
             
             return None;
@@ -449,7 +449,6 @@ class Board{
 
         inline void set_piece_bitboard(const piece_names& piece_name, const U64& bitboard) {
             assert(piece_name != None);
-
             bitboards[piece_name] = bitboard;
         }
 
@@ -458,6 +457,7 @@ class Board{
         }
 
         inline U64 get_piece_bitboard(const piece_names& piece_name) {
+            assert(piece_name != None);
             return bitboards[piece_name];
         }
 

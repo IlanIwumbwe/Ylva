@@ -165,7 +165,7 @@ class Run{
         /// This function allows users to make nonsense moves, but they won't be made since they won't exist in generated moves
         /// This simplifies this function which is nice
         int convert_to_move(const std::tuple<std::string, std::string, std::string>& str_move, Move& move){
-            unsigned int from, to, flags;
+            uint from, to, flags;
 
             auto [from_str, to_str, promo_piece] = str_move;
 

@@ -70,7 +70,7 @@ int alg_to_int(const std::string& square){
     return 8*((square[1]-'0')-1) + (104-square[0]);
 }
 
-std::string int_to_alg(const unsigned int& square){
+std::string int_to_alg(const uint& square){
     char fileind = 104 - (square % 8);
     int rankind = (square / 8) + 1;
 
@@ -79,8 +79,8 @@ std::string int_to_alg(const unsigned int& square){
     return out;
 }
 
-unsigned int count_set_bits(U64 bitboard){
-    unsigned int count = 0;
+uint count_set_bits(U64 bitboard){
+    uint count = 0;
     
     for(; bitboard; ++count){
         bitboard &= bitboard-1;

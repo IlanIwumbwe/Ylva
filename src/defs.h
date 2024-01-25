@@ -1,10 +1,11 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-#define STARTING_FEN "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8"
+#define STARTING_FEN "K1k5/8/P7/8/8/8/8/8 w - - 0 1"
 #define MOVE_FORMAT std::regex(R"([a-h][1-8][a-h][1-8](q|r|n|b)?)")
 
 typedef uint64_t U64;
+typedef unsigned int uint;
 
 #define CAPTURE_FLAG 0x4000
 #define PROMO_FLAG 0x8000
@@ -41,7 +42,7 @@ typedef enum {
     r = 12,
     n = 13,
     b = 14,
-} piece_names;  
+} piece_names;
 
 char name_to_char(const piece_names& name){
     switch(name){
@@ -125,7 +126,7 @@ std::unordered_map<char, piece_names> char_to_name = {
     {'b', b}
 };
 
-std::unordered_map<std::string, unsigned int> promo_flags = {
+std::unordered_map<std::string, uint> promo_flags = {
     {"q", 11},
     {"r", 10},
     {"n", 8},
@@ -136,8 +137,8 @@ std::unordered_map<std::string, unsigned int> promo_flags = {
     {"bc", 13}
 };
 
-unsigned int p_flags[4] = {8,9,10,11};
-unsigned int pc_flags[4] = {12,13,14,15};
+uint p_flags[4] = {8,9,10,11};
+uint pc_flags[4] = {12,13,14,15};
 
 // attack sets
 U64 knight_attack_set[64];
