@@ -26,7 +26,7 @@ class Board{
 
             auto from_piece_colour = get_piece_colour(from_piece_name);
 
-            //assert(from_piece_name != None);
+            assert(from_piece_name != None);
 
             U64 from_piece_bitboard = get_piece_bitboard(from_piece_name);
 
@@ -154,10 +154,6 @@ class Board{
                     // get correct pawn bitboard
                     from_piece_name = get_piece_colour(promo_piece_name) ? p : P;
                     from_piece_bitboard = get_piece_bitboard(from_piece_name);
-
-                    //std::cout << "from: " << name_to_char(from_piece_name) << std::endl;
-                    //std::cout << "promo: " << name_to_char(promo_piece_name) << std::endl;
-                    //printbitboard(promotion_piece_bitboard); 
                 }
 
                 // put piece at initial square in its bitboard, then set the bitboard
@@ -312,32 +308,6 @@ class Board{
             }
         }
 
-        static piece_names char_to_name(const char& c) {
-            auto it = std::find_if(namecharint.begin(), namecharint.end(), [c](const std::pair<char, piece_names>& p) {
-                return p.first == c;
-            });
-
-            if(it == namecharint.end()){
-                std::cout << "What? The piece name (char) " << c << " does not exist" << std::endl;
-                exit(0);
-            } else {
-                return it->second;
-            }
-        }
-
-        static char name_to_char(const piece_names& name){
-            auto it = std::find_if(namecharint.begin(), namecharint.end(), [name](const std::pair<char, piece_names>& p) {
-                return p.second == name;
-            });
-
-            if(it == namecharint.end()){
-                std::cout << "What? The piece name (piece_name) " << name << " does not exist" << std::endl;
-                exit(0);
-            } else {
-                return it->first;
-            }
-        }
-
         void init_from_fen(const std::vector<std::string>& parts){
             if(parts.size() != 6){
                 std::cerr << "Fen string format incorrect" << std::endl;
@@ -361,7 +331,7 @@ class Board{
                 c = board_string[pointer];
         
                 if(isalpha(c)){
-                    piece_names piece_name = char_to_name(c);
+                    piece_names piece_name = char_to_name[c];
 
                     set_piece_bitboard(piece_name, get_piece_bitboard(piece_name) | set_bit(current_square));
 
@@ -450,11 +420,8 @@ class Board{
 
             for(int i = 0; i < 64; ++i){
                 name = get_piece_on_square(63-i);
-                if(name == None){
-                    letter = '.';
-                } else {
-                    letter = name_to_char(name);
-                }
+  
+                letter = name_to_char(name);
 
                 if((i+1) % 8 == 0){
                     std::cout << " " << letter << "| \n";
@@ -481,6 +448,8 @@ class Board{
         }
 
         inline void set_piece_bitboard(const piece_names& piece_name, const U64& bitboard) {
+            assert(piece_name != None);
+
             bitboards[piece_name] = bitboard;
         }
 
@@ -500,26 +469,6 @@ class Board{
             }
             
             return full_board;
-        }
-
-        U64 get_whites(){
-            U64 whites = 0;
-
-            for(auto p : bitboards){
-                if(p.first < 7){whites |= p.second;}
-            }
-
-            return whites;
-        }
-
-        U64 get_blacks(){
-            U64 blacks = 0;
-
-            for(auto p : bitboards){
-                if(p.first > 7){blacks |= p.second;}
-            }
-            
-            return blacks;
         }
 
         void add_valid_move(const Move& valid_move){

@@ -117,4 +117,6 @@ void king_attacks(U64 bitboard, U64& output){
     output |= (bitboard & ~(RANK(1) | A_FILE)) >> 7;
 }
 
+
+
 #endif

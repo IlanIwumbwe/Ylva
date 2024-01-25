@@ -1,7 +1,7 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-#define STARTING_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#define STARTING_FEN "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8"
 #define MOVE_FORMAT std::regex(R"([a-h][1-8][a-h][1-8](q|r|n|b)?)")
 
 typedef uint64_t U64;
@@ -42,6 +42,27 @@ typedef enum {
     n = 13,
     b = 14,
 } piece_names;  
+
+char name_to_char(const piece_names& name){
+    switch(name){
+        case P : return 'P';
+        case p : return 'p';
+        case Q : return 'Q';
+        case q : return 'q';
+        case N : return 'N';
+        case n : return 'n';
+        case R : return 'R';
+        case r : return 'r';
+        case B : return 'B';
+        case b : return 'b';
+        case K : return 'K';
+        case k : return 'k';
+        case None : return '.';
+        default :
+            std::cout << "What? The piece name (piece_name) " << name << " does not exist" << std::endl;
+            exit(0);
+    }
+}
 
 typedef enum{
     WHITE = 0,
@@ -89,7 +110,7 @@ dirInfo dir_info[8] = {
     {soWe, -7, A_FILE | RANK(1), noEa}    
 };
 
-std::vector<std::pair<char, piece_names>> namecharint = {
+std::unordered_map<char, piece_names> char_to_name = {
     {'P', P},
     {'K', K},
     {'Q', Q},

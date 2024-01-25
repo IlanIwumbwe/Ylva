@@ -5,7 +5,6 @@ menu(){
     echo "    2. Play against friend"
     echo "    3. Engine vs Engine"
     echo "    4. Run Perft"
-    echo "    5. Recompile"
 
     read -p "    >> " choice
 }
@@ -27,7 +26,6 @@ case $choice in
     2) ./chess -f "$fen" -m "pvp" ;;
     3) ./chess -f "$fen" -m "eve" ;; 
     4) ./chess -f "$fen" -m "perft" ;;
-    5) make clean && make ;;
     *) exit ;; 
 esac
 
