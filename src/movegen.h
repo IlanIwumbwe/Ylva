@@ -254,6 +254,7 @@ class MoveGen{
 
             if(colour){
                 out |= (knight_attack_set[square] & black_knights);
+                out |= (king_attack_set[square] & black_king);
                 out |= set_bit(square+7) & ~A_FILE & black_pawns;
                 out |= set_bit(square+9) & ~H_FILE & black_pawns;
                 // TODO: rays from square to check for slider pieces giving check (white king should not be in blockers bitboard)
@@ -262,6 +263,7 @@ class MoveGen{
                 out |= get_bishop_attacks(whites_minus_king | blacks, square) & black_bishops;                
             } else {
                 out |= (knight_attack_set[square] & white_knights);
+                out |= (king_attack_set[square] & white_king);
                 out |= set_bit(square-9) & ~A_FILE & white_pawns;
                 out |= set_bit(square-7) & ~H_FILE & white_pawns;
                 // TODO: rays from square to check for slider pieces giving check (black king should not be in blockers bitboard)
@@ -519,13 +521,13 @@ class MoveGen{
             create_other_moves(tos, from, 0);
 
             if(checkers_count == 0){
-                if(turn == BLACK && board->has_castling_rights(k_castle)){
+                if(board->has_castling_rights(k_castle)){  
                     if(!get_bit(occupied,58) && !get_bit(occupied,57) && !get_attackers(58,WHITE) && !get_attackers(57,WHITE)){
                         create_other_moves(set_bit(57), 59, 2);
                     }
                 }
 
-                if(turn == BLACK && board->has_castling_rights(q_castle)){
+                if(board->has_castling_rights(q_castle)){
                     if(!get_bit(occupied,60) && !get_bit(occupied,61) && !get_bit(occupied,62) && !get_attackers(60,WHITE) && !get_attackers(61,WHITE)){
                         create_other_moves(set_bit(61), 59, 3);
                     }

@@ -1,7 +1,7 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-#define STARTING_FEN "K1k5/8/P7/8/8/8/8/8 w - - 0 1"
+#define STARTING_FEN "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8"
 #define MOVE_FORMAT std::regex(R"([a-h][1-8][a-h][1-8](q|r|n|b)?)")
 
 typedef uint64_t U64;
@@ -70,28 +70,11 @@ typedef enum{
     BLACK = -1,
 } colour;
 
-typedef enum{
-    PVE,    
-    EVE,
-    PVP,
-    PERFT
-} game_modes;
+typedef enum{PVE, EVE, PVP, PERFT} game_modes;
 
-typedef enum{
-    north,
-    east,
-    west,
-    south,
-    noEa,
-    soEa,
-    noWe,
-    soWe
-} dirs;
+typedef enum{north, east, west, south, noEa, soEa, noWe, soWe} dirs;
 
-typedef enum {
-    diag,
-    nondiag
-} ray_type;
+typedef enum {diag, nondiag} ray_type;
 
 struct dirInfo {
     dirs dir;

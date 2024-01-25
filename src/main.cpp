@@ -3,7 +3,7 @@
 #include "run.h"
 
 int main(int argc, char* argv[]){
-    std::string fen;
+    std::string fen = "";
     game_modes mode = PERFT;
 
     int opt;

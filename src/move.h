@@ -26,7 +26,15 @@ class Move{
         bool operator!=(Move a) const {return move != a.get_move();}
 
         friend std::ostream& operator<<(std::ostream& os, Move& move) {
-            return os << int_to_alg(move.get_from()) << int_to_alg(move.get_to());
+            os << int_to_alg(move.get_from()) << int_to_alg(move.get_to());
+            auto f = move.get_flags();
+
+            if(f == 8 || f == 12){os << "n";}
+            else if(f == 9 || f == 13){os << "b";}
+            else if(f == 10 || f == 14){os << "r";}
+            else if(f == 11 || f == 15){os << "q";}
+
+            return os;
         }
 
     private:

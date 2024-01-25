@@ -75,7 +75,10 @@ class Board{
                 if(move.is_capture()){
                     // move is a promotion with capture move
                     capture_piece(to_piece_name, set_bit(to));
-                } else {hm_clock = 0;} 
+                } else {
+                    hm_clock_reset_history.push_back(hm_clock);
+                    hm_clock = 0;
+                } 
 
                 promo_piece_name = get_promo_piece(flags, from_piece_colour); // piece that we want to promote to
                 promotion_piece_bitboard = get_piece_bitboard(promo_piece_name);
@@ -121,6 +124,9 @@ class Board{
                 if(!prev_move.is_promo()){
                     // remove piece from to square on its bitboard if not a promotion move
                     from_piece_name = get_piece_on_square(to);
+
+                    assert(from_piece_name != None);
+
                     from_piece_bitboard = get_piece_bitboard(from_piece_name) & ~set_bit(to);
                     from_piece_colour = get_piece_colour(from_piece_name);
 
@@ -287,7 +293,7 @@ class Board{
 
         bool has_castling_rights(int flag) const {
             return (castling_rights & flag) != 0;
-        }
+        }   
 
         bool is_occupied(uint square){
             return get_bit(get_entire_bitboard(), square);
@@ -418,7 +424,7 @@ class Board{
             char letter;
             piece_names name;
 
-            for(int i = 0; i < 64; ++i){
+            for(int i = 0; i < 64; ++i){                
                 name = get_piece_on_square(63-i);
   
                 letter = name_to_char(name);
