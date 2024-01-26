@@ -4,6 +4,7 @@
 #include "defs.h"
 #include "move.h"
 #include "helper_funcs.h"
+#include "state.h"
 #include <assert.h>
 
 class Board{
@@ -29,24 +30,23 @@ class Board{
             assert(from_piece_name != None);
 
             U64 from_piece_bitboard = get_piece_bitboard(from_piece_name);
-
             piece_names promo_piece_name;
             U64 promotion_piece_bitboard;
 
-            castling_rights_history.push_back(castling_rights);
+            auto recent_capture = to_piece_name;
 
             // remove castling rights if king or rook moves
             if(from_piece_name == K){
                 castling_rights &= ~(K_castle | Q_castle);
             } else if(from_piece_name == k){
                 castling_rights &= ~(k_castle | q_castle);
-            } else if(from_piece_name == R && from == 0){
+            } else if((from_piece_name == R && from == 0) || (to_piece_name == R && to == 0)){
                 castling_rights &= ~K_castle;
-            } else if(from_piece_name == R && from == 7){
+            } else if((from_piece_name == R && from == 7) || (to_piece_name == R && to == 7)){
                 castling_rights &= ~Q_castle;
-            } else if(from_piece_name == r && from == 56){
+            } else if((from_piece_name == r && from == 56) || (to_piece_name == r && to == 56)){
                 castling_rights &= ~k_castle;
-            } else if (from_piece_name == r && from == 63){
+            } else if ((from_piece_name == r && from == 63) || (to_piece_name == r && to == 63)){
                 castling_rights &= ~q_castle;
             }
 
@@ -57,14 +57,14 @@ class Board{
                 if(flags == 4){
                     capture_piece(to_piece_name, set_bit(to));
                 } else if(flags == 5){
-                    ep_capture(from_piece_colour, to);
+                    recent_capture = ep_capture(from_piece_colour, to);
                 } else if(flags == 2){
                     castle_kingside(from, from_piece_colour);
                 } else if(flags == 3){
                     castle_queenside(from, from_piece_colour);
                 } else {
                     // quiet moves and double pawn pushes
-                    if(from_piece_name == P || from_piece_name == p){hm_clock_reset_history.push_back(hm_clock); hm_clock = 0;} // pawn advance
+                    if(from_piece_name == P || from_piece_name == p){hm_clock = 0;} // pawn advance
                     else{hm_clock++;}  // other quiet moves
                 }
             
@@ -72,11 +72,10 @@ class Board{
                 // set the name of to_piece to that of the piece we want to promote to
                 // set the bitboard of the piece that's been promoted to
 
-                if(move.is_capture()){
+                if(flags == 4){
                     // move is a promotion with capture move
                     capture_piece(to_piece_name, set_bit(to));
                 } else {
-                    hm_clock_reset_history.push_back(hm_clock);
                     hm_clock = 0;
                 } 
 
@@ -91,14 +90,14 @@ class Board{
             set_piece_bitboard(from_piece_name, from_piece_bitboard);
 
             // add move to move history
-            move_history.push_back(move);
+            add_state(move, recent_capture);
 
             change_turn();
         }
 
         int get_prev_move(Move& prev_move){
-            if(move_history.size() != 0){
-                prev_move = move_history.back();
+            if(current_state->prev_state != NULL){
+                prev_move = current_state->prev_move;
                 return 0;
             } else {
                 return -1;
@@ -106,10 +105,12 @@ class Board{
         }
 
         int undo_move(){
-            if(move_history.size() != 0){  
-                auto prev_move = move_history.back();
-                move_history.pop_back();
+            if(current_state->prev_state != NULL){  
+                auto prev_move = current_state->prev_move;
+                auto recent_capture = current_state->recent_capture;
 
+                revert_state();
+         
                 const auto from = prev_move.get_from();
                 const auto to = prev_move.get_to();
                 const auto flags = prev_move.get_flags();
@@ -131,7 +132,7 @@ class Board{
                     from_piece_colour = get_piece_colour(from_piece_name);
 
                     if(flags == 4){
-                        uncapture_piece(set_bit(to));
+                        uncapture_piece(set_bit(to), recent_capture);
                     } else if(flags == 5){
                         ep_uncapture(from_piece_colour, to);  
                     } else if(flags == 2){
@@ -140,7 +141,7 @@ class Board{
                         uncastle_queenside(from, from_piece_colour); 
                     } else {
                         // quiet moves and double pawn pushes
-                        if(from_piece_name == P || from_piece_name == p){hm_clock = hm_clock_reset_history.back(); hm_clock_reset_history.pop_back();} // pawn advance
+                        if(from_piece_name == P || from_piece_name == p){hm_clock = current_state->hm_clock;} // pawn advance
                         else{hm_clock--;}  // other quiet moves
                     }
 
@@ -150,11 +151,10 @@ class Board{
                     promotion_piece_bitboard = get_piece_bitboard(promo_piece_name) & ~set_bit(to);
                     set_piece_bitboard(promo_piece_name, promotion_piece_bitboard);
 
-                    if(prev_move.is_capture()){
-                        uncapture_piece(set_bit(to));
+                    if(flags == 4){
+                        uncapture_piece(set_bit(to), recent_capture);
                     } else {
-                        hm_clock = hm_clock_reset_history.back();
-                        hm_clock_reset_history.pop_back();
+                        hm_clock = current_state->hm_clock;
                     }
                 
                     // get correct pawn bitboard
@@ -168,8 +168,7 @@ class Board{
 
                 change_turn();
 
-                castling_rights = castling_rights_history.back();
-                castling_rights_history.pop_back();
+                castling_rights = current_state->castling_rights;
 
                 return 0;
             } else {
@@ -179,7 +178,7 @@ class Board{
         } 
 
         /// Perform en-passant capture
-        void ep_capture(const colour& pawn_colour, const uint& to){
+        piece_names ep_capture(const colour& pawn_colour, const uint& to){
             U64 captured_piece_bitboard = 0;
             piece_names captured_piece_name;
             uint captured_piece_square;
@@ -196,9 +195,9 @@ class Board{
             captured_piece_bitboard &= ~set_bit(captured_piece_square);
             set_piece_bitboard(captured_piece_name, captured_piece_bitboard);
 
-            captured_pieces.push_back(captured_piece_name);
-            hm_clock_reset_history.push_back(hm_clock);
             hm_clock = 0;
+
+            return captured_piece_name;
         }
 
         /// Revert en-passant capture
@@ -219,9 +218,7 @@ class Board{
             captured_piece_bitboard |= set_bit(captured_piece_square);
             set_piece_bitboard(captured_piece_name, captured_piece_bitboard);
 
-            captured_pieces.pop_back();
-            hm_clock = hm_clock_reset_history.back();
-            hm_clock_reset_history.pop_back();
+            hm_clock = current_state->hm_clock;
         }
 
         void castle_kingside(const uint& king_square, const colour& king_colour){
@@ -273,22 +270,16 @@ class Board{
             auto captured_piece_bitboard = get_piece_bitboard(to_piece_name);
             captured_piece_bitboard &= ~square_bitboard;
             set_piece_bitboard(to_piece_name, captured_piece_bitboard);
-
-            captured_pieces.push_back(to_piece_name);
-            hm_clock_reset_history.push_back(hm_clock);
             hm_clock = 0;
         }
 
         /// Revert normal capture
-        void uncapture_piece(const U64& square_bitboard){
-            auto to_piece_name = captured_pieces.back();
-            auto captured_piece_bitboard = get_piece_bitboard(to_piece_name);
+        void uncapture_piece(const U64& square_bitboard, piece_names& recent_capture){
+            auto captured_piece_bitboard = get_piece_bitboard(recent_capture);
             captured_piece_bitboard |= square_bitboard;
-            set_piece_bitboard(to_piece_name, captured_piece_bitboard);
+            set_piece_bitboard(recent_capture, captured_piece_bitboard);
 
-            captured_pieces.pop_back();
-            hm_clock = hm_clock_reset_history.back();   
-            hm_clock_reset_history.pop_back();
+            hm_clock = current_state->hm_clock;  
         }
 
         bool has_castling_rights(int flag) const {
@@ -322,9 +313,11 @@ class Board{
                 init_board_state(parts[0]);
                 init_turn(parts[1]);
                 init_castling_rights(parts[2]);
-                init_enpassant_square(parts[3]);
+                auto maybe_move = init_enpassant_square(parts[3]);
                 init_halfmove_clock(parts[4]);
                 init_fullmoves(parts[5]);
+
+                add_state(maybe_move, None);
             }
         }
 
@@ -376,16 +369,17 @@ class Board{
 
         /// Given the enpassant square, add the relevant move to move history that would've led to that enpassant square, which will be used to 
         /// validate possible enpassant captures by an enemy piece
-        void init_enpassant_square(const std::string& str_ep_square){
+        Move init_enpassant_square(const std::string& str_ep_square){
             if(str_ep_square == "-"){
                 ep_square = 0;
+                return Move(0,0,0);
             } else {
                 ep_square = alg_to_int(str_ep_square);
 
                 if(turn == WHITE){
-                    move_history.push_back(Move(ep_square+8,ep_square-8,1));
+                    return Move(ep_square+8,ep_square-8,1);
                 } else {
-                    move_history.push_back(Move(ep_square-8,ep_square+8,1));
+                    return Move(ep_square-8,ep_square+8,1);
                 }
             }
         }
@@ -399,7 +393,7 @@ class Board{
         }
 
         int get_fullmoves(){
-            return floor(move_history.size() / 2) + fullmoves;
+            return floor(current_state->state_id / 2) + fullmoves;
         }
 
         colour get_turn(){return turn;}
@@ -489,6 +483,17 @@ class Board{
             return valid_moves;
         }
 
+        void add_state(Move prev_move, piece_names recent_capture){
+            auto new_current = std::make_shared<State>(castling_rights, hm_clock, recent_capture, prev_move);
+                
+            new_current->prev_state = current_state;
+            current_state = new_current;
+        }
+
+        void revert_state(){
+            current_state = current_state->prev_state;
+        }
+
     private:        
         // informaton from fen string
         colour turn;
@@ -499,12 +504,9 @@ class Board{
 
         // piece bitboards
         std::unordered_map<piece_names, U64> bitboards{};
-
-        std::vector<uint8_t> castling_rights_history;
-    
-        std::vector<Move> move_history;
-        std::vector<int> hm_clock_reset_history;
-        std::vector<piece_names> captured_pieces;
+        
+        // maintain state
+        std::shared_ptr<State> current_state = NULL;
 
         std::vector<Move> valid_moves;
 };

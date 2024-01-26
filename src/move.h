@@ -7,6 +7,10 @@
 
 class Move{
     public:
+        Move(){
+            move = 0;
+        }
+
         Move(uint from, uint to, uint flags){
             move = ((flags & 0xf) << 12) | ((from & 0x3f) << 6) | (to & 0x3f);
         }
@@ -19,7 +23,6 @@ class Move{
         void set_to(uint to) {move &= ~0x3f; move |= to & 0x3f;}
         void set_from(uint from) {move &= ~0xfc0; move |= (from & 0x3f) << 6;}
       
-        bool is_capture() const {return (move & CAPTURE_FLAG) != 0;}
         bool is_promo() const {return (move & PROMO_FLAG) != 0;}
 
         bool operator==(Move a) const {return move == a.get_move();}

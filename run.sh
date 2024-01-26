@@ -4,7 +4,7 @@ menu(){
     echo "    1. Play against engine"
     echo "    2. Play against friend"
     echo "    3. Engine vs Engine"
-    echo "    4. Run Perft"
+    echo "    4. Run Perft" 
 
     read -p "    >> " choice
 }
