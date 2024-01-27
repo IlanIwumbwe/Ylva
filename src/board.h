@@ -27,6 +27,10 @@ class Board{
 
             auto from_piece_colour = get_piece_colour(from_piece_name);
 
+            if(from_piece_name == None){
+                std::cout << from_piece_name << " " << to_piece_name << std::endl;
+            }
+
             assert(from_piece_name != None);
 
             U64 from_piece_bitboard = get_piece_bitboard(from_piece_name);
@@ -40,14 +44,22 @@ class Board{
                 castling_rights &= ~(K_castle | Q_castle);
             } else if(from_piece_name == k){
                 castling_rights &= ~(k_castle | q_castle);
-            } else if((from_piece_name == R && from == 0) || (to_piece_name == R && to == 0)){
-                castling_rights &= ~K_castle;
-            } else if((from_piece_name == R && from == 7) || (to_piece_name == R && to == 7)){
-                castling_rights &= ~Q_castle;
-            } else if((from_piece_name == r && from == 56) || (to_piece_name == r && to == 56)){
-                castling_rights &= ~k_castle;
-            } else if ((from_piece_name == r && from == 63) || (to_piece_name == r && to == 63)){
-                castling_rights &= ~q_castle;
+            } else {
+                if((from == 63 && to == 7) || (from == 7 && to == 63)){
+                    castling_rights &= ~Q_castle;
+                    castling_rights &= ~q_castle;
+                } else if((from == 56 && to == 0) || (from == 0 && to == 56)){
+                    castling_rights &= ~K_castle;
+                    castling_rights &= ~k_castle;
+                } else if(from == 0 || to == 0){
+                    castling_rights &= ~K_castle;
+                } else if(from == 7 || to == 7){
+                    castling_rights &= ~Q_castle;
+                } else if(from == 56 || to == 56){
+                    castling_rights &= ~k_castle;
+                } else if(from == 63 || to == 63){
+                    castling_rights &= ~q_castle;
+                }
             }
 
             if(!move.is_promo()){
@@ -72,7 +84,7 @@ class Board{
                 // set the name of to_piece to that of the piece we want to promote to
                 // set the bitboard of the piece that's been promoted to
 
-                if(flags == 4){
+                if(move.is_capture()){
                     // move is a promotion with capture move
                     capture_piece(to_piece_name, set_bit(to));
                 } else {
@@ -89,14 +101,13 @@ class Board{
             from_piece_bitboard &= ~set_bit(from);
             set_piece_bitboard(from_piece_name, from_piece_bitboard);
 
-            // add move to move history
             add_state(move, recent_capture);
-
+            
             change_turn();
         }
 
         int get_prev_move(Move& prev_move){
-            if(current_state->prev_state != NULL){
+            if(current_state->prev_state != NULL || ep_square){
                 prev_move = current_state->prev_move;
                 return 0;
             } else {
@@ -151,7 +162,7 @@ class Board{
                     promotion_piece_bitboard = get_piece_bitboard(promo_piece_name) & ~set_bit(to);
                     set_piece_bitboard(promo_piece_name, promotion_piece_bitboard);
 
-                    if(flags == 4){
+                    if(prev_move.is_capture()){
                         uncapture_piece(set_bit(to), recent_capture);
                     } else {
                         hm_clock = current_state->hm_clock;
@@ -410,9 +421,12 @@ class Board{
             return None;
         }
 
+        
+
         void view_board(){
             std::cout << ((turn == WHITE) ? "white" : "black") << " to move" << std::endl; 
             std::cout << "Half move clock: " << hm_clock << std::endl;
+            std::cout << "Castling rights: KQkq --> " << (int)castling_rights << std::endl;  
             std::cout << "  =======================" << std::endl;
                                                     
             char letter;
@@ -436,11 +450,11 @@ class Board{
         }
 
         bool move_is_valid(Move& move){
-            std::cout << move.get_move() << std::endl;
+            std::cout << move << std::endl;
             
             std::cout << "Valids" << std::endl;
-            for(auto v_move : valid_moves){
-                std::cout << v_move.get_move() << std::endl;
+            for(auto v_move : current_state->valid_moves){
+                std::cout << v_move << std::endl;
                 if(v_move == move){return true;}
             }
             
@@ -472,17 +486,15 @@ class Board{
         }
 
         void add_valid_move(const Move& valid_move){
-            valid_moves.push_back(valid_move);
+            current_state->add_valid_move(valid_move);
         }
 
-        void clear_valid_moves(){
-            valid_moves.clear();
+        std::vector<Move> get_valid_moves(){    
+            return current_state->valid_moves;
         }
 
-        std::vector<Move> get_valid_moves(){
-            return valid_moves;
-        }
-
+        /// after a new move has been made, create a new state. Store the new castling rights, the half move clock, the move that led to this state,
+        /// and the piece if any that got captured when that move was made
         void add_state(Move prev_move, piece_names recent_capture){
             auto new_current = std::make_shared<State>(castling_rights, hm_clock, recent_capture, prev_move);
                 
@@ -490,8 +502,16 @@ class Board{
             current_state = new_current;
         }
 
+        /// in the driver, each time a move is made on the board, new moves are generated for the new state. this function is called by the driver
+        /// to update the new state with the valid moves in that state
+        void add_valid_moves_to_state(std::vector<Move> valid_moves){
+            current_state->valid_moves = valid_moves;
+        }
+
+        /// Make the previous state the current state, then make valid moves the valid moves of that previous state
         void revert_state(){
             current_state = current_state->prev_state;
+            //valid_moves = current_state->valid_moves;
         }
 
     private:        
@@ -508,7 +528,6 @@ class Board{
         // maintain state
         std::shared_ptr<State> current_state = NULL;
 
-        std::vector<Move> valid_moves;
 };
 
 #endif

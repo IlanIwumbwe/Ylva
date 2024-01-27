@@ -9,6 +9,7 @@ using namespace std::chrono;
 class Run{
     public:
         Run(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(mode) {
+            // generate moves for the start state (no moves made yet)
             movegen.generate_moves();
 
             if(mode == PVP){
@@ -48,40 +49,58 @@ class Run{
         }
 
         void run_perft(){
-            board.view_board();
+            auto moves = board.get_valid_moves();
 
-            int depth = get_perft_depth();
+            while(run){
+                board.view_board();
 
-            auto start = high_resolution_clock::now();
-            int num_pos = movegenTest(depth);
-            auto end = high_resolution_clock::now();
+                int depth = get_perft_depth();
+                int num_pos = 0, total_pos = 0;
 
-            auto duration = duration_cast<milliseconds>(end-start);
-            
-            std::cout << "Time taken: " << std::to_string(duration.count()) << " ms" << std::endl;
-            std::cout << "Total positions: " << std::to_string(num_pos) << std::endl;
+                auto start = high_resolution_clock::now();
+
+                for(auto move : moves){
+                    make_move(move);
+                    num_pos = movegenTest(depth-1);
+                    board.undo_move();
+
+                    std::cout << move << ": " << num_pos << std::endl;
+                    total_pos += num_pos;
+                }
+
+                auto end = high_resolution_clock::now();
+
+                auto duration = duration_cast<milliseconds>(end-start);
+                
+                std::cout << "Time taken: " << std::to_string(duration.count()) << " ms" << std::endl;
+                std::cout << "Total positions: " << std::to_string(total_pos) << std::endl;
+                std::cout << "\n";
+            }
         }
 
-        int movegenTest(int depth, bool root = true){
+        int movegenTest(int depth){
+            auto moves = board.get_valid_moves();
+            
             if(depth == 0){
                 return 1;
             }
 
-            int pos_per_node, num_nodes = 0;    
-            auto moves = board.get_valid_moves();
+            int num_nodes = 0;    
 
             for(auto move : moves){
-                board.make_move(move);
-                movegen.generate_moves();
-
-                pos_per_node = movegenTest(depth-1, false);
-                num_nodes += pos_per_node;
-                if(root){std::cout << move << ": " << pos_per_node << std::endl;}
-                
+                make_move(move);
+                num_nodes += movegenTest(depth-1);                               
                 board.undo_move();
+                // if(m.get_from() == 48 && m.get_to() == 32){std::cout << "move: " << move << " " << move.get_flags() << std::endl;}
             }
 
             return num_nodes;
+        }
+
+        // whenever a move is made on the board, generate new moves for the new state
+        void make_move(const Move& move){
+            board.make_move(move);
+            movegen.generate_moves();
         }
 
         void get_input_from_player(){
@@ -100,7 +119,7 @@ class Run{
             }
 
             if(input == "undo"){
-                if(board.undo_move() == 0){movegen.generate_moves();}
+                board.undo_move();
             } else if(input == "quit"){
                 run = false;
             } else if (std::regex_match(input, MOVE_FORMAT)){
@@ -115,16 +134,12 @@ class Run{
             std::cout << ">>: ";
             std::cin >> input;
 
-            while(!isStringDigit(input) && input != "quit"){
+            while(!isStringDigit(input)){
+                std::cout << ">>: ";
                 std::cin >> input;
             }
 
-            if(input == "quit"){
-                run = false;
-                return 0;
-            } else {
-                return std::stoi(input);
-            }
+            return std::stoi(input);
         }
 
         void parse_player_move(std::string& str_move){
@@ -151,8 +166,7 @@ class Run{
                 std::cout << "There's no piece at the square chosen"<< std::endl;
             } else {
                 if(board.move_is_valid(move)){
-                    board.make_move(move);   
-                    movegen.generate_moves();
+                    make_move(move);
                 } else {
                     std::cout << "Move entered is not valid " << std::endl;
                     get_input_from_player();
@@ -223,6 +237,8 @@ class Run{
         MoveGen movegen;
         game_modes mode;
         bool run = true;
+
+        std::vector<int> perft_results;
 };
 
 #endif

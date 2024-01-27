@@ -37,7 +37,7 @@ class MoveGen{
             whites_minus_king = whites & ~white_king;
 
             turn = board->get_turn();
-            board->clear_valid_moves();
+            //board->clear_valid_moves();
             pinned_pieces = 0;
             
             get_legal_moves();         
@@ -332,13 +332,13 @@ class MoveGen{
 
                     if(!ep_discovered_check(pawn_bitboard | (pawn_bitboard >> 1), black_rooks, black_queens)){
                         // capture by white pawn to the right
-                        tos = (white_pawns & (pawn_bitboard >> 1)) << 9;
+                        tos = (white_pawns & ((pawn_bitboard & ~H_FILE) >> 1)) << 9;
                         create_pawn_moves(tos,-9,5);
                     }
 
                     if(!ep_discovered_check(pawn_bitboard | (pawn_bitboard << 1), black_rooks, black_queens)){
                         // capture by white pawn to the left
-                        tos = (white_pawns & (pawn_bitboard << 1)) << 7;
+                        tos = (white_pawns & ((pawn_bitboard & ~A_FILE) << 1)) << 7;
                         create_pawn_moves(tos,-7,5);
                     }
 
@@ -392,13 +392,13 @@ class MoveGen{
 
                     if(!ep_discovered_check(pawn_bitboard | (pawn_bitboard >> 1), white_rooks, white_queens)){
                         // capture by black pawn to the right
-                        tos = (black_pawns & (pawn_bitboard >> 1)) >> 7;
+                        tos = (black_pawns & ((pawn_bitboard & ~H_FILE) >> 1)) >> 7;
                         create_pawn_moves(tos,7,5);
                     }
 
                     if(!ep_discovered_check(pawn_bitboard | (pawn_bitboard << 1), white_rooks, white_queens)){
                         // capture by black pawn to the left
-                        tos = (black_pawns & (pawn_bitboard << 1)) >> 9;
+                        tos = (black_pawns & ((pawn_bitboard & ~A_FILE) << 1)) >> 9;
                         create_pawn_moves(tos,9,5);
                     }
                 }
@@ -458,12 +458,11 @@ class MoveGen{
         void K_moves(){
             checkers_count = get_checkers();
 
-            auto king = white_king;
             U64 attack_set, can_capture, can_push;
             uint from;
             king_danger_squares = 0;
 
-            from = get_lsb(king);
+            from = get_lsb(ally_king);
             attack_set = king_attack_set[from];
 
             // filter out king danger squares
@@ -498,12 +497,11 @@ class MoveGen{
         void k_moves(){
             checkers_count = get_checkers();
 
-            auto king = black_king;
             U64 attack_set, can_capture, can_push;
             uint from;
             king_danger_squares = 0;
 
-            from = get_lsb(king);
+            from = get_lsb(ally_king);
             attack_set = king_attack_set[from];
 
             // filter out king danger squares
@@ -691,6 +689,7 @@ class MoveGen{
         /// This receives the actual from square, as its the same for all tos that are passed to it
         void create_other_moves(U64 tos, uint from, uint flag){
             uint to;
+
             while(tos){
                 to =  get_lsb(tos);
 

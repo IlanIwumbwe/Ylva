@@ -9,6 +9,7 @@
 struct State{
     uint8_t castling_rights;  
     int hm_clock;
+    std::vector<Move> valid_moves;
     piece_names recent_capture;
     Move prev_move; 
     std::shared_ptr<State> prev_state = NULL;
@@ -22,6 +23,10 @@ struct State{
         prev_move = prev;
 
         state_id++;
+    }
+
+    void add_valid_move(const Move& move){
+        valid_moves.push_back(move);
     }
 };
 
