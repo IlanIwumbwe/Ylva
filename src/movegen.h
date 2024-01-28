@@ -37,7 +37,7 @@ class MoveGen{
             whites_minus_king = whites & ~white_king;
 
             turn = board->get_turn();
-            //board->clear_valid_moves();
+            board->clear_valid_moves();
             pinned_pieces = 0;
             
             get_legal_moves();         

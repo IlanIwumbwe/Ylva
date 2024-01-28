@@ -91,6 +91,7 @@ class Run{
                 make_move(move);
                 num_nodes += movegenTest(depth-1);                               
                 board.undo_move();
+                movegen.generate_moves();
                 // if(m.get_from() == 48 && m.get_to() == 32){std::cout << "move: " << move << " " << move.get_flags() << std::endl;}
             }
 
@@ -119,7 +120,7 @@ class Run{
             }
 
             if(input == "undo"){
-                board.undo_move();
+                if(board.undo_move() == 0){movegen.generate_moves();};
             } else if(input == "quit"){
                 run = false;
             } else if (std::regex_match(input, MOVE_FORMAT)){

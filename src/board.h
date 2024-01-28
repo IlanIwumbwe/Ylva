@@ -27,10 +27,6 @@ class Board{
 
             auto from_piece_colour = get_piece_colour(from_piece_name);
 
-            if(from_piece_name == None){
-                std::cout << from_piece_name << " " << to_piece_name << std::endl;
-            }
-
             assert(from_piece_name != None);
 
             U64 from_piece_bitboard = get_piece_bitboard(from_piece_name);
@@ -421,8 +417,6 @@ class Board{
             return None;
         }
 
-        
-
         void view_board(){
             std::cout << ((turn == WHITE) ? "white" : "black") << " to move" << std::endl; 
             std::cout << "Half move clock: " << hm_clock << std::endl;
@@ -453,12 +447,16 @@ class Board{
             std::cout << move << std::endl;
             
             std::cout << "Valids" << std::endl;
-            for(auto v_move : current_state->valid_moves){
+            for(auto v_move : valid_moves){
                 std::cout << v_move << std::endl;
                 if(v_move == move){return true;}
             }
             
             return false;
+        }
+
+        void clear_valid_moves(){
+            valid_moves.clear();
         }
 
         inline void set_piece_bitboard(const piece_names& piece_name, const U64& bitboard) {
@@ -486,11 +484,11 @@ class Board{
         }
 
         void add_valid_move(const Move& valid_move){
-            current_state->add_valid_move(valid_move);
+            valid_moves.push_back(valid_move);
         }
 
         std::vector<Move> get_valid_moves(){    
-            return current_state->valid_moves;
+            return valid_moves;
         }
 
         /// after a new move has been made, create a new state. Store the new castling rights, the half move clock, the move that led to this state,
@@ -502,16 +500,9 @@ class Board{
             current_state = new_current;
         }
 
-        /// in the driver, each time a move is made on the board, new moves are generated for the new state. this function is called by the driver
-        /// to update the new state with the valid moves in that state
-        void add_valid_moves_to_state(std::vector<Move> valid_moves){
-            current_state->valid_moves = valid_moves;
-        }
-
         /// Make the previous state the current state, then make valid moves the valid moves of that previous state
         void revert_state(){
             current_state = current_state->prev_state;
-            //valid_moves = current_state->valid_moves;
         }
 
     private:        
@@ -527,6 +518,8 @@ class Board{
         
         // maintain state
         std::shared_ptr<State> current_state = NULL;
+
+        std::vector<Move> valid_moves;
 
 };
 
