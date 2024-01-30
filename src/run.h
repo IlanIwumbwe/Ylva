@@ -238,8 +238,6 @@ class Run{
         MoveGen movegen;
         game_modes mode;
         bool run = true;
-
-        std::vector<int> perft_results;
 };
 
 #endif

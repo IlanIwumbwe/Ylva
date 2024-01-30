@@ -14,6 +14,8 @@
 #include <cmath>
 #include <unordered_map>
 
+#include "defs.h"
+
 namespace fs = std::filesystem;
 
 std::vector<std::string> splitString(const std::string& input, const char& delimiter) {
