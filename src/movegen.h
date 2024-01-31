@@ -273,14 +273,16 @@ class MoveGen{
             return (out);
         }
 
-    
-
         /// Produce bitboard of all pieces giving ally king check, and return the number of checkers
         uint get_checkers(){
             uint ally_king_sq = get_lsb(ally_king);
             checkers = get_attackers(ally_king_sq, ~turn);
 
             return count_set_bits(checkers);
+        }
+
+        inline bool ally_king_in_check(){
+            return checkers != 0;
         }
 
         void P_moves(){

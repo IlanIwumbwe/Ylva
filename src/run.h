@@ -3,13 +3,14 @@
 
 #include "board.h"
 #include "movegen.h"
+#include "engine.h"
 #include <chrono>
 #include <map>
 using namespace std::chrono;
 
 class Run{
     public:
-        Run(std::string& fen, game_modes mode, int depth) : board(fen), movegen(&board), mode(mode), depth(depth) {
+        Run(std::string& fen, game_modes mode, int depth) : board(fen), movegen(&board), mode(mode), depth(depth), engine(&board, &movegen) {
             // generate moves for the start state (no moves made yet)
             movegen.generate_moves();
 
@@ -31,6 +32,7 @@ class Run{
         void run_PVP(){
             while (run){
                 get_input_from_player();
+                end_game();
             }
         }
 
@@ -39,14 +41,32 @@ class Run{
                 if(board.get_turn() == WHITE){
                     get_input_from_player();
                 }else{
-                    /// TODO: make_engine_move();
+                    engine.make_engine_move();
                 }
+                end_game();
             }
         }
 
         void run_EVE(){
             while(run){
-                /// TODO: make_engine_move();
+                engine.make_engine_move();
+                end_game();
+            }
+        }
+
+        void end_game(){
+            if(board.get_hm_clock() == 101){
+                std::cout << "Draw by 50 move rule" << std::endl;
+                board.view_board();
+                run = false;
+            } else {
+                if(board.get_valid_moves().size() == 0){
+                    if(movegen.ally_king_in_check()){
+                        std::cout << (board.get_turn() ? "White " : "Black ") << "wins by checkmate" << std::endl;
+                    } else { std::cout << "Draw by stalemate" << std::endl; }
+                    board.view_board();
+                    run = false;
+                }
             }
         }
 
@@ -242,6 +262,7 @@ class Run{
         game_modes mode;
         bool run = true;
         int depth;
+        Engine engine;
 };
 
 #endif

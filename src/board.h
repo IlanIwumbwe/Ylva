@@ -83,10 +83,9 @@ class Board{
                 if(move.is_capture()){
                     // move is a promotion with capture move
                     capture_piece(to_piece_name, set_bit(to));
-                } else {
-                    hm_clock = 0;
                 } 
-
+                hm_clock = 0;
+                
                 promo_piece_name = get_promo_piece(flags, from_piece_colour); // piece that we want to promote to
                 promotion_piece_bitboard = get_piece_bitboard(promo_piece_name);
                 promotion_piece_bitboard |= set_bit(to);
@@ -420,7 +419,6 @@ class Board{
         void view_board(){
             std::cout << ((turn == WHITE) ? "white" : "black") << " to move" << std::endl; 
             std::cout << "Half move clock: " << hm_clock << std::endl;
-            std::cout << "Castling rights: KQkq --> " << (int)castling_rights << std::endl;  
             std::cout << "  =======================" << std::endl;
                                                     
             char letter;
@@ -444,11 +442,7 @@ class Board{
         }
 
         bool move_is_valid(Move& move){
-            std::cout << move << std::endl;
-            
-            std::cout << "Valids" << std::endl;
             for(auto v_move : valid_moves){
-                std::cout << v_move << std::endl;
                 if(v_move == move){return true;}
             }
             
