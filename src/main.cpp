@@ -5,10 +5,11 @@
 int main(int argc, char* argv[]){
     std::string fen = "";
     game_modes mode = PERFT;
+    int depth = 1;
     
     int opt;
 
-    while ((opt = getopt(argc, argv, "f:m:")) != -1) {
+    while ((opt = getopt(argc, argv, "f:m:d:")) != -1) {
         switch (opt) {
             case 'f':
                 fen = optarg;
@@ -20,9 +21,14 @@ int main(int argc, char* argv[]){
                     mode = PVE;
                 } else if(strcmp(optarg,"eve") == 0){
                     mode = EVE;
+                } else if(strcmp(optarg,"benchmark") == 0){
+                    mode = BENCHMARK;
                 } else {
                     mode = PERFT;
                 }
+                break;
+            case 'd':
+                depth = std::stoi(optarg);
             default:
                 break;
         }
@@ -37,7 +43,7 @@ int main(int argc, char* argv[]){
     populate_attack_sets();
     populate_rays();
 
-    Run game_loop(fen, mode);
+    Run game_loop(fen, mode, depth);
 
     return 0;
 }

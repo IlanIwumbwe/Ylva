@@ -70,7 +70,7 @@ typedef enum{
     BLACK = -1,
 } colour;
 
-typedef enum{PVE, EVE, PVP, PERFT} game_modes;
+typedef enum{PVE, EVE, PVP, PERFT, BENCHMARK} game_modes;
 
 typedef enum{north, east, west, south, noEa, soEa, noWe, soWe} dirs;
 

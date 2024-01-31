@@ -26,7 +26,17 @@ case $choice in
     2) ./chess -f "$fen" -m "pvp" ;;
     3) ./chess -f "$fen" -m "eve" ;; 
     4) ./chess -f "$fen" -m "perft" ;;
-    *) exit ;; 
+    5)  
+        read -p "    depth: " d
+
+        if [ -z "$fen" ]; then
+            python3 perft_cmp.py "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" $d  
+        else 
+            python3 perft_cmp.py "$fen" $d 
+        fi   
+        ;;
+
+    *) exit ;;  
 esac
 
 

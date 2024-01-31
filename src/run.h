@@ -9,7 +9,7 @@ using namespace std::chrono;
 
 class Run{
     public:
-        Run(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(mode) {
+        Run(std::string& fen, game_modes mode, int depth) : board(fen), movegen(&board), mode(mode), depth(depth) {
             // generate moves for the start state (no moves made yet)
             movegen.generate_moves();
 
@@ -21,7 +21,8 @@ class Run{
                 run_EVE();
             } else if(mode == PERFT){
                 run_perft();
-
+            } else if(mode == BENCHMARK){
+                perftDriver(depth, board.get_valid_moves());
             } else {
                 std::cerr << "Unexpected mode " << mode << std::endl;
             }
@@ -50,32 +51,36 @@ class Run{
         }
 
         void run_perft(){
-            auto moves = board.get_valid_moves();
             board.view_board();
+            auto moves = board.get_valid_moves();
 
             while(run){
                 int depth = get_perft_depth();
-                int num_pos = 0, total_pos = 0;
-                
-                auto start = high_resolution_clock::now();
-
-                for(auto move : moves){
-                    make_move(move);
-                    num_pos = movegenTest(depth-1);
-                    board.undo_move();
-                    std::cout << move << " " << num_pos << std::endl;
-                    total_pos += num_pos;
-                }
-
-                auto end = high_resolution_clock::now();
-
-                auto duration = duration_cast<milliseconds>(end-start);
-
-                std::cout << "nodes: " << std::to_string(total_pos) << std::endl;
-
-                std::cout << "Time taken: " << std::to_string(duration.count()) << " ms" << std::endl;
-                std::cout << "\n";
+                perftDriver(depth, moves);
             }
+        }
+
+        void perftDriver(int& depth, std::vector<Move> moves){
+            int num_pos = 0, total_pos = 0;
+            auto start = high_resolution_clock::now();
+
+            for(auto move : moves){
+                make_move(move);
+                num_pos = movegenTest(depth-1);
+                board.undo_move();
+
+                std::cout << move << " " << num_pos << std::endl;
+                total_pos += num_pos;
+            }
+
+            auto end = high_resolution_clock::now();
+
+            auto duration = duration_cast<milliseconds>(end-start);
+
+            std::cout << "nodes " << std::to_string(total_pos) << std::endl;
+
+            std::cout << "Time taken: " << std::to_string(duration.count()) << " ms" << std::endl;
+            std::cout << "\n";
         }
 
         int movegenTest(int depth){
@@ -236,6 +241,7 @@ class Run{
         MoveGen movegen;
         game_modes mode;
         bool run = true;
+        int depth;
 };
 
 #endif
