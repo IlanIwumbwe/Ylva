@@ -17,9 +17,9 @@ ask_fen(){
 echo "====================================="
 echo "                 YLVA                "
 echo -e "=====================================\n"   
-ask_fen
-menu
 
+menu
+ask_fen
 
 case $choice in
     1) ./chess -f "$fen" -m "pve" ;;

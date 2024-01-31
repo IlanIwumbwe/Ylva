@@ -1,6 +1,8 @@
 import chess
 import chess.engine
 from typing import Dict
+import sys
+import subprocess
 
 def perft(board : chess.Board , depth : int) -> None:
     if(depth == 0):
@@ -15,7 +17,7 @@ def perft(board : chess.Board , depth : int) -> None:
 
     return nodes
 
-def perft_results(fen : str, depth : int, counts : Dict[str, int]) -> None:
+def stockfish_results(fen : str, depth : int, counts : Dict[str, int]) -> None:
     board = chess.Board(fen)
     legal_moves = list(board.legal_moves)
 
@@ -29,13 +31,19 @@ def perft_results(fen : str, depth : int, counts : Dict[str, int]) -> None:
 
     engine.quit()
 
-counts = {}
-total = 0
+if __name__ == "__main__":
+    if(len(sys.argv) > 1):
+        fen = sys.argv[1]
+        depth = int(sys.argv[2])
 
-perft_results("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 3, counts)
+        counts = {}
+        total = 0
 
-for move, count in counts.items():
-    print(f"{move} : {count}")
-    total += count
+        stockfish_results(fen, depth, counts)
 
-print(f"nodes : {total}")
+        for move, count in counts.items():
+            print(f"{move} : {count}")
+            total += count
+
+        print(f"nodes : {total}")
+        

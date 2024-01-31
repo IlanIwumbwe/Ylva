@@ -5,7 +5,7 @@
 int main(int argc, char* argv[]){
     std::string fen = "";
     game_modes mode = PERFT;
-
+    
     int opt;
 
     while ((opt = getopt(argc, argv, "f:m:")) != -1) {
@@ -29,7 +29,7 @@ int main(int argc, char* argv[]){
     }
 
     if (fen == "" && opt == 'f') {
-        std::cerr << "Usage: " << argv[0] << " -f <fen_string>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " -f <fen_string> -m <MODE>" << std::endl;
         std::cerr << "Missing required arguments." << std::endl;
         return 1;
     }

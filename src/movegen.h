@@ -257,7 +257,6 @@ class MoveGen{
                 out |= (king_attack_set[square] & black_king);
                 out |= set_bit(square+7) & ~A_FILE & black_pawns;
                 out |= set_bit(square+9) & ~H_FILE & black_pawns;
-                // TODO: rays from square to check for slider pieces giving check (white king should not be in blockers bitboard)
                 out |= get_queen_attacks(whites_minus_king | blacks, square) & black_queens;
                 out |= get_rook_attacks(whites_minus_king | blacks, square) & black_rooks;
                 out |= get_bishop_attacks(whites_minus_king | blacks, square) & black_bishops;                
@@ -266,7 +265,6 @@ class MoveGen{
                 out |= (king_attack_set[square] & white_king);
                 out |= set_bit(square-9) & ~A_FILE & white_pawns;
                 out |= set_bit(square-7) & ~H_FILE & white_pawns;
-                // TODO: rays from square to check for slider pieces giving check (black king should not be in blockers bitboard)
                 out |= get_queen_attacks(blacks_minus_king | whites, square) & white_queens;
                 out |= get_rook_attacks(blacks_minus_king | whites, square) & white_rooks;
                 out |= get_bishop_attacks(blacks_minus_king | whites, square) & white_bishops;    
@@ -410,7 +408,9 @@ class MoveGen{
             auto ally_king_sq = get_lsb(ally_king);
             auto occupancy = occupied & ~ep_mask;
 
-            return ((get_rook_attacks(occupancy, ally_king_sq) & enemy_rooks) | (get_queen_attacks(occupancy, ally_king_sq) & enemy_queens)) != 0;
+            auto horizontal_mask = get_rank_attacks(occupancy, ally_king_sq);
+
+            return (((get_rook_attacks(occupancy, ally_king_sq) & enemy_rooks) | (get_queen_attacks(occupancy, ally_king_sq) & enemy_queens)) & horizontal_mask) != 0;
         }
 
         void N_moves(){

@@ -4,6 +4,7 @@
 #include "board.h"
 #include "movegen.h"
 #include <chrono>
+#include <map>
 using namespace std::chrono;
 
 class Run{
@@ -52,32 +53,30 @@ class Run{
             auto moves = board.get_valid_moves();
 
             while(run){
-                board.view_board();
-
                 int depth = get_perft_depth();
                 int num_pos = 0, total_pos = 0;
-
+                
                 auto start = high_resolution_clock::now();
 
                 for(auto move : moves){
                     make_move(move);
                     num_pos = movegenTest(depth-1);
                     board.undo_move();
-
-                    std::cout << move << ": " << num_pos << std::endl;
+                    std::cout << move << " " << num_pos << std::endl;
                     total_pos += num_pos;
                 }
 
                 auto end = high_resolution_clock::now();
 
                 auto duration = duration_cast<milliseconds>(end-start);
-                
+
+                std::cout << "nodes: " << std::to_string(total_pos) << std::endl;
+
                 std::cout << "Time taken: " << std::to_string(duration.count()) << " ms" << std::endl;
-                std::cout << "Total positions: " << std::to_string(total_pos) << std::endl;
                 std::cout << "\n";
             }
         }
-
+    
         int movegenTest(int depth){
             auto moves = board.get_valid_moves();
             
@@ -92,7 +91,6 @@ class Run{
                 num_nodes += movegenTest(depth-1);                               
                 board.undo_move();
                 movegen.generate_moves();
-                // if(m.get_from() == 48 && m.get_to() == 32){std::cout << "move: " << move << " " << move.get_flags() << std::endl;}
             }
 
             return num_nodes;
