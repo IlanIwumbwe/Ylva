@@ -51,6 +51,7 @@ class Run{
 
         void run_perft(){
             auto moves = board.get_valid_moves();
+            board.view_board();
 
             while(run){
                 int depth = get_perft_depth();
@@ -76,7 +77,7 @@ class Run{
                 std::cout << "\n";
             }
         }
-    
+
         int movegenTest(int depth){
             auto moves = board.get_valid_moves();
             
@@ -90,7 +91,6 @@ class Run{
                 make_move(move);
                 num_nodes += movegenTest(depth-1);                               
                 board.undo_move();
-                movegen.generate_moves();
             }
 
             return num_nodes;

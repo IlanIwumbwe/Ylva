@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -g
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -O1 -O2 -O3
 SRCS = src/main.cpp
 OBJS = $(SRCS:.cpp=.o)
 TARGET = chess

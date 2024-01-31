@@ -719,31 +719,31 @@ class MoveGen{
             return attacks;
         }
 
-        U64 get_file_attacks(U64 occupied, uint square){
+        inline U64 get_file_attacks(U64 occupied, uint square){
             return get_positive_ray_attacks(occupied, north, square) | get_negative_ray_attacks(occupied, south, square);
         }
 
-        U64 get_rank_attacks(U64 occupied, uint square){
+        inline U64 get_rank_attacks(U64 occupied, uint square){
             return get_positive_ray_attacks(occupied, west, square) | get_negative_ray_attacks(occupied, east, square);
         }
 
-        U64 get_diagonal_attacks(U64 occupied, uint square){
+        inline U64 get_diagonal_attacks(U64 occupied, uint square){
             return get_positive_ray_attacks(occupied, noEa, square) | get_negative_ray_attacks(occupied, soWe, square);
         }
 
-        U64 get_antidiagonal_attacks(U64 occupied, uint square){
+        inline U64 get_antidiagonal_attacks(U64 occupied, uint square){
             return get_positive_ray_attacks(occupied, noWe, square) | get_negative_ray_attacks(occupied, soEa, square);
         }
 
-        U64 get_rook_attacks(U64 occupied, uint square){
+        inline U64 get_rook_attacks(U64 occupied, uint square){
             return get_file_attacks(occupied, square) | get_rank_attacks(occupied, square);
         }
 
-        U64 get_bishop_attacks(U64 occupied, uint square){
+        inline U64 get_bishop_attacks(U64 occupied, uint square){
             return get_diagonal_attacks(occupied, square) | get_antidiagonal_attacks(occupied, square);
         }
 
-        U64 get_queen_attacks(U64 occupied, uint square){
+        inline U64 get_queen_attacks(U64 occupied, uint square){
             return get_rook_attacks(occupied, square) | get_bishop_attacks(occupied, square);
         }
 
