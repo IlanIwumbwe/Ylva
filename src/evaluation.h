@@ -11,13 +11,7 @@ typedef enum{
     QUEEN = 900
 } piece_vals;
 
-int count_material(const Board* bo){
-    auto turn = bo->get_turn();
-    
-    
-
-
-}
+int count_material(const Board* bo);
 
 
 #endif

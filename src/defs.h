@@ -4,6 +4,15 @@
 #define STARTING_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define MOVE_FORMAT std::regex(R"([a-h][1-8][a-h][1-8](q|r|n|b)?)")
 
+#include <cstdint>
+#include <iostream>
+#include <filesystem>
+#include <unordered_map>
+#include <vector>
+#include <bitset>
+#include <regex>
+#include <cmath>
+
 typedef uint64_t U64;
 typedef unsigned int uint;
 
@@ -26,15 +35,11 @@ typedef unsigned int uint;
 #define set_bit(i) (1ULL << (i))
 #define get_bit(bitboard, i) (bitboard & set_bit(i))
 
-extern void knight_attacks(U64 bitboard, U64& output);
-extern void king_attacks(U64 bitboard, U64& output);
-
-#include <unordered_map>
 typedef enum {
     None = 0,
     P = 1 , 
     K = 2 ,
-    Q = 3 ,
+    Q = 3 , 
     R = 4 ,
     N = 5 ,
     B = 6 ,
@@ -45,27 +50,6 @@ typedef enum {
     n = 13,
     b = 14,
 } piece_names;
-
-char name_to_char(const piece_names& name){
-    switch(name){
-        case P : return 'P';
-        case p : return 'p';
-        case Q : return 'Q';
-        case q : return 'q';
-        case N : return 'N';
-        case n : return 'n';
-        case R : return 'R';
-        case r : return 'r';
-        case B : return 'B';
-        case b : return 'b';
-        case K : return 'K';
-        case k : return 'k';
-        case None : return '.';
-        default :
-            std::cout << "What? The piece name (piece_name) " << name << " does not exist" << std::endl;
-            exit(0);
-    }
-}
 
 typedef enum{
     WHITE = 0,
@@ -85,77 +69,45 @@ struct dirInfo {
     dirs opp_dir;
 }; 
 
-dirInfo dir_info[8] = {
-    {north, 8, RANK(8), south},
-    {east, -1, H_FILE, west},
-    {west, 1, A_FILE, east},
-    {south, -8, RANK(1), north},
-    {noEa, 7, H_FILE | RANK(8), soWe},
-    {noWe, 9, A_FILE  | RANK(8), soEa},
-    {soEa, -9, H_FILE | RANK(1), noWe},
-    {soWe, -7, A_FILE | RANK(1), noEa}    
-};
+extern dirInfo dir_info[8];
 
-std::unordered_map<char, piece_names> char_to_name = {
-    {'P', P},
-    {'K', K},
-    {'Q', Q},
-    {'R', R},
-    {'N', N},
-    {'B', B},
-    {'p', p},
-    {'k', k},
-    {'q', q},
-    {'r', r},
-    {'n', n},
-    {'b', b}
-};
+extern std::unordered_map<char, piece_names> char_to_name;
 
-std::unordered_map<std::string, uint> promo_flags = {
-    {"q", 11},
-    {"r", 10},
-    {"n", 8},
-    {"b", 9},
-    {"qc", 15},
-    {"rc", 14},
-    {"nc", 12},
-    {"bc", 13}
-};
+extern std::unordered_map<std::string, uint> promo_flags;
 
-uint p_flags[4] = {8,9,10,11};
-uint pc_flags[4] = {12,13,14,15};
+extern uint p_flags[4];
+extern uint pc_flags[4];
 
 // attack sets
-U64 knight_attack_set[64];
-U64 king_attack_set[64];
+extern U64 knight_attack_set[64];
+extern U64 king_attack_set[64];
 
-void populate_attack_sets(){
-    for(int i = 0; i < 64; ++i){
-        knight_attacks(set_bit(i), knight_attack_set[i]);
-        king_attacks(set_bit(i), king_attack_set[i]);
-    }
-}
+extern U64 RAYS[8][64];
 
-U64 RAYS[8][64];
+void populate_attack_sets();
 
-void populate_rays(){
-    for(auto info : dir_info){
-        for(int i = 0; i < 64; ++i){
-            U64 out = 0;
-            int mult = 0;
+void populate_rays();
 
-            out |= set_bit(i);
+char name_to_char(const piece_names& name);
 
-            while((out & info.bound) == 0){
-                mult ++;
-                out |= set_bit(i + mult * info.offset);
-            }
+void knight_attacks(U64 bitboard, U64& output);
 
-            out &= ~set_bit(i);
+void king_attacks(U64 bitboard, U64& output);
 
-            RAYS[info.dir][i] = out;
-        }
-    }
-}
+std::vector<std::string> splitString(const std::string& input, const char& delimiter);
+
+std::string removeWhiteSpace(std::string str);
+
+bool isStringDigit(std::string& input);
+
+auto numtobin(const U64& number);
+
+void printbitboard(const U64& number);
+
+int alg_to_int(const std::string& square);
+
+std::string int_to_alg(const uint& square);
+
+uint count_set_bits(U64 bitboard);
 
 #endif
