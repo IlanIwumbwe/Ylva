@@ -26,8 +26,10 @@ typedef unsigned int uint;
 #define set_bit(i) (1ULL << (i))
 #define get_bit(bitboard, i) (bitboard & set_bit(i))
 
-#include "helper_funcs.h"
+extern void knight_attacks(U64 bitboard, U64& output);
+extern void king_attacks(U64 bitboard, U64& output);
 
+#include <unordered_map>
 typedef enum {
     None = 0,
     P = 1 , 
@@ -67,7 +69,7 @@ char name_to_char(const piece_names& name){
 
 typedef enum{
     WHITE = 0,
-    BLACK = -1,
+    BLACK = 1,
 } colour;
 
 typedef enum{PVE, EVE, PVP, PERFT, BENCHMARK} game_modes;

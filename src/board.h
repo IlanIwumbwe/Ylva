@@ -402,7 +402,7 @@ class Board{
             return floor(current_state->state_id / 2) + fullmoves;
         }
 
-        colour get_turn(){return turn;}
+        colour get_turn() const {return turn;}
 
         inline int get_hm_clock(){return hm_clock;}
 
@@ -509,6 +509,12 @@ class Board{
 
         // piece bitboards
         std::unordered_map<piece_names, U64> bitboards{};
+        //U64 pawns[2];
+        //U64 knights[2];
+        //U64 bishops[2];
+        //U64 queens[2];
+        //U64 kings[2];
+        //U64 rooks[2];
         
         // maintain state
         std::shared_ptr<State> current_state = NULL;

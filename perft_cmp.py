@@ -20,14 +20,26 @@ def perft(board : chess.Board , depth : int) -> None:
     return nodes
 
 def my_results(fen:str, depth:int):
-    engine = subprocess.Popen(
-        ["./chess", f'-f {fen}', '-m benchmark' f'-f {depth}'],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        text=True
-    )   
-    
-    return sorted(list(engine.stdout))
+    try:
+        engine = subprocess.Popen(
+            ["./chess", f'-f "{fen}"', '-m "benchmark"', f'-d "{str(depth)}"'],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )   
+
+        output, errors = engine.communicate()
+
+        if(errors):
+            print("Errors: ", errors)
+        
+        if(output):
+            return sorted(list(engine.stdout))
+        
+    except Exception as e:
+        print("Error: ", e)
+        return []
 
 def stockfish_results(fen : str, depth : int, counts : Dict[str, int]) -> None:
     board = chess.Board(fen)
@@ -56,9 +68,10 @@ if __name__ == "__main__":
         
         res = my_results(fen, depth)
 
+        print(res)
+
         for move, count in sorted(counts.items(), key=lambda pair : pair[0]):
-            if(res[p].strip() != f"{move} {count}"):
-                print(res[p].strip())
+            print(move, count)
 
             p+=1
             total += count
