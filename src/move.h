@@ -1,10 +1,7 @@
 #ifndef MOVE_H
 #define MOVE_H
 
-#include "helper_funcs.h"
 #include "defs.h"
-
-
 class Move{
     public:
         Move(){
@@ -29,7 +26,7 @@ class Move{
         bool operator==(Move a) const {return move == a.get_move();}
         bool operator!=(Move a) const {return move != a.get_move();}
 
-        friend std::ostream& operator<<(std::ostream& os, Move& move) {
+        friend std::ostream& operator<<(std::ostream& os, Move& move){
             os << int_to_alg(move.get_from()) << int_to_alg(move.get_to());
             auto f = move.get_flags();
 
