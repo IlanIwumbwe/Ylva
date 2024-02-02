@@ -1,5 +1,7 @@
 #include "evaluation.h"
 
+Eval::Eval(){}
+
 Eval::Eval(Board* _board, MoveGen* _movegen) : board(_board), movegen(_movegen) {}
 
 int Eval::count_white_material(){
@@ -58,6 +60,38 @@ float Eval::PlainMinimax(int depth){
 
     return best_eval;
 }
+/// Minimax with alpha beta
+float Eval::AlphaBetaMinimax(int depth, float alpha, float beta){
+    if(depth == 0){
+        return Evaluation();
+    }
+
+    auto moves = board->get_valid_moves();
+    if(moves.size() == 0){
+        if(movegen->ally_king_in_check()){
+            return -INFINITY;  // checkmate
+        } else {
+            return 0.0;         // stalemate
+        }
+    }
+
+    float curr_eval;
+
+    for(auto move : moves){
+        make_move(move);
+        curr_eval = -AlphaBetaMinimax(depth-1, -beta, -alpha);
+        
+        if(curr_eval >= beta){
+            return beta;
+        }
+
+        alpha = std::max(curr_eval, alpha);
+        board->undo_move();
+    }
+
+    return alpha;
+}
+
 
 
 

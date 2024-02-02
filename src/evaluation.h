@@ -14,6 +14,8 @@ typedef enum{
 
 class Eval{
     public:
+        Eval();
+
         Eval(Board* _board, MoveGen* movegen);
 
         float PlainMinimax(int depth);

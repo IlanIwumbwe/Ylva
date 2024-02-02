@@ -1,5 +1,7 @@
 #include "engine.h"
 
+Engine::Engine(){}
+
 Engine::Engine(Board* board, MoveGen* movegen, int depth) : board(board), movegen(movegen), eval(board, movegen), depth(depth){
     std::cout << "Searching to depth " << depth << std::endl;
 }

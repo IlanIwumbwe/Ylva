@@ -10,7 +10,7 @@ using namespace std::chrono;
 
 class Run{
     public:
-        Run(std::string& fen, game_modes mode, int depth);
+        Run(std::string& fen, game_modes mode);
 
         void run_PVP();
 
@@ -48,7 +48,6 @@ class Run{
         MoveGen movegen;
         game_modes mode;
         bool run = true;
-        int depth;
         Engine engine;
 };
 

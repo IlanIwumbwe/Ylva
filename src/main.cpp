@@ -5,10 +5,9 @@
 int main(int argc, char* argv[]){
     std::string fen = "";
     game_modes mode = PVE;
-    int depth = 1;
     int opt;
 
-    while ((opt = getopt(argc, argv, "f:m:d:")) != -1) {
+    while ((opt = getopt(argc, argv, "f:m:")) != -1) {
         switch (opt) {
             case 'f':
                 fen = optarg;
@@ -26,8 +25,6 @@ int main(int argc, char* argv[]){
                     mode = PERFT;
                 }
                 break;
-            case 'd':
-                depth = (*optarg - '0');
             default:
                 break;
         }
@@ -42,7 +39,7 @@ int main(int argc, char* argv[]){
     populate_attack_sets();
     populate_rays();
 
-    Run game_loop(fen, mode, depth);
+    Run game_loop(fen, mode);
 
     return 0;
 }

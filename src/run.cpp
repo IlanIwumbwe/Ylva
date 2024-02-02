@@ -1,18 +1,25 @@
 #include "run.h"
 
-Run::Run(std::string& fen, game_modes mode, int depth) : board(fen), movegen(&board), mode(mode), depth(depth), engine(&board, &movegen, depth) {
+Run::Run(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(mode) {
     // generate moves for the start state (no moves made yet)
     movegen.generate_moves();
 
     if(mode == PVP){
         run_PVP();
     } else if(mode == PVE){
+        int depth = get_perft_depth();
+        Engine _engine(&board, &movegen, depth);
+        engine = _engine;
         run_PVE();
     } else if(mode == EVE) {
+        int depth = get_perft_depth();
+        Engine _engine(&board, &movegen, depth);
+        engine = _engine;
         run_EVE();
     } else if(mode == PERFT){
         run_perft();
     } else if(mode == BENCHMARK){
+        int depth = get_perft_depth();
         perftDriver(depth, board.get_valid_moves());
     } else {
         std::cerr << "Unexpected mode " << mode << std::endl;
