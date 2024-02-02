@@ -1,6 +1,6 @@
 #include "run.h"
 
-Run::Run(std::string& fen, game_modes mode, int depth) : board(fen), movegen(&board), mode(mode), depth(depth), engine(&board, &movegen) {
+Run::Run(std::string& fen, game_modes mode, int depth) : board(fen), movegen(&board), mode(mode), depth(depth), engine(&board, &movegen, depth) {
     // generate moves for the start state (no moves made yet)
     movegen.generate_moves();
 

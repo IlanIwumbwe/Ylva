@@ -6,7 +6,6 @@ int main(int argc, char* argv[]){
     std::string fen = "";
     game_modes mode = PVE;
     int depth = 1;
-    
     int opt;
 
     while ((opt = getopt(argc, argv, "f:m:d:")) != -1) {
@@ -28,8 +27,7 @@ int main(int argc, char* argv[]){
                 }
                 break;
             case 'd':
-                std::cout << optarg << std::endl;
-                depth = (*optarg - '0'); 
+                depth = (*optarg - '0');
             default:
                 break;
         }

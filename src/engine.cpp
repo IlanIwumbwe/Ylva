@@ -1,7 +1,7 @@
 #include "engine.h"
 
-Engine::Engine(Board* board, MoveGen* movegen) : board(board), movegen(movegen), eval(board, movegen){
-
+Engine::Engine(Board* board, MoveGen* movegen, int depth) : board(board), movegen(movegen), eval(board, movegen), depth(depth){
+    std::cout << "Searching to depth " << depth << std::endl;
 }
 
 int Engine::get_random_index(int moves_size){
@@ -14,14 +14,15 @@ int Engine::get_random_index(int moves_size){
 }
 
 Move Engine::find_minimax_move(){
-    int best_eval = -INFINITY, curr_eval;
+    float best_eval = -INFINITY, curr_eval;
     Move best_move;
+    int perspective = board->get_turn() ? -1 : 1;
 
     auto moves = board->get_valid_moves();
 
     for(auto move : moves){
         make_move(move);
-        curr_eval = eval.PlainMinimax(depth - 1) + eval.Evaluation();
+        curr_eval = perspective * eval.PlainMinimax(depth - 1);
 
         if(curr_eval > best_eval){
             best_eval = curr_eval;

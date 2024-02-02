@@ -16,7 +16,9 @@ class Eval{
     public:
         Eval(Board* _board, MoveGen* movegen);
 
-        int PlainMinimax(int depth);
+        float PlainMinimax(int depth);
+
+        float AlphaBetaMinimax(int depth, float alpha, float beta);
 
         int Evaluation();
 

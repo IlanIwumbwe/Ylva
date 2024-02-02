@@ -9,7 +9,7 @@
 
 class Engine{
     public:
-        Engine(Board* board, MoveGen* movegen);
+        Engine(Board* board, MoveGen* movegen, int depth);
 
         int get_random_index(int moves_size);
 
@@ -28,7 +28,7 @@ class Engine{
         Board* board;
         MoveGen* movegen;
         Eval eval;
-        int depth = 2;
+        int depth = 4;
 };
 
 #endif

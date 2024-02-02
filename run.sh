@@ -22,9 +22,13 @@ menu
 ask_fen
 
 case $choice in
-    1) ./chess -f "$fen" -m "pve" ;;
+    1) 
+        ./chess -f "$fen" -m "pve"
+        ;;
     2) ./chess -f "$fen" -m "pvp" ;;
-    3) ./chess -f "$fen" -m "eve" ;; 
+    3)  
+        ./chess -f "$fen" -m "eve"
+        ;; 
     4) ./chess -f "$fen" -m "perft" ;;
     5)  
         read -p "    depth: " d

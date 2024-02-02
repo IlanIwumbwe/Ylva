@@ -33,7 +33,7 @@ int Eval::Evaluation(){
 }
 
 /// Minimax with no optimisations
-int Eval::PlainMinimax(int depth){
+float Eval::PlainMinimax(int depth){
     if(depth == 0){
         return Evaluation();
     }
@@ -43,11 +43,11 @@ int Eval::PlainMinimax(int depth){
         if(movegen->ally_king_in_check()){
             return -INFINITY;  // checkmate
         } else {
-            return 0;         // stalemate
+            return 0.0;         // stalemate
         }
     }
 
-    int curr_eval = 0, best_eval = -INFINITY;
+    float curr_eval = 0.0, best_eval = -INFINITY;
 
     for(auto move : moves){
         make_move(move);
@@ -58,5 +58,6 @@ int Eval::PlainMinimax(int depth){
 
     return best_eval;
 }
+
 
 
