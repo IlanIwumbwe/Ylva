@@ -53,7 +53,7 @@ typedef enum {
 
 typedef enum{
     WHITE = 0,
-    BLACK = 1,
+    BLACK,
 } colour;
 
 typedef enum{PVE, EVE, PVP, PERFT, BENCHMARK} game_modes;
