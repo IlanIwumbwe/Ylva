@@ -24,7 +24,7 @@ Move Engine::find_minimax_move(){
 
     for(auto move : moves){
         make_move(move);
-        curr_eval = perspective * eval.PlainMinimax(depth - 1);
+        curr_eval = perspective * eval.PlainMinimax(depth-1); //eval.AlphaBetaMinimax(depth-1,-INFINITY, INFINITY);
 
         if(curr_eval > best_eval){
             best_eval = curr_eval;

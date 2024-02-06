@@ -59,7 +59,7 @@ float Eval::PlainMinimax(int depth){
     }
 
     return best_eval;
-}
+}   
 /// Minimax with alpha beta
 float Eval::AlphaBetaMinimax(int depth, float alpha, float beta){
     if(depth == 0){
@@ -73,7 +73,7 @@ float Eval::AlphaBetaMinimax(int depth, float alpha, float beta){
         } else {
             return 0.0;         // stalemate
         }
-    }
+    }   
 
     float curr_eval;
 
