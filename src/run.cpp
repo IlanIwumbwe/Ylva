@@ -152,6 +152,7 @@ void Run::get_input_from_player(){
 
 int Run::get_perft_depth(){
     std::string input;
+    std::cout << "Provide search depth" << std::endl;
     std::cout << ">>: ";
     std::cin >> input;
 
