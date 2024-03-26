@@ -21,6 +21,12 @@ void Board::make_move(const Move& move){
 
     auto from_piece_colour = get_piece_colour(from_piece_name);
 
+    if(from_piece_name == None){
+        std::cout << int_to_alg(from) << std::endl;
+
+        view_board();
+    }
+
     assert(from_piece_name != None);
 
     U64 from_piece_bitboard = get_piece_bitboard(from_piece_name);

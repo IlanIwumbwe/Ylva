@@ -14,3 +14,18 @@ Currently, everything runs in the terminal.
 
 Current move generation speed is `~500k` nodes/second. Proper benchmarking to be done in the future.
 
+Ylva is meant to be a *v1* of hopefully something bigger, and an improvement upon an earlier (failed) [attempt](https://github.com/IlanIwumbwe/BitboardChess/tree/master).
+
+### Notable techniques
+
+Ylva uses bitboards as the data structure that stores information about a board state. 
+
+Bitboards are great because when used right, they speed up move generation significantly, because most operations required during move generation are reduced to bitwise operations. 12 bitboards are used for each of the 6 chess pieces, for each colour. 
+
+Slider piece move generation is really costly, and various techniques such as [magic bitboards](https://www.chessprogramming.org/Magic_Bitboards) exist to speed up slider piece move generation. This implementation uses the [classical approach](https://www.chessprogramming.org/Classical_Approach) as it was the easiest to implement as a starting point.
+
+The engine is uses a very simple material based evaluation and minimax search to decide which moves are best.
+
+### Todos
+
+[Future plans for Ylva](https://github.com/IlanIwumbwe/Ylva/issues/2)
