@@ -6,15 +6,13 @@
 
 Welcome to *Ylva!*
 
+A minimal chess engine in the terminal. Ylva will see improvements over time.
+
 **Not** UCI compliant. 
 
 Run using `run.sh`. This brings up a menu, with options to play with a friend, with the engine, engine v engine, or run Perft.
-
-Currently, everything runs in the terminal. 
-
+ 
 Current move generation speed is `~500k` nodes/second. Proper benchmarking to be done in the future.
-
-Ylva is meant to be a *v1* of hopefully something bigger, and an improvement upon an earlier (failed) [attempt](https://github.com/IlanIwumbwe/BitboardChess/tree/master).
 
 ### Notable techniques
 
