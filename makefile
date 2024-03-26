@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -g -O1 -O2 -O3
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -O3
 SRC_DIR = src
 SRCS = $(SRC_DIR)/main.cpp $(SRC_DIR)/board.cpp $(SRC_DIR)/engine.cpp $(SRC_DIR)/evaluation.cpp $(SRC_DIR)/movegen.cpp $(SRC_DIR)/run.cpp $(SRC_DIR)/defs.cpp
 OBJS = $(SRCS:.cpp=.o)

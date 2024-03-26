@@ -1,5 +1,14 @@
 #!/bin/bash
 
+executable="./chess"
+
+if [ -x "$(command -v $executable)" ]; then
+    echo "Executable '$executable' exists"
+else
+    echo "Executable '$executable' will be created by running make"
+    make 
+fi
+
 menu(){  
     echo "    1. Play against engine"
     echo "    2. Play against friend"
@@ -23,24 +32,15 @@ ask_fen
 
 case $choice in
     1) 
-        ./chess -f "$fen" -m "pve"
-        ;;
-    2) ./chess -f "$fen" -m "pvp" ;;
-    3)  
-        ./chess -f "$fen" -m "eve"
-        ;; 
-    4) ./chess -f "$fen" -m "perft" ;;
-    5)  
-        read -p "    depth: " d
-
-        if [ -z "$fen" ]; then
-            python3 perft_cmp.py "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" $d  
-        else 
-            python3 perft_cmp.py "$fen" $d 
-        fi   
-        ;;
-
-    *) exit ;;  
+        $executable -f "$fen" -m "pve";;
+    2) 
+        $executable -f "$fen" -m "pvp" ;;
+    3) 
+        $executable -f "$fen" -m "eve" ;; 
+    4) 
+        $executable -f "$fen" -m "perft" ;;
+    *) 
+        exit ;;  
 esac
 
 
