@@ -4,9 +4,9 @@
     <img width="33%" src="ylva.jpg">
 </p>
 
-Welcome to *Ylva!*
+Welcome to *Ylva*, a minimal chess engine in the terminal. 
 
-A minimal chess engine in the terminal. Ylva will see improvements over time.
+Ylva will see improvements over time.
 
 **Not** UCI compliant. 
 
