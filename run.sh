@@ -19,7 +19,7 @@ menu(){
 }
 
 ask_fen(){
-    echo "    Load FEN "
+    echo "    Load FEN (starting fen by defualt)"
     read -p "    >> " fen
 }
 

@@ -22,15 +22,18 @@ Move Engine::find_minimax_move(){
 
     auto moves = board->get_valid_moves();
 
+    /*
     std::cout << "valids" << std::endl;
     for (Move move : moves){
         std::cout << move << std::endl;
     }
+    */
 
     for(auto move : moves){
         make_move(move);
-        curr_eval = perspective * eval.AlphaBetaMinimax(depth-1,-INFINITY, INFINITY);
-        //curr_eval = perspective * eval.PlainMinimax(depth-1);
+        /// TODO: running alpha beta causes assertion failure, fix this
+        //curr_eval = perspective * eval.AlphaBetaMinimax(depth-1,-INFINITY, INFINITY);
+        curr_eval = perspective * eval.PlainMinimax(depth-1);
 
         if(curr_eval > best_eval){
             best_eval = curr_eval;
