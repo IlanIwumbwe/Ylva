@@ -5,11 +5,11 @@
 #include "movegen.h"
 
 typedef enum{
-    PAWN = 100,
-    KNIGHT = 300,
-    BISHOP = 300,
-    ROOK = 500,
-    QUEEN = 900
+    PAWN_VAL = 100,
+    KNIGHT_VAL = 300,
+    BISHOP_VAL = 300,
+    ROOK_VAL = 500,
+    QUEEN_VAL = 900
 } piece_vals;
 
 class Eval{
@@ -28,7 +28,7 @@ class Eval{
 
         int count_white_material();
 
-        inline void make_move(Move move){
+        inline void make_move(const Move& move){
             board->make_move(move);
             movegen->generate_moves();
         }

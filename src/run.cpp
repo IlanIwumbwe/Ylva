@@ -131,7 +131,7 @@ void Run::get_input_from_player(){
     std::cout << ">> ";
     std::cin >> input;
 
-    while(!std::regex_match(input, MOVE_FORMAT) && input != "undo" && input != "quit"){
+    while(!std::regex_match(input, MOVE_FORMAT) && input != "undo" && input != "quit" && input != "move"){
         std::cout << "Inputs are undo, quit or a chess move." << std::endl;
         std::cout << "Type moves in long algebraic notation. " << std::endl;
         std::cout << "Examples:  e2e4, e7e5, e1g1 (white short castling), e7e8q (for promotion)" << std::endl;
@@ -145,6 +145,8 @@ void Run::get_input_from_player(){
         run = false;
     } else if (std::regex_match(input, MOVE_FORMAT)){
         parse_player_move(input);
+    } else if(input == "move"){
+        engine.make_engine_move();
     } else {
         std::cout << "Inputs are undo, quit or a chess move in long algebraic format" << std::endl;
     }

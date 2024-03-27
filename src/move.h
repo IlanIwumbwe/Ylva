@@ -26,7 +26,7 @@ class Move{
         bool operator==(Move a) const {return move == a.get_move();}
         bool operator!=(Move a) const {return move != a.get_move();}
 
-        friend std::ostream& operator<<(std::ostream& os, Move& move){
+        friend std::ostream& operator<<(std::ostream& os, const Move& move){
             os << int_to_alg(move.get_from()) << int_to_alg(move.get_to());
             auto f = move.get_flags();
 

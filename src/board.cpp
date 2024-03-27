@@ -12,6 +12,8 @@ Board::Board (const std::string& _fen){
 
 /// Make move given as input on the board
 void Board::make_move(const Move& move){
+    // std::cout << "making move " << move << std::endl;
+
     const auto from = move.get_from();
     const auto to = move.get_to();
     const auto flags = move.get_flags();
@@ -112,8 +114,10 @@ int Board::get_prev_move(Move& prev_move){
 
 int Board::undo_move(){
     if(current_state->prev_state != NULL){  
-        auto prev_move = current_state->prev_move;
-        auto recent_capture = current_state->recent_capture;
+        Move prev_move = current_state->prev_move;
+        piece_names recent_capture = current_state->recent_capture;
+
+        // std::cout << "undoing move " << prev_move << std::endl;
 
         revert_state();
     
