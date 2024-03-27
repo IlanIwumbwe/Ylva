@@ -27,3 +27,7 @@ The engine is uses a very simple material based evaluation and minimax search to
 ### Todos
 
 [Future plans for Ylva](https://github.com/IlanIwumbwe/Ylva/issues/2)
+
+### Demo
+
+[ylvavid.webm](https://github.com/IlanIwumbwe/Ylva/assets/56346800/16319713-d396-4238-bd31-d42e1c36ef8f)
