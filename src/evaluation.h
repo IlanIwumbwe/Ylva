@@ -4,13 +4,9 @@
 #include "board.h"
 #include "movegen.h"
 
-typedef enum{
-    PAWN_VAL = 100,
-    KNIGHT_VAL = 300,
-    BISHOP_VAL = 300,
-    ROOK_VAL = 500,
-    QUEEN_VAL = 900
-} piece_vals;
+#define CAPTURE_VAL_POWER 10
+#define PROMOTION_POWER 20
+#define PAWN_ATTACK_POWER 50ULL
 
 class Eval{
     public:
@@ -18,9 +14,9 @@ class Eval{
 
         Eval(Board* _board, MoveGen* movegen);
 
-        float PlainMinimax(int depth);
+        float plain_minimax(int depth);
 
-        float AlphaBetaMinimax(int depth, float alpha, float beta);
+        float alpha_beta_minimax(int depth, float alpha, float beta);
 
         int Evaluation();
 
@@ -28,14 +24,34 @@ class Eval{
 
         int count_white_material();
 
-        inline void make_move(const Move& move){
+        void set_move_heuristics(std::vector<Move>& moves, U64& enemy_pawns);
+
+        void order_moves(std::vector<Move>& moves);
+
+        void make_move(const Move& move){
             board->make_move(move);
+            nodes_searched += 1;
             movegen->generate_moves();
         }
+
+        int nodes_searched = 0;
 
     private:
         Board* board;
         MoveGen* movegen;
+
+        std::unordered_map<piece_names, int> get_piece_value{
+            {P, 100},
+            {p, 100},
+            {N, 300},
+            {n, 300},
+            {B, 300},
+            {b, 300},
+            {R, 500},
+            {r, 500},
+            {Q, 900},
+            {q, 900}
+        };
 };
 
 #endif

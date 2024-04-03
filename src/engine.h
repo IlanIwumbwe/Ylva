@@ -6,6 +6,9 @@
 #include "movegen.h"
 #include "evaluation.h"
 #include <random>
+#include <chrono>
+
+using namespace std::chrono;
 
 class Engine{
     public:
@@ -17,12 +20,15 @@ class Engine{
 
         Move find_minimax_move();
 
+        Move find_alphabeta_move();
+
         Move get_random_move();
         
         void make_engine_move();
 
         inline void make_move(Move move){
             board->make_move(move);    
+            eval.nodes_searched += 1;
             movegen->generate_moves(); 
         }
 
@@ -32,5 +38,6 @@ class Engine{
         Eval eval;
         int depth = 4;
 };
+
 
 #endif

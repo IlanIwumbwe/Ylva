@@ -4,9 +4,7 @@
 #include "board.h"
 #include "movegen.h"
 #include "engine.h"
-#include <chrono>
 #include <map>
-using namespace std::chrono;
 
 class Run{
     public:

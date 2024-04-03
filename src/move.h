@@ -38,9 +38,13 @@ class Move{
             return os;
         }
 
+        bool operator<(Move a) const {return value > a.value;}
+
+        /// move value used for move ordering
+        int value = 0;
+
     private:
         uint16_t move;
-
 };
 
 #endif
