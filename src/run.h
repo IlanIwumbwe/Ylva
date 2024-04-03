@@ -46,7 +46,7 @@ class Run{
         MoveGen movegen;
         game_modes mode;
         bool run = true;
-        Engine engine;
+        Enginev1 engine_v1;
 };
 
 #endif

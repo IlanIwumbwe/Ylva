@@ -12,19 +12,9 @@ using namespace std::chrono;
 
 class Engine{
     public:
-        Engine();
+        virtual Move get_engine_move() = 0;
 
-        Engine(Board* board, MoveGen* movegen, int depth);
-
-        int get_random_index(int moves_size);
-
-        Move find_minimax_move();
-
-        Move find_alphabeta_move();
-
-        Move get_random_move();
-        
-        void make_engine_move();
+        void engine_driver();
 
         inline void make_move(Move move){
             board->make_move(move);    
@@ -32,12 +22,52 @@ class Engine{
             movegen->generate_moves(); 
         }
 
-    private:
+    protected:
         Board* board;
         MoveGen* movegen;
         Eval eval;
         int depth = 4;
 };
 
+class Enginev0 : public Engine{
+    public:
+        Enginev0(){}
+
+        Enginev0(Board* _board, MoveGen* _movegen, int _depth){
+            std::cout << "Searching to depth " << depth << std::endl;
+            board = _board;
+            movegen = _movegen;
+            depth = _depth;
+
+            Eval _eval(board, movegen);
+            
+            eval = _eval;
+        }
+
+        Move get_engine_move();
+        
+        int get_random_index(int moves_size);
+
+        Move get_random_move();
+};
+
+class Enginev1 : public Engine{
+    public:
+        Enginev1(){}
+
+        Enginev1(Board* _board, MoveGen* _movegen, int _depth){
+            std::cout << "Searching to depth " << depth << std::endl;
+            board = _board;
+            movegen = _movegen;
+            depth = _depth;
+
+            Eval _eval(board, movegen);
+            
+            eval = _eval;
+        }
+
+        Move get_engine_move();
+
+};
 
 #endif

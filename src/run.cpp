@@ -8,13 +8,13 @@ Run::Run(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(
         run_PVP();
     } else if(mode == PVE){
         int depth = get_perft_depth();
-        Engine _engine(&board, &movegen, depth);
-        engine = _engine;
+        Enginev1 _engine(&board, &movegen, depth);
+        engine_v1 = _engine;
         run_PVE();
     } else if(mode == EVE) {
         int depth = get_perft_depth();
-        Engine _engine(&board, &movegen, depth);
-        engine = _engine;
+        Enginev1 _engine(&board, &movegen, depth);
+        engine_v1 = _engine;
         run_EVE();
     } else if(mode == PERFT){
         run_perft();
@@ -38,7 +38,7 @@ void Run::run_PVE(){
         if(board.get_turn() == WHITE){
             get_input_from_player();
         }else{
-            engine.make_engine_move();
+            engine_v1.engine_driver();
         }
         end_game();
     }
@@ -46,7 +46,7 @@ void Run::run_PVE(){
 
 void Run::run_EVE(){
     while(run){
-        engine.make_engine_move();
+        engine_v1.engine_driver();
         end_game();
     }
 }
@@ -146,7 +146,7 @@ void Run::get_input_from_player(){
     } else if (std::regex_match(input, MOVE_FORMAT)){
         parse_player_move(input);
     } else if(input == "move"){
-        engine.make_engine_move();
+        engine_v1.engine_driver();
     } else {
         std::cout << "Inputs are undo, quit or a chess move in long algebraic format" << std::endl;
     }

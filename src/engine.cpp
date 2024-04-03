@@ -1,12 +1,6 @@
 #include "engine.h"
 
-Engine::Engine(){}
-
-Engine::Engine(Board* board, MoveGen* movegen, int depth) : board(board), movegen(movegen), eval(board, movegen), depth(depth){
-    std::cout << "Searching to depth " << depth << std::endl;
-}
-
-int Engine::get_random_index(int moves_size){
+int Enginev0::get_random_index(int moves_size){
     std::random_device rd;
     std::mt19937 gen(rd());
 
@@ -15,7 +9,7 @@ int Engine::get_random_index(int moves_size){
     return dist(gen);
 }
 
-Move Engine::find_minimax_move(){
+Move Enginev0::get_engine_move(){
     float best_eval = -INFINITY, curr_eval;
     Move best_move;
     int perspective = board->get_turn() ? -1 : 1;
@@ -40,7 +34,7 @@ Move Engine::find_minimax_move(){
     return best_move;
 }
 
-Move Engine::find_alphabeta_move(){
+Move Enginev1::get_engine_move(){
     float best_eval = -INFINITY, curr_eval;
     Move best_move;
     int perspective = board->get_turn() ? -1 : 1;
@@ -67,17 +61,12 @@ Move Engine::find_alphabeta_move(){
     return best_move;
 }
 
-Move Engine::get_random_move(){
-    auto moves = board->get_valid_moves();
-    return moves[get_random_index(moves.size())];
-}
-
-void Engine::make_engine_move(){
+void Engine::engine_driver(){
     board->view_board();   
 
     auto start = high_resolution_clock::now();
 
-    auto move = find_alphabeta_move(); // find_minimax_move(); //get_random_move();
+    Move move = get_engine_move(); // find_minimax_move(); //get_random_move();
 
     auto end = high_resolution_clock::now();
 
@@ -88,5 +77,6 @@ void Engine::make_engine_move(){
     std::cout << move << std::endl;
 
     make_move(move);
-}   
+}
+
 
