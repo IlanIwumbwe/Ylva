@@ -31,6 +31,8 @@ class Run{
 
         int get_perft_depth();
 
+        void set_engine(int& depth);
+
         void parse_player_move(std::string& str_move);
 
         void make_player_move(const std::tuple<std::string, std::string, std::string>& str_move);
@@ -46,7 +48,8 @@ class Run{
         MoveGen movegen;
         game_modes mode;
         bool run = true;
-        Enginev1 engine_v1;
+
+        std::unique_ptr<Engine> engine;
 };
 
 #endif

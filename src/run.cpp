@@ -8,13 +8,11 @@ Run::Run(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(
         run_PVP();
     } else if(mode == PVE){
         int depth = get_perft_depth();
-        Enginev1 _engine(&board, &movegen, depth);
-        engine_v1 = _engine;
+        set_engine(depth);
         run_PVE();
     } else if(mode == EVE) {
         int depth = get_perft_depth();
-        Enginev1 _engine(&board, &movegen, depth);
-        engine_v1 = _engine;
+        set_engine(depth);
         run_EVE();
     } else if(mode == PERFT){
         run_perft();
@@ -38,7 +36,7 @@ void Run::run_PVE(){
         if(board.get_turn() == WHITE){
             get_input_from_player();
         }else{
-            engine_v1.engine_driver();
+            engine->engine_driver();
         }
         end_game();
     }
@@ -46,7 +44,7 @@ void Run::run_PVE(){
 
 void Run::run_EVE(){
     while(run){
-        engine_v1.engine_driver();
+        engine->engine_driver();
         end_game();
     }
 }
@@ -146,7 +144,7 @@ void Run::get_input_from_player(){
     } else if (std::regex_match(input, MOVE_FORMAT)){
         parse_player_move(input);
     } else if(input == "move"){
-        engine_v1.engine_driver();
+        engine->engine_driver();
     } else {
         std::cout << "Inputs are undo, quit or a chess move in long algebraic format" << std::endl;
     }
@@ -164,6 +162,28 @@ int Run::get_perft_depth(){
     }
 
     return std::stoi(input);
+}
+
+void Run::set_engine(int& depth){
+    std::string input;
+
+    std::cout << "Engine version " << std::endl;
+    std::cout << ">>: ";
+    std::cin >> input;
+
+    while(!std::regex_match(input, VERSION_FORMAT)){
+        std::cout << "v0, v1, v2" << std::endl;
+        std::cout << ">>: ";
+        std::cin >> input;
+    }
+
+    if(input == "v0"){
+        engine = std::make_unique<Enginev0>(&board, &movegen, depth);
+    } else if(input == "v1"){
+        engine = std::make_unique<Enginev1>(&board, &movegen, depth);
+    } else if(input == "v2"){
+        engine = std::make_unique<Enginev2>(&board, &movegen, depth);
+    }
 }
 
 void Run::parse_player_move(std::string& str_move){

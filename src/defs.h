@@ -3,6 +3,7 @@
 
 #define STARTING_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define MOVE_FORMAT std::regex(R"([a-h][1-8][a-h][1-8](q|r|n|b)?)")
+#define VERSION_FORMAT std::regex(R"(v[0-2])")
 
 #include <cstdint>
 #include <iostream>
@@ -57,7 +58,7 @@ typedef enum{
 } colour;
 
 typedef enum{PVE, EVE, PVP, PERFT, BENCHMARK} game_modes;
-
+ 
 typedef enum{north, east, west, south, noEa, soEa, noWe, soWe} dirs;
 
 typedef enum {diag, nondiag} ray_type;
@@ -74,6 +75,8 @@ extern dirInfo dir_info[8];
 extern std::unordered_map<char, piece_names> char_to_name;
 
 extern std::unordered_map<std::string, uint> promo_flags;
+
+extern std::unordered_map<piece_names, int> get_piece_value;
 
 extern uint p_flags[4];
 extern uint pc_flags[4];

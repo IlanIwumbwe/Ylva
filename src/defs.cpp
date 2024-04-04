@@ -39,6 +39,19 @@ std::unordered_map<std::string, uint> promo_flags = {
     {"bc", 13}
 };
 
+std::unordered_map<piece_names, int> get_piece_value = {
+    {P, 100},
+    {p, 100},
+    {N, 300},
+    {n, 300},
+    {B, 300},
+    {b, 300},
+    {R, 500},
+    {r, 500},
+    {Q, 900},
+    {q, 900}
+};
+
 uint p_flags[4] = {8,9,10,11};
 uint pc_flags[4] = {12,13,14,15};
 U64 knight_attack_set[64] = {};

@@ -12,6 +12,10 @@ using namespace std::chrono;
 
 class Engine{
     public:
+        Engine(Board* _board, MoveGen* _movegen, int _depth) : board(_board), movegen(_movegen), depth(_depth), eval(board){
+            std::cout << "Searching to depth " << depth << std::endl;
+        }
+
         virtual Move get_engine_move() = 0;
 
         void engine_driver();
@@ -25,49 +29,39 @@ class Engine{
     protected:
         Board* board;
         MoveGen* movegen;
-        Eval eval;
         int depth = 4;
+        Eval eval;
 };
 
 class Enginev0 : public Engine{
     public:
-        Enginev0(){}
+        Enginev0(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
 
-        Enginev0(Board* _board, MoveGen* _movegen, int _depth){
-            std::cout << "Searching to depth " << depth << std::endl;
-            board = _board;
-            movegen = _movegen;
-            depth = _depth;
+        Move get_engine_move() override;
 
-            Eval _eval(board, movegen);
-            
-            eval = _eval;
-        }
-
-        Move get_engine_move();
-        
-        int get_random_index(int moves_size);
-
-        Move get_random_move();
+        float plain_minimax(int depth);
 };
 
 class Enginev1 : public Engine{
     public:
-        Enginev1(){}
+        Enginev1(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
 
-        Enginev1(Board* _board, MoveGen* _movegen, int _depth){
-            std::cout << "Searching to depth " << depth << std::endl;
-            board = _board;
-            movegen = _movegen;
-            depth = _depth;
+        Move get_engine_move() override;
 
-            Eval _eval(board, movegen);
-            
-            eval = _eval;
-        }
+        float alpha_beta_minimax(int depth, float alpha, float beta);
+};
 
-        Move get_engine_move();
+class Enginev2 : public Engine{
+    public:
+        Enginev2(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
 
+        Move get_engine_move() override;
+
+        float ab_move_ordering(int depth, float alpha, float beta);
+
+        void set_move_heuristics(std::vector<Move>& moves, U64& enemy_pawns);
+
+        void order_moves(std::vector<Move>& moves);
 };
 
 #endif
