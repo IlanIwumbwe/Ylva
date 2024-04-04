@@ -10,7 +10,7 @@ class MoveGen{
     public:
         MoveGen(Board* current_state);
 
-        std::vector<Move> generate_moves();
+        std::vector<Move> generate_moves(bool _captures_only = false);
 
         bool move_is_legal(Move& move);
 
@@ -18,7 +18,11 @@ class MoveGen{
 
         bool no_legal_moves();
 
+        /// generate all legal moves
         void generate_legal_moves();
+
+        /// generate only captures moves
+        void generate_legal_captures();
 
         /// Setup a bitboard of all pinned pieces on the board. This mask is used to remove pinned pieces when such that moves aren't generated for them
         /// in main move generator. Instead, pinned pieces' moves are generated separately at right after king moves are generated
@@ -61,31 +65,55 @@ class MoveGen{
             return checkers != 0;
         }
 
-        void P_moves();
+        void P_quiet_moves();
 
-        void p_moves();
+        void P_captures_moves();
+
+        void p_quiet_moves();
+
+        void p_captures_moves();
 
         bool ep_discovered_check(U64 ep_mask, U64 enemy_rooks, U64 enemy_queens);
 
-        void N_moves();
+        void N_quiet_moves();
 
-        void n_moves();
+        void N_captures_moves();
 
-        void K_moves();
+        void n_quiet_moves();
 
-        void k_moves();
+        void n_captures_moves();
 
-        void R_moves();
+        void K_quiet_moves();
 
-        void r_moves();
+        void K_captures_moves();
 
-        void B_moves();
+        void k_quiet_moves();
 
-        void b_moves();
+        void k_captures_moves();
 
-        void Q_moves();
+        void R_quiet_moves();
 
-        void q_moves();
+        void R_captures_moves();
+
+        void r_quiet_moves();
+
+        void r_captures_moves();
+
+        void B_quiet_moves();
+
+        void B_captures_moves();
+
+        void b_quiet_moves();
+
+        void b_captures_moves();
+
+        void Q_quiet_moves();
+
+        void Q_captures_moves();
+
+        void q_quiet_moves();
+
+        void q_captures_moves();
 
         /// Given a bitboard of destination squares, a pointer to the board state, an offset of calculate from square, and a flag to 
         /// indicate move type, add that move to the list of valid moves in board state
@@ -141,6 +169,7 @@ class MoveGen{
         U64 pawn_bitboard;
 
         int checkers_count;
+        bool captures_only = false;
 
         std::vector<Move> legal_moves;
 };

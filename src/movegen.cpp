@@ -4,7 +4,7 @@
 MoveGen::MoveGen(Board* current_state) : board(current_state), prev_move(0,0,0) {
 }
 
-std::vector<Move> MoveGen::generate_moves(){
+std::vector<Move> MoveGen::generate_moves(bool _captures_only){
     // initialisations
     white_pawns = board->get_piece_bitboard(P);
     black_pawns = board->get_piece_bitboard(p);
@@ -31,8 +31,13 @@ std::vector<Move> MoveGen::generate_moves(){
     turn = board->get_turn();
     legal_moves.clear();
     pinned_pieces = 0;
-    
-    generate_legal_moves();   
+
+    if(_captures_only){
+        captures_only = _captures_only;
+        generate_legal_captures();   
+    } else {
+        generate_legal_moves();
+    }
 
     return legal_moves;
 }
@@ -53,7 +58,7 @@ bool MoveGen::no_legal_moves(){
     return (legal_moves.size() == 0) || (legal_moves[0] == Move(0,0,0)); 
 }
 
-void MoveGen::generate_legal_moves(){
+void MoveGen::generate_legal_captures(){
 
     if(turn == WHITE){
         ally_king = white_king;
@@ -61,14 +66,18 @@ void MoveGen::generate_legal_moves(){
         diag_pinners = black_bishops | black_queens;
         nondiag_pinners = black_rooks | black_queens;
 
-        K_moves();
+        checkers_count = get_checkers();
+
+        K_captures_moves();
     } else {
         ally_king = black_king;
         ally_pieces = blacks_minus_king;
         diag_pinners = white_bishops | white_queens;
         nondiag_pinners = white_rooks | white_queens;
 
-        k_moves();
+        checkers_count = get_checkers();
+
+        k_captures_moves();
     }
 
     if(checkers_count <= 1){
@@ -84,17 +93,85 @@ void MoveGen::generate_legal_moves(){
         }
 
         if(turn == WHITE){
-            P_moves();
-            N_moves();
-            R_moves();
-            B_moves();
-            Q_moves();
+            N_captures_moves();
+            R_captures_moves();
+            B_captures_moves();
+            Q_captures_moves();
+            P_captures_moves();
+
         } else {
-            p_moves();
-            n_moves();
-            r_moves();
-            b_moves();
-            q_moves();
+            n_captures_moves();
+            r_captures_moves();
+            b_captures_moves();
+            q_captures_moves();
+            p_captures_moves();  
+        }
+    }
+
+    captures_only = false;
+}
+
+void MoveGen::generate_legal_moves(){
+
+    if(turn == WHITE){
+        ally_king = white_king;
+        ally_pieces = whites_minus_king;
+        diag_pinners = black_bishops | black_queens;
+        nondiag_pinners = black_rooks | black_queens;
+
+        checkers_count = get_checkers();
+
+        K_captures_moves();
+        K_quiet_moves();
+    } else {
+        ally_king = black_king;
+        ally_pieces = blacks_minus_king;
+        diag_pinners = white_bishops | white_queens;
+        nondiag_pinners = white_rooks | white_queens;
+
+        checkers_count = get_checkers();
+
+        k_captures_moves();
+        k_quiet_moves();
+    }
+
+    if(checkers_count <= 1){
+        get_pinned_pieces();
+
+        // modify push and capture mask if king is in check
+        if(checkers_count == 1){
+            capture_mask = checkers;
+            set_push_mask(); 
+        } else {
+            capture_mask = ULLONG_MAX;
+            push_mask = ULLONG_MAX;
+        }
+
+        if(turn == WHITE){
+            N_captures_moves();
+            R_captures_moves();
+            B_captures_moves();
+            Q_captures_moves();
+            P_captures_moves();
+
+            N_quiet_moves();
+            R_quiet_moves();
+            B_quiet_moves();
+            Q_quiet_moves();
+            P_quiet_moves();
+
+        } else {
+            n_captures_moves();
+            r_captures_moves();
+            b_captures_moves();
+            q_captures_moves();
+            p_captures_moves();
+
+            n_quiet_moves();
+            r_quiet_moves();
+            b_quiet_moves();
+            q_quiet_moves();
+            p_quiet_moves(); 
         }
     }
 }
@@ -160,16 +237,11 @@ void MoveGen::pinned_moves(uint& pinner_sq, U64& possible_pin, const U64& pinned
     auto pinned_piece_name = board->get_piece_on_square(pinned_sq);
 
     if(valid_slider_pin(pinned_piece_name, _ray_type)){
-        create_other_moves(possible_pin & ~pinned_bitboard, pinned_sq, 0);
         create_other_moves(set_bit(pinner_sq), pinned_sq, 4);
+        if(!captures_only){
+            create_other_moves(possible_pin & ~pinned_bitboard, pinned_sq, 0);
+        }
     } else if (pinned_piece_name == P){
-        // quiet moves
-        tos = (pinned_bitboard << 8) & possible_pin;
-        create_pawn_moves(tos, -8, 0);
-        
-        tos = ((pinned_bitboard & RANK(2)) << 16) & possible_pin;
-        create_pawn_moves(tos, -16, 1);
-
         // right / left captures
         tos = (pinned_bitboard << 7) & set_bit(pinner_sq);
         create_pawn_moves(tos,-7,4);
@@ -177,20 +249,31 @@ void MoveGen::pinned_moves(uint& pinner_sq, U64& possible_pin, const U64& pinned
         tos = (pinned_bitboard << 9) & set_bit(pinner_sq);
         create_pawn_moves(tos,-9,4);
 
-    } else if(pinned_piece_name == p){
-        // quiet moves
-        tos = (pinned_bitboard >> 8) & possible_pin;
-        create_pawn_moves(tos, 8, 0);
-        
-        tos = ((pinned_bitboard & RANK(7)) >> 16) & possible_pin;
-        create_pawn_moves(tos, 16, 1);
+        if(!captures_only){
+            // quiet moves
+            tos = (pinned_bitboard << 8) & possible_pin;
+            create_pawn_moves(tos, -8, 0);
+            
+            tos = ((pinned_bitboard & RANK(2)) << 16) & possible_pin;
+            create_pawn_moves(tos, -16, 1);
+        }   
 
+    } else if(pinned_piece_name == p){
         // right / left captures
         tos = (pinned_bitboard >> 9) & set_bit(pinner_sq);
         create_pawn_moves(tos,9,4);
 
         tos = (pinned_bitboard >> 7) & set_bit(pinner_sq);
         create_pawn_moves(tos,7,4);
+
+        if(!captures_only){
+            // quiet moves
+            tos = (pinned_bitboard >> 8) & possible_pin;
+            create_pawn_moves(tos, 8, 0);
+            
+            tos = ((pinned_bitboard & RANK(7)) >> 16) & possible_pin;
+            create_pawn_moves(tos, 16, 1);
+        }
     }
 }
 
@@ -291,7 +374,7 @@ uint MoveGen::get_checkers(){
     return count_set_bits(checkers);
 }
 
-void MoveGen::P_moves(){
+void MoveGen::P_quiet_moves(){
     white_pawns &= ~pinned_pieces;
 
     // forward 1
@@ -302,6 +385,16 @@ void MoveGen::P_moves(){
     tos = ((white_pawns & RANK(2) & ~((occupied & RANK(3)) >> 8)) << 16) & ~occupied & push_mask;
     create_pawn_moves(tos,-16,1);
 
+    // promotion forward 1
+    tos = (white_pawns << 8) & RANK(8) & ~occupied & push_mask;
+    for(int i = 0; i < 4; ++i){
+        create_pawn_moves(tos,-8,p_flags[i]);
+    }  
+}
+
+void MoveGen::P_captures_moves(){
+    white_pawns &= ~pinned_pieces;
+
     // right captures
     tos = (white_pawns << 7) & ~RANK(8) & ~A_FILE & blacks_minus_king & capture_mask;
     create_pawn_moves(tos,-7,4); 
@@ -309,12 +402,6 @@ void MoveGen::P_moves(){
     // left captures
     tos = (white_pawns << 9) & ~RANK(8) & ~H_FILE & blacks_minus_king & capture_mask;
     create_pawn_moves(tos,-9,4); 
-
-    // promotion forward 1
-    tos = (white_pawns << 8) & RANK(8) & ~occupied & push_mask;
-    for(int i = 0; i < 4; ++i){
-        create_pawn_moves(tos,-8,p_flags[i]);
-    }
 
     // promotion right captures
     tos = (white_pawns << 7) & RANK(8) & ~A_FILE & blacks_minus_king & capture_mask;
@@ -349,11 +436,12 @@ void MoveGen::P_moves(){
             }
 
         }
-    }      
+    }    
 }
 
-void MoveGen::p_moves(){
+void MoveGen::p_quiet_moves(){
     black_pawns &= ~pinned_pieces;
+
     // forward 1
     tos = (black_pawns >> 8) & ~occupied & ~RANK(1) & push_mask;  
     create_pawn_moves(tos,8,0);
@@ -362,6 +450,17 @@ void MoveGen::p_moves(){
     tos = ((black_pawns & RANK(7) & ~((occupied & RANK(6)) << 8)) >> 16) & ~occupied & push_mask;
     create_pawn_moves(tos,16,1);
 
+    // promotion forward 1
+    tos = (black_pawns >> 8) & RANK(1) & ~occupied & push_mask;
+    for(int i = 0; i < 4; ++i){
+        create_pawn_moves(tos,8,p_flags[i]);
+    }
+
+}
+
+void MoveGen::p_captures_moves(){
+    black_pawns &= ~pinned_pieces;
+
     // right captures
     tos = (black_pawns >> 9) & ~RANK(1) & ~A_FILE & whites_minus_king & capture_mask;
     create_pawn_moves(tos,9,4); 
@@ -369,12 +468,6 @@ void MoveGen::p_moves(){
     // left captures
     tos = (black_pawns >> 7) & ~RANK(1) & ~H_FILE & whites_minus_king & capture_mask;
     create_pawn_moves(tos,7,4); 
-
-    // promotion forward 1
-    tos = (black_pawns >> 8) & RANK(1) & ~occupied & push_mask;
-    for(int i = 0; i < 4; ++i){
-        create_pawn_moves(tos,8,p_flags[i]);
-    }
 
     // promotion right captures
     tos = (black_pawns >> 9) & RANK(1) & ~A_FILE & whites_minus_king & capture_mask;
@@ -421,7 +514,7 @@ bool MoveGen::ep_discovered_check(U64 ep_mask, U64 enemy_rooks, U64 enemy_queens
     return (((get_rook_attacks(occupancy, ally_king_sq) & enemy_rooks) | (get_queen_attacks(occupancy, ally_king_sq) & enemy_queens)) & horizontal_mask) != 0;
 }
 
-void MoveGen::N_moves(){
+void MoveGen::N_quiet_moves(){
     auto knights = white_knights & ~pinned_pieces;
     U64 attack_set;
     uint from;
@@ -429,10 +522,6 @@ void MoveGen::N_moves(){
     while(knights){
         from =  get_lsb(knights);
         attack_set = knight_attack_set[from];
-
-        // tos for knight capture
-        tos = attack_set & blacks_minus_king & capture_mask;
-        create_other_moves(tos, from, 4);
 
         // tos for quiet knight move
         tos = attack_set & ~occupied & push_mask;
@@ -442,7 +531,41 @@ void MoveGen::N_moves(){
     }
 }
 
-void MoveGen::n_moves(){
+void MoveGen::N_captures_moves(){
+    auto knights = white_knights & ~pinned_pieces;
+    U64 attack_set;
+    uint from;
+
+    while(knights){
+        from = get_lsb(knights);
+        attack_set = knight_attack_set[from];
+
+        // tos for knight capture
+        tos = attack_set & blacks_minus_king & capture_mask;
+        create_other_moves(tos, from, 4);
+
+        knights &= knights - 1;
+    }
+}
+
+void MoveGen::n_quiet_moves(){
+    auto knights = black_knights & ~pinned_pieces;
+    U64 attack_set;
+    uint from;
+
+    while(knights){
+        from = get_lsb(knights);
+        attack_set = knight_attack_set[from];
+
+        // tos for quiet knight move
+        tos = attack_set & ~occupied & push_mask;
+        create_other_moves(tos, from, 0);
+
+        knights &= knights - 1;
+    }
+}
+
+void MoveGen::n_captures_moves(){
     auto knights = black_knights & ~pinned_pieces;
     U64 attack_set;
     uint from;
@@ -455,36 +578,17 @@ void MoveGen::n_moves(){
         tos = attack_set & whites_minus_king & capture_mask;
         create_other_moves(tos, from, 4);
 
-        // tos for quiet knight move
-        tos = attack_set & ~occupied & push_mask;
-        create_other_moves(tos, from, 0);
-
         knights &= knights - 1;
     }
 }
 
-void MoveGen::K_moves(){
-    checkers_count = get_checkers();
-
-    U64 attack_set, can_capture, can_push;
-    uint from;
-    king_danger_squares = 0;
-
-    from = get_lsb(ally_king);
-    attack_set = king_attack_set[from];
-
-    // filter out king danger squares
-    set_king_danger_squares(attack_set, turn);
-
-    can_capture = blacks_minus_king & ~king_danger_squares;
-    can_push = ~occupied & ~king_danger_squares;
-
-    // tos for king capture
-    tos = (attack_set & can_capture);
-    create_other_moves(tos, from, 4);
+void MoveGen::K_quiet_moves(){
+    uint from = get_lsb(ally_king);
+    U64 can_push = ~occupied & ~king_danger_squares;
+    U64 attack_set = king_attack_set[from];
 
     // tos for quiet king move
-    tos = (attack_set & can_push);
+    tos = attack_set & can_push;
     create_other_moves(tos, from, 0);
 
     if(checkers_count == 0){
@@ -502,25 +606,27 @@ void MoveGen::K_moves(){
     }
 }
 
-void MoveGen::k_moves(){
-    checkers_count = get_checkers();
+void MoveGen::K_captures_moves(){
+    uint from = get_lsb(ally_king);
 
-    U64 attack_set, can_capture, can_push;
-    uint from;
-    king_danger_squares = 0;
-
-    from = get_lsb(ally_king);
+    U64 attack_set, can_capture;
     attack_set = king_attack_set[from];
+
+    king_danger_squares = 0;
 
     // filter out king danger squares
     set_king_danger_squares(attack_set, turn);
-
-    can_capture = whites_minus_king & ~king_danger_squares;
-    can_push = ~occupied & ~king_danger_squares;
-
+    can_capture = blacks_minus_king & ~king_danger_squares;
+    
     // tos for king capture
-    tos = (attack_set & can_capture);
-    create_other_moves(tos, from, 4);
+    tos = attack_set & can_capture;
+    create_other_moves(tos, from, 4);    
+}
+
+void MoveGen::k_quiet_moves(){
+    uint from = get_lsb(ally_king);
+    U64 can_push = ~occupied & ~king_danger_squares;
+    U64 attack_set = king_attack_set[from];
 
     // tos for quiet king move
     tos = (attack_set & can_push);
@@ -541,7 +647,42 @@ void MoveGen::k_moves(){
     }
 }
 
-void MoveGen::R_moves(){
+void MoveGen::k_captures_moves(){
+    uint from = get_lsb(ally_king);
+
+    U64 attack_set, can_capture;
+    attack_set = king_attack_set[from];
+
+    king_danger_squares = 0;
+
+    // filter out king danger squares
+    set_king_danger_squares(attack_set, turn);
+    can_capture = whites_minus_king & ~king_danger_squares;
+
+    // tos for king capture
+    tos = attack_set & can_capture;
+    create_other_moves(tos, from, 4);  
+}
+
+void MoveGen::R_quiet_moves(){
+    auto rooks = white_rooks & ~pinned_pieces;
+    uint from;
+    U64 attack_set;
+
+    while(rooks){
+        from = get_lsb(rooks);
+
+        attack_set = get_rook_attacks(occupied, from) & ~whites;
+
+        // rook quiet moves
+        tos = attack_set & ~occupied & push_mask;
+        create_other_moves(tos, from, 0);
+
+        rooks &= rooks - 1;
+    }
+}
+
+void MoveGen::R_captures_moves(){
     auto rooks = white_rooks & ~pinned_pieces;
     uint from;
     U64 attack_set;
@@ -556,6 +697,20 @@ void MoveGen::R_moves(){
 
         create_other_moves(tos, from, 4);
 
+        rooks &= rooks - 1;
+    }
+}
+
+void MoveGen::r_quiet_moves(){
+    auto rooks = black_rooks & ~pinned_pieces;
+    uint from;
+    U64 attack_set;
+
+    while(rooks){
+        from = get_lsb(rooks);
+
+        attack_set = get_rook_attacks(occupied, from) & ~blacks;
+
         // rook quiet moves
         tos = attack_set & ~occupied & push_mask;
         create_other_moves(tos, from, 0);
@@ -564,7 +719,7 @@ void MoveGen::R_moves(){
     }
 }
 
-void MoveGen::r_moves(){
+void MoveGen::r_captures_moves(){
     auto rooks = black_rooks & ~pinned_pieces;
     uint from;
     U64 attack_set;
@@ -576,18 +731,31 @@ void MoveGen::r_moves(){
 
         // rook captures
         tos = attack_set & whites_minus_king & capture_mask;
-
         create_other_moves(tos, from, 4);
-
-        // rook quiet moves
-        tos = attack_set & ~occupied & push_mask;
-        create_other_moves(tos, from, 0);
 
         rooks &= rooks - 1;
     }
 }
 
-void MoveGen::B_moves(){
+void MoveGen::B_quiet_moves(){
+    auto bishops = white_bishops & ~pinned_pieces;
+    uint from;
+    U64 attack_set;
+
+    while(bishops){
+        from = get_lsb(bishops);
+
+        attack_set = get_bishop_attacks(occupied, from) & ~whites;
+
+        // bishop quiet moves
+        tos = attack_set & ~occupied & push_mask;
+        create_other_moves(tos, from, 0);
+
+        bishops &= bishops - 1;
+    }
+}
+
+void MoveGen::B_captures_moves(){
     auto bishops = white_bishops & ~pinned_pieces;
     uint from;
     U64 attack_set;
@@ -599,10 +767,23 @@ void MoveGen::B_moves(){
 
         // bishop captures
         tos = attack_set & blacks_minus_king & capture_mask;
-
         create_other_moves(tos, from, 4);
 
-        // rook quiet moves
+        bishops &= bishops - 1;
+    }
+}
+
+void MoveGen::b_quiet_moves(){
+    auto bishops = black_bishops & ~pinned_pieces;
+    uint from;
+    U64 attack_set;
+
+    while(bishops){
+        from = get_lsb(bishops);
+
+        attack_set = get_bishop_attacks(occupied, from) & ~blacks;
+
+        // bishop quiet moves
         tos = attack_set & ~occupied & push_mask;
         create_other_moves(tos, from, 0);
 
@@ -610,7 +791,7 @@ void MoveGen::B_moves(){
     }
 }
 
-void MoveGen::b_moves(){
+void MoveGen::b_captures_moves(){
     auto bishops = black_bishops & ~pinned_pieces;
     uint from;
     U64 attack_set;
@@ -622,18 +803,31 @@ void MoveGen::b_moves(){
 
         // bishop captures
         tos = attack_set & whites_minus_king & capture_mask;
-
         create_other_moves(tos, from, 4);
-
-        // rook quiet moves
-        tos = attack_set & ~occupied & push_mask;
-        create_other_moves(tos, from, 0);
 
         bishops &= bishops - 1;
     }
 }
 
-void MoveGen::Q_moves(){
+void MoveGen::Q_quiet_moves(){
+    auto queens = white_queens & ~pinned_pieces;
+    uint from;
+    U64 attack_set;
+
+    while(queens){
+        from = get_lsb(queens);
+
+        attack_set = get_queen_attacks(occupied, from) & ~whites;
+
+        // queen quiet moves
+        tos = attack_set & ~occupied & push_mask;
+        create_other_moves(tos, from, 0);
+
+        queens &= queens - 1;
+    }
+}
+
+void MoveGen::Q_captures_moves(){
     auto queens = white_queens & ~pinned_pieces;
     uint from;
     U64 attack_set;
@@ -645,8 +839,21 @@ void MoveGen::Q_moves(){
 
         // queen captures
         tos = attack_set & blacks_minus_king & capture_mask;
-
         create_other_moves(tos, from, 4);
+
+        queens &= queens - 1;
+    }
+}
+
+void MoveGen::q_quiet_moves(){
+    auto queens = black_queens & ~pinned_pieces;
+    uint from;
+    U64 attack_set;
+
+    while(queens){
+        from = get_lsb(queens);
+
+        attack_set = get_queen_attacks(occupied, from) & ~blacks;
 
         // queen quiet moves
         tos = attack_set & ~occupied & push_mask;
@@ -654,10 +861,9 @@ void MoveGen::Q_moves(){
 
         queens &= queens - 1;
     }
-
 }
 
-void MoveGen::q_moves(){
+void MoveGen::q_captures_moves(){
     auto queens = black_queens & ~pinned_pieces;
     uint from;
     U64 attack_set;
@@ -669,13 +875,7 @@ void MoveGen::q_moves(){
 
         // queen captures
         tos = attack_set & whites_minus_king & capture_mask;
-
-
         create_other_moves(tos, from, 4);
-
-        // queen quiet moves
-        tos = attack_set & ~occupied & push_mask;
-        create_other_moves(tos, from, 0);
 
         queens &= queens - 1;
     }

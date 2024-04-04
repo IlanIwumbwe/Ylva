@@ -151,7 +151,7 @@ void Enginev2::order_moves(std::vector<Move>& moves){
 
 int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
     if(depth == 0){
-        return eval.Evaluation();
+        return eval.Evaluation(); // quiescence(alpha, beta);
     }
 
     std::vector<Move> moves = movegen->generate_moves(); 
@@ -216,9 +216,11 @@ int Enginev2::quiescence(int alpha, int beta){
     if(evaluation >= beta){
         return beta;
     }
+
+    alpha = std::max(evaluation, alpha);
     
     // consider only capture moves
-    std::vector<Move> moves = movegen->generate_moves(); 
+    std::vector<Move> moves = movegen->generate_moves(true); 
 
     int curr_eval = 0;
 
@@ -227,9 +229,9 @@ int Enginev2::quiescence(int alpha, int beta){
     for(Move& move : moves){
         make_move(move);
         curr_eval = -quiescence(-beta, -alpha);
-        
-        alpha = std::max(curr_eval, alpha);
         board->undo_move();
+
+        alpha = std::max(curr_eval, alpha);
 
         if(curr_eval >= beta){
             return beta;
