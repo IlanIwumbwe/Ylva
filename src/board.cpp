@@ -23,12 +23,6 @@ void Board::make_move(const Move& move){
 
     auto from_piece_colour = get_piece_colour(from_piece_name);
 
-    if(from_piece_name == None){
-        std::cout << int_to_alg(from) << std::endl;
-
-        view_board();
-    }
-
     assert(from_piece_name != None);
 
     U64 from_piece_bitboard = get_piece_bitboard(from_piece_name);
@@ -439,18 +433,6 @@ void Board::view_board(){
     std::cout << "   a  b  c  d  e  f  g  h" << std::endl;
 }
 
-bool Board::move_is_valid(Move& move){
-    for(auto v_move : valid_moves){
-        if(v_move == move){return true;}
-    }
-    
-    return false;
-}
-
-void Board::clear_valid_moves(){
-    valid_moves.clear();
-}
-
 inline void Board::set_piece_bitboard(const piece_names& piece_name, const U64& bitboard) {
     assert(piece_name != None);
     bitboards[piece_name] = bitboard;
@@ -468,14 +450,6 @@ U64 Board::get_entire_bitboard() const {
     }
     
     return full_board;
-}
-
-void Board::add_valid_move(const Move& valid_move){
-    valid_moves.push_back(valid_move);
-}
-
-std::vector<Move> Board::get_valid_moves(){    
-    return valid_moves;
 }
 
 /// after a new move has been made, create a new state. Store the new castling rights, the half move clock, the move that led to this state,

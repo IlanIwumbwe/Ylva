@@ -10,9 +10,15 @@ class MoveGen{
     public:
         MoveGen(Board* current_state);
 
-        void generate_moves();
+        std::vector<Move> generate_moves();
 
-        void get_legal_moves();
+        bool move_is_legal(Move& move);
+
+        std::vector<Move> get_legal_moves();
+
+        bool no_legal_moves();
+
+        void generate_legal_moves();
 
         /// Setup a bitboard of all pinned pieces on the board. This mask is used to remove pinned pieces when such that moves aren't generated for them
         /// in main move generator. Instead, pinned pieces' moves are generated separately at right after king moves are generated
@@ -136,6 +142,7 @@ class MoveGen{
 
         int checkers_count;
 
+        std::vector<Move> legal_moves;
 };
 
 #endif

@@ -4,7 +4,7 @@
 MoveGen::MoveGen(Board* current_state) : board(current_state), prev_move(0,0,0) {
 }
 
-void MoveGen::generate_moves(){
+std::vector<Move> MoveGen::generate_moves(){
     // initialisations
     white_pawns = board->get_piece_bitboard(P);
     black_pawns = board->get_piece_bitboard(p);
@@ -29,13 +29,31 @@ void MoveGen::generate_moves(){
     whites_minus_king = whites & ~white_king;
 
     turn = board->get_turn();
-    board->clear_valid_moves();
+    legal_moves.clear();
     pinned_pieces = 0;
     
-    get_legal_moves();         
+    generate_legal_moves();   
+
+    return legal_moves;
 }
 
-void MoveGen::get_legal_moves(){
+bool MoveGen::move_is_legal(Move& move){
+    for(auto v_move : legal_moves){
+        if(v_move == move){return true;}
+    }
+    
+    return false;
+}
+
+std::vector<Move> MoveGen::get_legal_moves(){
+    return legal_moves;
+}
+
+bool MoveGen::no_legal_moves(){
+    return (legal_moves.size() == 0) || (legal_moves[0] == Move(0,0,0)); 
+}
+
+void MoveGen::generate_legal_moves(){
 
     if(turn == WHITE){
         ally_king = white_king;
@@ -670,7 +688,7 @@ void MoveGen::create_pawn_moves(U64 tos, int offset, uint flag){
     while(tos){
         to =  get_lsb(tos);
 
-        board->add_valid_move(Move(to+offset, to, flag));
+        legal_moves.push_back(Move(to+offset, to, flag));
 
         tos &= tos-1;
     }
@@ -683,7 +701,7 @@ void MoveGen::create_other_moves(U64 tos, uint from, uint flag){
     while(tos){
         to =  get_lsb(tos);
 
-        board->add_valid_move(Move(from, to, flag));
+        legal_moves.push_back(Move(from, to, flag));
 
         tos &= tos-1;
     }

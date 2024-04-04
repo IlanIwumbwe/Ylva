@@ -23,7 +23,6 @@ class Engine{
         inline void make_move(Move move){
             board->make_move(move);    
             eval.nodes_searched += 1;
-            movegen->generate_moves(); 
         }
 
     protected:
@@ -33,35 +32,40 @@ class Engine{
         Eval eval;
 };
 
+/// v0 has a plain minimax search algorithm
 class Enginev0 : public Engine{
     public:
         Enginev0(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
 
         Move get_engine_move() override;
 
-        float plain_minimax(int depth);
+        int plain_minimax(int depth);
 };
 
+/// v1 has minimax optimised with alpha beta pruning
 class Enginev1 : public Engine{
     public:
         Enginev1(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
 
         Move get_engine_move() override;
 
-        float alpha_beta_minimax(int depth, float alpha, float beta);
+        int alpha_beta_minimax(int depth, int alpha, int beta);
 };
 
+/// v2 has alpha beta with move ordering and quiescence search 
 class Enginev2 : public Engine{
     public:
         Enginev2(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
 
         Move get_engine_move() override;
 
-        float ab_move_ordering(int depth, float alpha, float beta);
+        int ab_move_ordering(int depth, int alpha, int beta);
 
         void set_move_heuristics(std::vector<Move>& moves, U64& enemy_pawns);
 
         void order_moves(std::vector<Move>& moves);
+
+        int quiescence(int alpha, int beta);
 };
 
 #endif

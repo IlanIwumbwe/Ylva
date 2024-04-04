@@ -1,22 +1,22 @@
 #include "engine.h"
 
 /// Minimax with no optimisations
-float Enginev0::plain_minimax(int depth){
+int Enginev0::plain_minimax(int depth){
     if(depth == 0){
         return eval.Evaluation();
     }
 
-    std::vector<Move> moves = board->get_valid_moves();
+    std::vector<Move> moves = movegen->generate_moves(); 
 
     if(moves.size() == 0){
         if(movegen->ally_king_in_check()){
-            return -INFINITY;  // checkmate
+            return -infinity;  // checkmate
         } else {
-            return 0.0;         // stalemate
+            return 0;         // stalemate
         }
     }
 
-    float curr_eval = 0.0, best_eval = -INFINITY;
+    int curr_eval = 0, best_eval = -infinity;
 
     for(Move& move : moves){
         make_move(move);
@@ -29,11 +29,11 @@ float Enginev0::plain_minimax(int depth){
 }  
 
 Move Enginev0::get_engine_move(){
-    float best_eval = -INFINITY, curr_eval;
+    int best_eval = -infinity, curr_eval;
     Move best_move;
     int perspective = board->get_turn() ? -1 : 1;
 
-    std::vector<Move> moves = board->get_valid_moves();
+    std::vector<Move> moves = movegen->generate_moves(); 
 
     eval.nodes_searched = 0;
 
@@ -54,22 +54,22 @@ Move Enginev0::get_engine_move(){
 }
 
 /// Minimax with alpha beta
-float Enginev1::alpha_beta_minimax(int depth, float alpha, float beta){
+int Enginev1::alpha_beta_minimax(int depth, int alpha, int beta){
     if(depth == 0){
         return eval.Evaluation();
     }
 
-    std::vector<Move> moves = board->get_valid_moves();
+    std::vector<Move> moves = movegen->generate_moves(); 
 
     if(moves.size() == 0){
         if(movegen->ally_king_in_check()){
-            return -INFINITY;  // checkmate
+            return -infinity;  // checkmate
         } else {
-            return 0.0;         // stalemate
+            return 0;         // stalemate
         }
     } 
 
-    float curr_eval = 0.0;
+    int curr_eval = 0;
 
     for(Move& move : moves){
         make_move(move);
@@ -87,18 +87,18 @@ float Enginev1::alpha_beta_minimax(int depth, float alpha, float beta){
 }
 
 Move Enginev1::get_engine_move(){
-    float best_eval = -INFINITY, curr_eval;
+    int best_eval = -infinity, curr_eval;
     Move best_move;
     int perspective = board->get_turn() ? -1 : 1;
 
-    std::vector<Move> moves = board->get_valid_moves();
+    std::vector<Move> moves = movegen->generate_moves(); 
 
     eval.nodes_searched = 0;
 
     for(Move& move : moves){
         make_move(move);
 
-        curr_eval = perspective * alpha_beta_minimax(depth-1,-INFINITY, INFINITY);
+        curr_eval = perspective * alpha_beta_minimax(depth-1,-infinity, infinity);
 
         if(curr_eval > best_eval){
             best_eval = curr_eval;
@@ -149,22 +149,22 @@ void Enginev2::order_moves(std::vector<Move>& moves){
     std::sort(moves.begin(), moves.end());
 }
 
-float Enginev2::ab_move_ordering(int depth, float alpha, float beta){
+int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
     if(depth == 0){
         return eval.Evaluation();
     }
 
-    std::vector<Move> moves = board->get_valid_moves();
+    std::vector<Move> moves = movegen->generate_moves(); 
 
     if(moves.size() == 0){
         if(movegen->ally_king_in_check()){
-            return -INFINITY;  // checkmate
+            return -infinity;  // checkmate
         } else {
-            return 0.0;         // stalemate
+            return 0;         // stalemate
         }
     } 
 
-    float curr_eval = 0.0;
+    int curr_eval = 0;
 
     order_moves(moves);
 
@@ -184,11 +184,11 @@ float Enginev2::ab_move_ordering(int depth, float alpha, float beta){
 }
 
 Move Enginev2::get_engine_move(){
-    float best_eval = -INFINITY, curr_eval;
+    int best_eval = -infinity, curr_eval;
     Move best_move;
     int perspective = board->get_turn() ? -1 : 1;
 
-    std::vector<Move> moves = board->get_valid_moves();
+    std::vector<Move> moves = movegen->generate_moves(); 
 
     eval.nodes_searched = 0;
 
@@ -197,7 +197,7 @@ Move Enginev2::get_engine_move(){
     for(Move& move : moves){
         make_move(move);
 
-        curr_eval = perspective * ab_move_ordering(depth-1,-INFINITY, INFINITY);
+        curr_eval = perspective * ab_move_ordering(depth-1,-infinity, infinity);
 
         if(curr_eval > best_eval){
             best_eval = curr_eval;
@@ -208,6 +208,35 @@ Move Enginev2::get_engine_move(){
     }
 
     return best_move;
+}
+
+int Enginev2::quiescence(int alpha, int beta){
+    int evaluation = eval.Evaluation();
+
+    if(evaluation >= beta){
+        return beta;
+    }
+    
+    // consider only capture moves
+    std::vector<Move> moves = movegen->generate_moves(); 
+
+    int curr_eval = 0;
+
+    order_moves(moves);
+
+    for(Move& move : moves){
+        make_move(move);
+        curr_eval = -quiescence(-beta, -alpha);
+        
+        alpha = std::max(curr_eval, alpha);
+        board->undo_move();
+
+        if(curr_eval >= beta){
+            return beta;
+        }
+    }
+
+    return alpha;
 }
 
 void Engine::engine_driver(){
@@ -225,7 +254,7 @@ void Engine::engine_driver(){
     std::cout << "Time taken: " << std::to_string(duration.count()) << " ms" << std::endl;
     std::cout << move << std::endl;
 
-    make_move(move);
+    board->make_move(move);
 }
 
 

@@ -16,9 +16,6 @@ Run::Run(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(
         run_EVE();
     } else if(mode == PERFT){
         run_perft();
-    } else if(mode == BENCHMARK){
-        int depth = get_perft_depth();
-        perftDriver(depth, board.get_valid_moves());
     } else {
         std::cerr << "Unexpected mode " << mode << std::endl;
     }
@@ -54,20 +51,17 @@ void Run::end_game(){
         std::cout << "Draw by 50 move rule" << std::endl;
         board.view_board();
         run = false;
-    } else {
-        if(board.get_valid_moves().size() == 0){
-            if(movegen.ally_king_in_check()){
-                std::cout << (board.get_turn() ? "White " : "Black ") << "wins by checkmate" << std::endl;
-            } else { std::cout << "Draw by stalemate" << std::endl; }
-            board.view_board();
-            run = false;
-        }
+    } else if(movegen.no_legal_moves()){
+        if(movegen.ally_king_in_check()){
+            std::cout << (board.get_turn() ? "Black " : "White ") << "wins by checkmate" << std::endl;
+        } else { std::cout << "Draw by stalemate" << std::endl; }
+        run = false;
     }
 }
 
 void Run::run_perft(){
     board.view_board();
-    auto moves = board.get_valid_moves();
+    std::vector<Move> moves = movegen.generate_moves();
 
     while(run){
         int depth = get_perft_depth();
@@ -75,12 +69,12 @@ void Run::run_perft(){
     }
 }
 
-void Run::perftDriver(int& depth, std::vector<Move> moves){
+void Run::perftDriver(int& depth, const std::vector<Move>& moves){
     int num_pos = 0, total_pos = 0;
     auto start = high_resolution_clock::now();
 
     for(auto move : moves){
-        make_move(move);
+        board.make_move(move);
         num_pos = movegenTest(depth-1);
         board.undo_move();
 
@@ -99,7 +93,7 @@ void Run::perftDriver(int& depth, std::vector<Move> moves){
 }
 
 int Run::movegenTest(int depth){
-    auto moves = board.get_valid_moves();
+    std::vector<Move> moves = movegen.generate_moves();
     
     if(depth == 0){
         return 1;
@@ -108,7 +102,7 @@ int Run::movegenTest(int depth){
     int num_nodes = 0;    
 
     for(auto move : moves){
-        make_move(move);
+        board.make_move(move);
         num_nodes += movegenTest(depth-1);                               
         board.undo_move();
     }
@@ -116,20 +110,14 @@ int Run::movegenTest(int depth){
     return num_nodes;
 }
 
-// whenever a move is made on the board, generate new moves for the new state
-void Run::make_move(const Move& move){
-    board.make_move(move);
-    movegen.generate_moves();
-}
-
 void Run::get_input_from_player(){
     board.view_board();
-
+    
     std::string input;
     std::cout << ">> ";
     std::cin >> input;
 
-    while(!std::regex_match(input, MOVE_FORMAT) && input != "undo" && input != "quit" && input != "move"){
+    while(!std::regex_match(input, MOVE_FORMAT) && input != "undo" && input != "quit"){
         std::cout << "Inputs are undo, quit or a chess move." << std::endl;
         std::cout << "Type moves in long algebraic notation. " << std::endl;
         std::cout << "Examples:  e2e4, e7e5, e1g1 (white short castling), e7e8q (for promotion)" << std::endl;
@@ -138,13 +126,11 @@ void Run::get_input_from_player(){
     }
 
     if(input == "undo"){
-        if(board.undo_move() == 0){movegen.generate_moves();};
+        if(board.undo_move() == 0){movegen.generate_moves();}
     } else if(input == "quit"){
         run = false;
     } else if (std::regex_match(input, MOVE_FORMAT)){
         parse_player_move(input);
-    } else if(input == "move"){
-        engine->engine_driver();
     } else {
         std::cout << "Inputs are undo, quit or a chess move in long algebraic format" << std::endl;
     }
@@ -209,8 +195,8 @@ void Run::make_player_move(const std::tuple<std::string, std::string, std::strin
     if(check != 0){
         std::cout << "There's no piece at the square chosen"<< std::endl;
     } else {
-        if(board.move_is_valid(move)){
-            make_move(move);
+        if(movegen.move_is_legal(move)){
+            board.make_move(move);
         } else {
             std::cout << "Move entered is not valid " << std::endl;
             get_input_from_player();

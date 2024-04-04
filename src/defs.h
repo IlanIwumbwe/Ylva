@@ -36,6 +36,8 @@ typedef unsigned int uint;
 #define set_bit(i) (1ULL << (i))
 #define get_bit(bitboard, i) (bitboard & set_bit(i))
 
+#define infinity std::numeric_limits<int>::max()
+
 typedef enum {
     None = 0,
     P = 1 , 

@@ -8,7 +8,6 @@
 struct State{
     uint8_t castling_rights;  
     int hm_clock;
-    //std::vector<Move> valid_moves;
     piece_names recent_capture;
     Move prev_move; 
     std::shared_ptr<State> prev_state = NULL;
@@ -91,10 +90,6 @@ class Board{
 
         void view_board();
 
-        bool move_is_valid(Move& move);
-
-        void clear_valid_moves();
-
         void set_piece_bitboard(const piece_names& piece_name, const U64& bitboard);
 
         colour get_piece_colour(const piece_names& piece_name);
@@ -105,10 +100,6 @@ class Board{
         }
 
         U64 get_entire_bitboard() const;
-
-        void add_valid_move(const Move& valid_move);
-
-        std::vector<Move> get_valid_moves();
 
         /// after a new move has been made, create a new state. Store the new castling rights, the half move clock, the move that led to this state,
         /// and the piece if any that got captured when that move was made
@@ -127,18 +118,9 @@ class Board{
 
         // piece bitboards
         std::unordered_map<piece_names, U64> bitboards{};
-        //U64 pawns[2];
-        //U64 knights[2];
-        //U64 bishops[2];
-        //U64 queens[2];
-        //U64 kings[2];
-        //U64 rooks[2];
         
         // maintain state
         std::shared_ptr<State> current_state = NULL;
-
-        std::vector<Move> valid_moves;
-
 };
 
 #endif

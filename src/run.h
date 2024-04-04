@@ -20,12 +20,9 @@ class Run{
 
         void run_perft();
 
-        void perftDriver(int& depth, std::vector<Move> moves);
+        void perftDriver(int& depth, const std::vector<Move>& moves);
 
         int movegenTest(int depth);
-
-        // whenever a move is made on the board, generate new moves for the new state
-        void make_move(const Move& move);
 
         void get_input_from_player();
 
