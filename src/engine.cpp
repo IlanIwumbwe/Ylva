@@ -257,6 +257,8 @@ void Engine::engine_driver(){
     std::cout << move << std::endl;
 
     board->make_move(move);
+    movegen->generate_moves();
+
 }
 
 

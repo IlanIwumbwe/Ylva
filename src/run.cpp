@@ -197,8 +197,13 @@ void Run::make_player_move(const std::tuple<std::string, std::string, std::strin
     } else {
         if(movegen.move_is_legal(move)){
             board.make_move(move);
+            movegen.generate_moves();
         } else {
             std::cout << "Move entered is not valid " << std::endl;
+            std::cout << "legals" << std::endl;
+            for(auto move : movegen.get_legal_moves()){
+                std::cout << move << std::endl;
+            }
             get_input_from_player();
         }
     }
