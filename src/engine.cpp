@@ -33,7 +33,7 @@ Move Enginev0::get_engine_move(){
     Move best_move;
     int perspective = board->get_turn() ? -1 : 1;
 
-    std::vector<Move> moves = movegen->generate_moves(); 
+    std::vector<Move> moves = movegen->get_legal_moves(); 
 
     eval.nodes_searched = 0;
 
@@ -91,7 +91,7 @@ Move Enginev1::get_engine_move(){
     Move best_move;
     int perspective = board->get_turn() ? -1 : 1;
 
-    std::vector<Move> moves = movegen->generate_moves(); 
+    std::vector<Move> moves = movegen->get_legal_moves(); 
 
     eval.nodes_searched = 0;
 
@@ -196,9 +196,8 @@ Move Enginev2::get_engine_move(){
 
     for(Move& move : moves){
         make_move(move);
-
         curr_eval = perspective * ab_move_ordering(depth-1,-infinity, infinity);
-
+        
         if(curr_eval > best_eval){
             best_eval = curr_eval;
             best_move = move;
