@@ -62,6 +62,10 @@ class MoveGen{
         uint get_checkers();
 
         inline bool ally_king_in_check(){
+            std::cout << "ally king " << std::endl;
+            printbitboard(ally_king);
+            std::cout << "checkers" << std::endl;
+            printbitboard(checkers);
             return checkers != 0;
         }
 

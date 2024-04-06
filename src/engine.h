@@ -61,7 +61,7 @@ class Enginev2 : public Engine{
 
         int ab_move_ordering(int depth, int alpha, int beta);
 
-        void set_move_heuristics(std::vector<Move>& moves, U64& enemy_pawns);
+        void set_move_heuristics(std::vector<Move>& moves);
 
         void order_moves(std::vector<Move>& moves);
 

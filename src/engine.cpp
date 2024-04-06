@@ -112,7 +112,7 @@ Move Enginev1::get_engine_move(){
 }
 
 /// Given a set of moves, use hueristics to guess its quality. Used for move ordering
-void Enginev2::set_move_heuristics(std::vector<Move>& moves, U64& enemy_pawns){
+void Enginev2::set_move_heuristics(std::vector<Move>& moves){
     int move_score, from_val, to_val;
 
     piece_names from_piece, to_piece;
@@ -134,24 +134,24 @@ void Enginev2::set_move_heuristics(std::vector<Move>& moves, U64& enemy_pawns){
         // promotion is good
         move_score += (move.get_move() & PROMO_FLAG) * (PROMOTION_POWER / 32768);
 
-        // moving into square attacked by enemy pawn is bad    
-        move_score -= std::min((set_bit(move.get_to()) & enemy_pawns) << 6, PAWN_ATTACK_POWER);
+        // moving into square attacked by enemy pawn is bad   
+        // bitboard of enemy pawns
+        U64 enemy_pawns = board->get_turn() ? board->get_piece_bitboard(P) : board->get_piece_bitboard(p); 
+
+        move_score -= PAWN_ATTACK_POWER * movegen->get_attackers(move.get_to(), ~board->get_turn()) & enemy_pawns;
 
         move.value = move_score;
     }
 }
 
 void Enginev2::order_moves(std::vector<Move>& moves){      
-    /// bitboard of enemy pawns
-    U64 enemy_pawns = board->get_turn() ? board->get_piece_bitboard(P) : board->get_piece_bitboard(p);
-
-    set_move_heuristics(moves, enemy_pawns);
+    set_move_heuristics(moves);
     std::sort(moves.begin(), moves.end());
 }
 
 int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
     if(depth == 0){
-        return eval.Evaluation(); // quiescence(alpha, beta);
+        return quiescence(alpha, beta);
     }
 
     std::vector<Move> moves = movegen->generate_moves(); 
@@ -188,7 +188,7 @@ Move Enginev2::get_engine_move(){
     Move best_move;
     int perspective = board->get_turn() ? -1 : 1;
 
-    std::vector<Move> moves = movegen->generate_moves(); 
+    std::vector<Move> moves = movegen->get_legal_moves(); 
 
     eval.nodes_searched = 0;
 

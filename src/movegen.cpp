@@ -38,7 +38,7 @@ std::vector<Move> MoveGen::generate_moves(bool _captures_only){
     } else {
         generate_legal_moves();
     }
-
+    
     return legal_moves;
 }
 
@@ -58,6 +58,8 @@ bool MoveGen::no_legal_moves(){
     return (legal_moves.size() == 0) || (legal_moves[0] == Move(0,0,0)); 
 }
 
+/// generate only legal capture moves
+/// called during quiescence search
 void MoveGen::generate_legal_captures(){
 
     if(turn == WHITE){

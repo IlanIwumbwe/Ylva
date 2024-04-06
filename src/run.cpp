@@ -52,6 +52,7 @@ void Run::end_game(){
         board.view_board();
         run = false;
     } else if(movegen.no_legal_moves()){
+        board.view_board();
         if(movegen.ally_king_in_check()){
             std::cout << (board.get_turn() ? "Black " : "White ") << "wins by checkmate" << std::endl;
         } else { std::cout << "Draw by stalemate" << std::endl; }
