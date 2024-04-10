@@ -55,17 +55,14 @@ class MoveGen{
         /// Given a king attack set, look through it and return a bitboard of those squares in the attack set that are attacked by enemy piece
         void set_king_danger_squares(U64 attack_set, int king_colour);
 
-        /// Given a square, and a piece colour, return a bitboard of all pieces of that colour attacking that square
         U64 get_attackers(uint square, const int colour);
+
+        void get_pawn_attackers(U64& pawn_attackers, uint square, const int colour);
 
         /// Produce bitboard of all pieces giving ally king check, and return the number of checkers
         uint get_checkers();
 
         inline bool ally_king_in_check(){
-            std::cout << "ally king " << std::endl;
-            printbitboard(ally_king);
-            std::cout << "checkers" << std::endl;
-            printbitboard(checkers);
             return checkers != 0;
         }
 

@@ -16,10 +16,11 @@ class Engine{
             std::cout << "Searching to depth " << depth << std::endl;
         }
 
-        virtual Move get_engine_move() = 0;
+        virtual Move get_engine_move(std::vector<Move>& moves) = 0;
 
         void engine_driver();
-
+        
+        /// Make move on the board, and increament nodes searched counter
         inline void make_move(Move move){
             board->make_move(move);    
             eval.nodes_searched += 1;
@@ -37,7 +38,7 @@ class Enginev0 : public Engine{
     public:
         Enginev0(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
 
-        Move get_engine_move() override;
+        Move get_engine_move(std::vector<Move>& moves) override;
 
         int plain_minimax(int depth);
 };
@@ -47,7 +48,7 @@ class Enginev1 : public Engine{
     public:
         Enginev1(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
 
-        Move get_engine_move() override;
+        Move get_engine_move(std::vector<Move>& moves) override;
 
         int alpha_beta_minimax(int depth, int alpha, int beta);
 };
@@ -57,7 +58,7 @@ class Enginev2 : public Engine{
     public:
         Enginev2(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
 
-        Move get_engine_move() override;
+        Move get_engine_move(std::vector<Move>& moves) override;
 
         int ab_move_ordering(int depth, int alpha, int beta);
 

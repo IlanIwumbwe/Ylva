@@ -4,9 +4,9 @@
 #include "board.h"
 #include "movegen.h"
 
-#define CAPTURE_VAL_POWER 10
-#define PROMOTION_POWER 20
-#define PAWN_ATTACK_POWER 50ULL
+#define CAPTURE_VAL_POWER 30
+#define PROMOTION_POWER 50
+#define PAWN_ATTACK_POWER 20
 
 class Eval{
     public:

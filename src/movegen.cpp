@@ -368,6 +368,17 @@ U64 MoveGen::get_attackers(uint square, const int colour){
     return (out);
 }
 
+/// Given a square, and a piece colour, return a bitboard of all pawns of that colour attacking that square
+void MoveGen::get_pawn_attackers(U64& pawn_attackers, uint square, const int colour){
+    if(colour){
+        pawn_attackers |= set_bit(square+7) & ~A_FILE & black_pawns;
+        pawn_attackers |= set_bit(square+9) & ~H_FILE & black_pawns;             
+    } else {
+        pawn_attackers |= set_bit(square-9) & ~A_FILE & white_pawns;
+        pawn_attackers |= set_bit(square-7) & ~H_FILE & white_pawns;   
+    }
+}
+
 /// Produce bitboard of all pieces giving ally king check, and return the number of checkers
 uint MoveGen::get_checkers(){
     uint ally_king_sq = get_lsb(ally_king);

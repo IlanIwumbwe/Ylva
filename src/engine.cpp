@@ -28,19 +28,16 @@ int Enginev0::plain_minimax(int depth){
     return best_eval;
 }  
 
-Move Enginev0::get_engine_move(){
+Move Enginev0::get_engine_move(std::vector<Move>& moves){
     int best_eval = -infinity, curr_eval;
-    Move best_move;
-    int perspective = board->get_turn() ? -1 : 1;
-
-    std::vector<Move> moves = movegen->get_legal_moves(); 
+    Move best_move = moves[0];
 
     eval.nodes_searched = 0;
 
     for(Move& move : moves){
         make_move(move);
 
-        curr_eval = perspective * plain_minimax(depth-1);
+        curr_eval = -plain_minimax(depth-1);
 
         if(curr_eval > best_eval){
             best_eval = curr_eval;
@@ -86,19 +83,16 @@ int Enginev1::alpha_beta_minimax(int depth, int alpha, int beta){
     return alpha;
 }
 
-Move Enginev1::get_engine_move(){
+Move Enginev1::get_engine_move(std::vector<Move>& moves){
     int best_eval = -infinity, curr_eval;
-    Move best_move;
-    int perspective = board->get_turn() ? -1 : 1;
-
-    std::vector<Move> moves = movegen->get_legal_moves(); 
+    Move best_move = moves[0];
 
     eval.nodes_searched = 0;
 
     for(Move& move : moves){
         make_move(move);
 
-        curr_eval = perspective * alpha_beta_minimax(depth-1,-infinity, infinity);
+        curr_eval = -alpha_beta_minimax(depth-1,-infinity, infinity);
 
         if(curr_eval > best_eval){
             best_eval = curr_eval;
@@ -135,10 +129,11 @@ void Enginev2::set_move_heuristics(std::vector<Move>& moves){
         move_score += (move.get_move() & PROMO_FLAG) * (PROMOTION_POWER / 32768);
 
         // moving into square attacked by enemy pawn is bad   
-        // bitboard of enemy pawns
-        U64 enemy_pawns = board->get_turn() ? board->get_piece_bitboard(P) : board->get_piece_bitboard(p); 
+        U64 pawn_attackers = 0;
 
-        move_score -= PAWN_ATTACK_POWER * movegen->get_attackers(move.get_to(), ~board->get_turn()) & enemy_pawns;
+        movegen->get_pawn_attackers(pawn_attackers, move.get_to(), ~board->get_turn());
+
+        move_score -= PAWN_ATTACK_POWER * count_set_bits(pawn_attackers);
 
         move.value = move_score;
     }
@@ -151,6 +146,7 @@ void Enginev2::order_moves(std::vector<Move>& moves){
 
 int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
     if(depth == 0){
+        // return eval.Evaluation(); 
         return quiescence(alpha, beta);
     }
 
@@ -183,21 +179,20 @@ int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
     return alpha;
 }
 
-Move Enginev2::get_engine_move(){
+Move Enginev2::get_engine_move(std::vector<Move>& moves){
     int best_eval = -infinity, curr_eval;
     Move best_move;
-    int perspective = board->get_turn() ? -1 : 1;
-
-    std::vector<Move> moves = movegen->get_legal_moves(); 
 
     eval.nodes_searched = 0;
 
     order_moves(moves);
 
+    best_move = moves[0];
+
     for(Move& move : moves){
         make_move(move);
-        curr_eval = perspective * ab_move_ordering(depth-1,-infinity, infinity);
-        
+        curr_eval = -ab_move_ordering(depth-1,-infinity, infinity);
+
         if(curr_eval > best_eval){
             best_eval = curr_eval;
             best_move = move;
@@ -207,7 +202,7 @@ Move Enginev2::get_engine_move(){
     }
 
     return best_move;
-}
+} 
 
 int Enginev2::quiescence(int alpha, int beta){
     int evaluation = eval.Evaluation();
@@ -219,13 +214,13 @@ int Enginev2::quiescence(int alpha, int beta){
     alpha = std::max(evaluation, alpha);
     
     // consider only capture moves
-    std::vector<Move> moves = movegen->generate_moves(true); 
+    std::vector<Move> capture_moves = movegen->generate_moves(true); 
 
     int curr_eval = 0;
 
-    order_moves(moves);
+    order_moves(capture_moves);
 
-    for(Move& move : moves){
+    for(Move& move : capture_moves){
         make_move(move);
         curr_eval = -quiescence(-beta, -alpha);
         board->undo_move();
@@ -243,9 +238,11 @@ int Enginev2::quiescence(int alpha, int beta){
 void Engine::engine_driver(){
     board->view_board();   
 
+    std::vector<Move> legal_moves = movegen->get_legal_moves();
+
     auto start = high_resolution_clock::now();
 
-    Move move = get_engine_move();
+    Move move = get_engine_move(legal_moves);
 
     auto end = high_resolution_clock::now();
 
