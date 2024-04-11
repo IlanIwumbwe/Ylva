@@ -400,7 +400,7 @@ int Board::get_fullmoves(){
     return floor(current_state->state_id / 2) + fullmoves;
 }
 
-piece_names Board::get_piece_on_square(int square) const {
+piece_names Board::get_piece_on_square(uint square) const {
     for(auto p: bitboards){
         if((p.second & set_bit(square)) != 0){return p.first;}
     }

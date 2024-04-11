@@ -107,35 +107,37 @@ Move Enginev1::get_engine_move(std::vector<Move>& moves){
 
 /// Given a set of moves, use hueristics to guess its quality. Used for move ordering
 void Enginev2::set_move_heuristics(std::vector<Move>& moves){
-    int move_score, from_val, to_val;
+    int move_value, from_val, to_val;
 
     piece_names from_piece, to_piece;
 
     for(Move& move : moves){
-        move_score = 0;
+        move_value = 0;
 
         from_piece = board->get_piece_on_square(move.get_from());
         from_val = get_piece_value[from_piece];
         
         // capturing high value piece with low value piece is good
-        if(move.get_move() & CAPTURE_FLAG){
+        if(move.is_capture()){
             to_piece = board->get_piece_on_square(move.get_to());
             to_val = get_piece_value[to_piece];
 
-            move_score += CAPTURE_VAL_POWER * std::max(0, to_val - from_val);
+            move_value += CAPTURE_VAL_POWER * std::max(0, to_val - from_val);
         }
         
         // promotion is good
-        move_score += (move.get_move() & PROMO_FLAG) * (PROMOTION_POWER / 32768);
+        if(move.is_promo()){
+            move_value += PROMOTION_POWER;
+        }
 
         // moving into square attacked by enemy pawn is bad   
         U64 pawn_attackers = 0;
 
         movegen->get_pawn_attackers(pawn_attackers, move.get_to(), ~board->get_turn());
 
-        move_score -= PAWN_ATTACK_POWER * count_set_bits(pawn_attackers);
+        move_value -= PAWN_ATTACK_POWER * count_set_bits(pawn_attackers);
 
-        move.value = move_score;
+        move.value = move_value;
     }
 }
 
@@ -146,7 +148,7 @@ void Enginev2::order_moves(std::vector<Move>& moves){
 
 int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
     if(depth == 0){
-        // return eval.Evaluation(); 
+        //return eval.Evaluation(); 
         return quiescence(alpha, beta);
     }
 
@@ -254,7 +256,6 @@ void Engine::engine_driver(){
 
     board->make_move(move);
     movegen->generate_moves();
-
 }
 
 

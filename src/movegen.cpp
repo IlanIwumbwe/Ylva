@@ -235,8 +235,8 @@ bool MoveGen::valid_slider_pin(piece_names& pinned_piece_name, ray_type _ray_typ
 
 /// Generate all valid moved for pinned pieces on the board
 void MoveGen::pinned_moves(uint& pinner_sq, U64& possible_pin, const U64& pinned_bitboard, ray_type _ray_type){
-    auto pinned_sq = get_lsb(pinned_bitboard);
-    auto pinned_piece_name = board->get_piece_on_square(pinned_sq);
+    uint pinned_sq = get_lsb(pinned_bitboard);
+    piece_names pinned_piece_name = board->get_piece_on_square(pinned_sq);
 
     if(valid_slider_pin(pinned_piece_name, _ray_type)){
         create_other_moves(set_bit(pinner_sq), pinned_sq, 4);
@@ -284,8 +284,8 @@ void MoveGen::pinned_moves(uint& pinner_sq, U64& possible_pin, const U64& pinned
 /// If in check by non slider, push mask is 0
 void MoveGen::set_push_mask(){
     uint ally_king_sq = get_lsb(ally_king);
-    auto checker_sq = get_lsb(checkers);
-    auto checker = board->get_piece_on_square(checker_sq);
+    uint checker_sq = get_lsb(checkers);
+    piece_names checker = board->get_piece_on_square(checker_sq);
 
     if(is_bishop(checker)){               
         push_mask = mask_opposing_rays(checker_sq, ally_king_sq, 4, 7);

@@ -109,7 +109,7 @@ auto numtobin(const U64& number);
 
 void printbitboard(const U64& number);
 
-int alg_to_int(const std::string& square);
+uint alg_to_int(const std::string& square);
 
 std::string int_to_alg(const uint& square);
 

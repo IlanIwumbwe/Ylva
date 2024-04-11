@@ -224,9 +224,9 @@ int Run::convert_to_move(const std::tuple<std::string, std::string, std::string>
 
     from = alg_to_int(from_str);
     to = alg_to_int(to_str);
-    diff = from - to;
-
     moving_piece = board.get_piece_on_square(from);
+
+    diff = from - to;
 
     if(moving_piece == None){
         return -1;

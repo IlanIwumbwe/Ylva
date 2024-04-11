@@ -184,7 +184,7 @@ void printbitboard(const U64& number){
     std::cout << "  ------------------------" << std::endl;
 }
 
-int alg_to_int(const std::string& square){
+uint alg_to_int(const std::string& square){
     return 8*((square[1]-'0')-1) + (104-square[0]);
 }
 

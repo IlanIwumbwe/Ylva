@@ -86,7 +86,7 @@ class Board{
 
         inline void change_turn(){turn = (colour)~turn;}
 
-        piece_names get_piece_on_square(int square) const;
+        piece_names get_piece_on_square(uint square) const;
 
         void view_board();
 

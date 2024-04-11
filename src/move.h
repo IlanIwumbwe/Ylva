@@ -15,7 +15,7 @@ class Move{
         uint get_to() const {return move & 0x3f;}
         uint get_from() const {return (move >> 6) & 0x3f;}
         uint get_flags() const {return (move >> 12) & 0xf;}
-        uint get_move() const {return move;}
+        uint16_t get_move() const {return move;}
 
         void set_to(uint to) {move &= ~0x3f; move |= to & 0x3f;}
         void set_from(uint from) {move &= ~0xfc0; move |= (from & 0x3f) << 6;}
