@@ -369,7 +369,9 @@ U64 MoveGen::get_attackers(uint square, const int colour){
 }
 
 /// Given a square, and a piece colour, return a bitboard of all pawns of that colour attacking that square
-void MoveGen::get_pawn_attackers(U64& pawn_attackers, uint square, const int colour){
+U64 MoveGen::get_pawn_attackers(uint square, const int colour){
+    U64 pawn_attackers = 0;
+
     if(colour){
         pawn_attackers |= set_bit(square+7) & ~A_FILE & black_pawns;
         pawn_attackers |= set_bit(square+9) & ~H_FILE & black_pawns;             
@@ -377,6 +379,29 @@ void MoveGen::get_pawn_attackers(U64& pawn_attackers, uint square, const int col
         pawn_attackers |= set_bit(square-9) & ~A_FILE & white_pawns;
         pawn_attackers |= set_bit(square-7) & ~H_FILE & white_pawns;   
     }
+
+    return pawn_attackers;
+}
+
+/// Return a bitboard of all pieces of this colour attacking this square. The pieces should be of the smallest possible piece value
+U64 MoveGen::get_smallest_attackers(uint square, const int colour){
+    U64 attackers = get_attackers(square, colour), smallest_attackers = 0;
+    std::vector<U64> order;
+
+    int i = 0;
+
+    if(colour){
+        order = {black_pawns, black_knights, black_bishops, black_rooks, black_queens};
+    } else {
+        order = {white_pawns, white_knights, white_bishops, white_rooks, white_queens};
+    }
+
+
+    for(; (i < 5) && !smallest_attackers; ++i){
+        smallest_attackers |= attackers & order[i];
+    }
+
+    return smallest_attackers;
 }
 
 /// Produce bitboard of all pieces giving ally king check, and return the number of checkers

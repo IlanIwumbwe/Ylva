@@ -107,12 +107,12 @@ Move Enginev1::get_engine_move(std::vector<Move>& moves){
 
 /// Given a set of moves, use hueristics to guess its quality. Used for move ordering
 void Enginev2::set_move_heuristics(std::vector<Move>& moves){
-    int move_value, from_val, to_val;
+    int from_val, to_val;
 
     piece_names from_piece, to_piece;
 
     for(Move& move : moves){
-        move_value = 0;
+        move.value = 0;
 
         from_piece = board->get_piece_on_square(move.get_from());
         from_val = get_piece_value[from_piece];
@@ -122,22 +122,18 @@ void Enginev2::set_move_heuristics(std::vector<Move>& moves){
             to_piece = board->get_piece_on_square(move.get_to());
             to_val = get_piece_value[to_piece];
 
-            move_value += CAPTURE_VAL_POWER * std::max(0, to_val - from_val);
+            move.value += CAPTURE_VAL_POWER * std::max(0, to_val - from_val);
         }
         
         // promotion is good
         if(move.is_promo()){
-            move_value += PROMOTION_POWER;
+            move.value += PROMOTION_POWER;
         }
 
         // moving into square attacked by enemy pawn is bad   
-        U64 pawn_attackers = 0;
+        U64 pawn_attackers = movegen->get_pawn_attackers(move.get_to(), ~board->get_turn());
 
-        movegen->get_pawn_attackers(pawn_attackers, move.get_to(), ~board->get_turn());
-
-        move_value -= PAWN_ATTACK_POWER * count_set_bits(pawn_attackers);
-
-        move.value = move_value;
+        move.value -= (PAWN_ATTACK_POWER * count_set_bits(pawn_attackers));
     }
 }
 
@@ -148,8 +144,8 @@ void Enginev2::order_moves(std::vector<Move>& moves){
 
 int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
     if(depth == 0){
-        //return eval.Evaluation(); 
-        return quiescence(alpha, beta);
+        return eval.Evaluation(); 
+        // return quiescence(alpha, beta);
     }
 
     std::vector<Move> moves = movegen->generate_moves(); 
@@ -181,6 +177,63 @@ int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
     return alpha;
 }
 
+/*
+    Perform a new search that looks only at capture moves
+*/
+int Enginev2::quiescence(int alpha, int beta){
+    int evaluation = eval.Evaluation();
+
+    if(evaluation >= beta){
+        return beta;
+    }
+
+    alpha = std::max(evaluation, alpha);
+    
+    // consider only capture moves
+    std::vector<Move> capture_moves = movegen->generate_moves(true); 
+
+    int curr_eval = 0;
+    
+    order_moves(capture_moves);
+
+    for(Move& move : capture_moves){
+        make_move(move);
+        curr_eval = -quiescence(-beta, -alpha);
+        board->undo_move();
+
+        alpha = std::max(curr_eval, alpha);
+
+        if(curr_eval >= beta){
+            return beta;
+        }
+    }
+    
+    return alpha;
+}
+
+/*
+    Perform static exchange evaluation on destination square to see whether after a series of captures, making this capture
+    is a winning move
+    https://www.chessprogramming.org/Static_Exchange_Evaluation
+*/
+int Enginev2::SEE(uint square, int side){
+    int value = 0;
+
+    U64 piece = movegen->get_smallest_attackers(square, side);
+    piece_names to_piece = board->get_piece_on_square(square);
+    int to_piece_value = get_piece_value[to_piece];
+
+    if(piece != None){
+        board->capture_piece(to_piece, set_bit(square));
+
+        value = std::max(0, to_piece_value - SEE(square, ~side));
+
+        board->uncapture_piece(set_bit(square), to_piece);
+    }
+
+    return value;
+}
+
 Move Enginev2::get_engine_move(std::vector<Move>& moves){
     int best_eval = -infinity, curr_eval;
     Move best_move;
@@ -203,39 +256,8 @@ Move Enginev2::get_engine_move(std::vector<Move>& moves){
         board->undo_move();
     }
 
-    return best_move;
+    return best_move;  
 } 
-
-int Enginev2::quiescence(int alpha, int beta){
-    int evaluation = eval.Evaluation();
-
-    if(evaluation >= beta){
-        return beta;
-    }
-
-    alpha = std::max(evaluation, alpha);
-    
-    // consider only capture moves
-    std::vector<Move> capture_moves = movegen->generate_moves(true); 
-
-    int curr_eval = 0;
-
-    order_moves(capture_moves);
-
-    for(Move& move : capture_moves){
-        make_move(move);
-        curr_eval = -quiescence(-beta, -alpha);
-        board->undo_move();
-
-        alpha = std::max(curr_eval, alpha);
-
-        if(curr_eval >= beta){
-            return beta;
-        }
-    }
-
-    return alpha;
-}
 
 void Engine::engine_driver(){
     board->view_board();   

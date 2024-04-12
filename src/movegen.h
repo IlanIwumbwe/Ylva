@@ -18,14 +18,10 @@ class MoveGen{
 
         bool no_legal_moves();
 
-        /// generate all legal moves
         void generate_legal_moves();
 
-        /// generate only captures moves
         void generate_legal_captures();
 
-        /// Setup a bitboard of all pinned pieces on the board. This mask is used to remove pinned pieces when such that moves aren't generated for them
-        /// in main move generator. Instead, pinned pieces' moves are generated separately at right after king moves are generated
         void get_pinned_pieces();
 
         void pins_along_diag(U64& potential_pin, uint& pinner_sq, const uint& ally_king_sq);
@@ -34,12 +30,8 @@ class MoveGen{
 
         bool valid_slider_pin(piece_names& pinned_piece_name, ray_type _ray_type);
 
-        /// Generate all valid moved for pinned pieces on the board
         void pinned_moves(uint& pinner_sq, U64& possible_pin, const U64& pinned_bitboard, ray_type _ray_type);
 
-        /// only call if in check by one piece
-        /// If in check by a slider, push mask is squares between ally king and enemy slider
-        /// If in check by non slider, push mask is 0
         void set_push_mask();
 
         U64 mask_opposing_rays(uint sq1, uint sq2, int start, int end);
@@ -52,14 +44,14 @@ class MoveGen{
 
         bool is_queen(const piece_names& piece);
 
-        /// Given a king attack set, look through it and return a bitboard of those squares in the attack set that are attacked by enemy piece
         void set_king_danger_squares(U64 attack_set, int king_colour);
 
         U64 get_attackers(uint square, const int colour);
 
-        void get_pawn_attackers(U64& pawn_attackers, uint square, const int colour);
+        U64 get_smallest_attackers(uint square, const int colour);
 
-        /// Produce bitboard of all pieces giving ally king check, and return the number of checkers
+        U64 get_pawn_attackers(uint square, const int colour);
+
         uint get_checkers();
 
         inline bool ally_king_in_check(){
@@ -116,11 +108,8 @@ class MoveGen{
 
         void q_captures_moves();
 
-        /// Given a bitboard of destination squares, a pointer to the board state, an offset of calculate from square, and a flag to 
-        /// indicate move type, add that move to the list of valid moves in board state
         void create_pawn_moves(U64 tos, int offset, uint flag);
 
-        /// This receives the actual from square, as its the same for all tos that are passed to it
         void create_other_moves(U64 tos, uint from, uint flag);
 
         U64 get_positive_ray_attacks(U64 occupied, dirs dir, uint square);

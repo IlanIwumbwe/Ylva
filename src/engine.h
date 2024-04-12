@@ -53,7 +53,7 @@ class Enginev1 : public Engine{
         int alpha_beta_minimax(int depth, int alpha, int beta);
 };
 
-/// v2 has alpha beta with move ordering and quiescence search 
+/// @brief v2 has alpha beta minimax, and other optimisations
 class Enginev2 : public Engine{
     public:
         Enginev2(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
@@ -67,6 +67,8 @@ class Enginev2 : public Engine{
         void order_moves(std::vector<Move>& moves);
 
         int quiescence(int alpha, int beta);
+
+        int SEE(uint square, int side);
 };
 
 #endif

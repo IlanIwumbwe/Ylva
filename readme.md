@@ -14,23 +14,30 @@ Run using `run.sh`. This brings up a menu, with options to play with a friend, w
  
 Current move generation speed is `~500k` nodes/second. Proper benchmarking to be done in the future.
 
-### Notable techniques
+## Notable techniques
+
+### Move generation
 
 Ylva uses bitboards as the data structure that stores information about a board state. 
 
-Bitboards are great because when used right, they speed up move generation significantly, because most operations required during move generation are reduced to bitwise operations. 12 bitboards are used for each of the 6 chess pieces, for each colour. 
+Bitboards are great because when used right, they speed up move generation significantly, because most operations required during move generation are reduced to bitwise operations. 12 bitboards are used for each of the 6 chess pieces, for each colour. The bitboards are also used to quickly get information such as whether certain squares are occupied (`set_bit(sq) & all_pieces`) , whether king is in check (`checkers != 0`).
 
 Slider piece move generation is really costly, and various techniques such as [magic bitboards](https://www.chessprogramming.org/Magic_Bitboards) exist to speed up slider piece move generation. This implementation uses the [classical approach](https://www.chessprogramming.org/Classical_Approach) as it was the easiest to implement as a starting point.
 
-The engine is uses a very simple material based evaluation and minimax search to decide which moves are best.
+### Evaluation
 
-### Todos
+The engine is uses a very simple material based evaluation and minimax search with alpha beta pruning to decide which moves are best.
+- Move ordering: Alpha beta pruning works best when it starts by searching good moves first, because then it can prune more branches. We don't know exactly what the good moves are of course, but we can guess what moves are better to start with. For instance: moves capturing high value pieces with lower value ones, promotion moves, and moves avoidiing squares attacked by opponent pawns are often good. 
+ 
+- [Quiescence search](https://www.chessprogramming.org/Quiescence_Search): Statically evaluating positions when depth == 0 is dangerous because if you capture a pawn with your queen on the next move, the evaluation will think this is a good move, but what if the move after that caputres the queen? Then you have actually blundered your queen. So at depth 0, we start a new search, which looks only at capture moves, and the final positions that get evaluated have no captures available.
+
+## Todos
 
 [Future plans for Ylva](https://github.com/IlanIwumbwe/Ylva/issues/2)
 
-### Demo
+## Demo
 
 [ylvavid.webm](https://github.com/IlanIwumbwe/Ylva/assets/56346800/16319713-d396-4238-bd31-d42e1c36ef8f)
 
-### License
+## License
 MIT

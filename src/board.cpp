@@ -12,16 +12,14 @@ Board::Board (const std::string& _fen){
 
 /// Make move given as input on the board
 void Board::make_move(const Move& move){
-    // std::cout << "making move " << move << std::endl;
+    const uint from = move.get_from();
+    const uint to = move.get_to();
+    const uint flags = move.get_flags();
 
-    const auto from = move.get_from();
-    const auto to = move.get_to();
-    const auto flags = move.get_flags();
+    const piece_names from_piece_name = get_piece_on_square(from);
+    const piece_names to_piece_name = get_piece_on_square(to);
 
-    const auto from_piece_name = get_piece_on_square(from);
-    const auto to_piece_name = get_piece_on_square(to);
-
-    auto from_piece_colour = get_piece_colour(from_piece_name);
+    colour from_piece_colour = get_piece_colour(from_piece_name);
 
     assert(from_piece_name != None);
 
@@ -29,7 +27,7 @@ void Board::make_move(const Move& move){
     piece_names promo_piece_name;
     U64 promotion_piece_bitboard;
 
-    auto recent_capture = to_piece_name;
+    piece_names recent_capture = to_piece_name;
 
     // remove castling rights if king or rook moves
     if(from_piece_name == K){
@@ -110,8 +108,6 @@ int Board::undo_move(){
     if(current_state->prev_state != NULL){  
         Move prev_move = current_state->prev_move;
         piece_names recent_capture = current_state->recent_capture;
-
-        // std::cout << "undoing move " << prev_move << std::endl;
 
         revert_state();
     

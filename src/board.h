@@ -28,17 +28,14 @@ class Board{
     public:
         Board (const std::string& _fen);
 
-        /// Make move given as input on the board
         void make_move(const Move& move);
 
         int get_prev_move(Move& prev_move);
 
         int undo_move();
 
-        /// Perform en-passant capture
         piece_names ep_capture(const colour& pawn_colour, const uint& to);
 
-        /// Revert en-passant capture
         void ep_uncapture(const colour& pawn_colour, const uint& to);
 
         void castle_kingside(const uint& king_square, const colour& king_colour);
@@ -49,10 +46,8 @@ class Board{
 
         void uncastle_queenside(const uint& king_square, const colour& king_colour);
         
-        /// Perform normal capture
         void capture_piece(const piece_names& to_piece_name, const U64& square_bitboard);
 
-        /// Revert normal capture
         void uncapture_piece(const U64& square_bitboard, piece_names& recent_capture);
 
         bool has_castling_rights(int flag) const;
@@ -63,15 +58,12 @@ class Board{
 
         void init_from_fen(const std::vector<std::string>& parts);
 
-        /// Initialise all bitboards and piece lists
         void init_board_state(const std::string& board_string);
         
         void init_turn(const std::string& str_turn);
 
         void init_castling_rights(const std::string& str_castling);
 
-        /// Given the enpassant square, add the relevant move to move history that would've led to that enpassant square, which will be used to 
-        /// validate possible enpassant captures by an enemy piece
         Move init_enpassant_square(const std::string& str_ep_square);
 
         void init_halfmove_clock(const std::string& str_hm_clock);
@@ -101,11 +93,8 @@ class Board{
 
         U64 get_entire_bitboard() const;
 
-        /// after a new move has been made, create a new state. Store the new castling rights, the half move clock, the move that led to this state,
-        /// and the piece if any that got captured when that move was made
         void add_state(Move prev_move, piece_names recent_capture);
 
-        /// Make the previous state the current state, then make valid moves the valid moves of that previous state
         void revert_state();
 
     private:        
