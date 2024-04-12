@@ -146,7 +146,7 @@ void Enginev2::set_move_heuristics(std::vector<Move>& moves){
 
         // use mvv_lva to sort capture moves by how much material they will gain 
         move.value += MVV_LVA[to_ind][from_ind];
-        
+
         // move.value += (CAPTURE_VAL_POWER * std::max(0, get_piece_value[to_ind] - get_piece_value[from_ind]));
         
         // promotion is good
@@ -174,8 +174,8 @@ void Enginev2::pick_move(std::vector<Move>& moves, int start_index){
 
 int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
     if(depth == 0){
-        return eval.Evaluation(); 
-        // return quiescence(alpha, beta);
+        // return eval.Evaluation(); 
+        return quiescence(alpha, beta);
     }
 
     std::vector<Move> moves = movegen->generate_moves(); 
