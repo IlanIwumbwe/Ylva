@@ -10,7 +10,7 @@ int Eval::count_white_material(){
     std::vector<piece_names> pieces = {N, P, Q, R, B};
 
     for(piece_names piece: pieces){
-        material += count_set_bits(board->get_piece_bitboard(piece)) * get_piece_value[piece];
+        material += count_set_bits(board->get_piece_bitboard(piece)) * get_piece_value[piece];                                      
     }
 
     return material;
@@ -22,7 +22,7 @@ int Eval::count_black_material(){
     std::vector<piece_names> pieces = {n, p, q, r, b};
 
     for(piece_names piece: pieces){
-        material += count_set_bits(board->get_piece_bitboard(piece)) * get_piece_value[piece];
+        material += count_set_bits(board->get_piece_bitboard(piece)) * get_piece_value[piece-8];
     }
     
     return material;

@@ -27,7 +27,7 @@ Slider piece move generation is really costly, and various techniques such as [m
 ### Evaluation
 
 The engine is uses a very simple material based evaluation and minimax search with alpha beta pruning to decide which moves are best.
-- Move ordering: Alpha beta pruning works best when it starts by searching good moves first, because then it can prune more branches. We don't know exactly what the good moves are of course, but we can guess what moves are better to start with. For instance: moves capturing high value pieces with lower value ones, promotion moves, and moves avoidiing squares attacked by opponent pawns are often good. 
+- Move ordering: Alpha beta pruning works best when it starts by searching good moves first, because then it can prune more branches. We don't know exactly what the good moves are of course, but we can guess what moves are better to start with. For instance: moves capturing high value pieces with lower value ones, promotion moves, and moves avoidiing squares attacked by opponent pawns are often good. The implementation is from [this book](https://rustic-chess.org/search/ordering/how.html), which allowed me to understand why my initial implementation was slower.
  
 - [Quiescence search](https://www.chessprogramming.org/Quiescence_Search): Statically evaluating positions when depth == 0 is dangerous because if you capture a pawn with your queen on the next move, the evaluation will think this is a good move, but what if the move after that caputres the queen? Then you have actually blundered your queen. So at depth 0, we start a new search, which looks only at capture moves, and the final positions that get evaluated have no captures available.
 

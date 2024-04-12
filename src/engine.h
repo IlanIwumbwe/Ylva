@@ -62,9 +62,9 @@ class Enginev2 : public Engine{
 
         int ab_move_ordering(int depth, int alpha, int beta);
 
-        void set_move_heuristics(std::vector<Move>& moves);
+        void pick_move(std::vector<Move>& moves, int start_index);
 
-        void order_moves(std::vector<Move>& moves);
+        void set_move_heuristics(std::vector<Move>& moves);
 
         int quiescence(int alpha, int beta);
 

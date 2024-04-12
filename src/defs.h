@@ -78,7 +78,7 @@ extern std::unordered_map<char, piece_names> char_to_name;
 
 extern std::unordered_map<std::string, uint> promo_flags;
 
-extern std::unordered_map<piece_names, int> get_piece_value;
+extern int get_piece_value[7];
 
 extern uint p_flags[4];
 extern uint pc_flags[4];
@@ -114,5 +114,7 @@ uint alg_to_int(const std::string& square);
 std::string int_to_alg(const uint& square);
 
 uint count_set_bits(U64 bitboard);
+
+int map_piece_index(int piece);
 
 #endif
