@@ -29,11 +29,24 @@ void Run::run_PVP(){
 }
 
 void Run::run_PVE(){
+    std::string colour_choice = get_colour_choice();
+
+    player_side = (colour_choice == "w") ? WHITE : BLACK;
+
     while(run){
-        if(board.get_turn() == WHITE){
+        std::cout << "\nwhite time: " << white_used_time.count() << std::endl; 
+        std::cout << "black time: " << black_used_time.count() << std::endl; 
+
+        if(board.get_turn() == player_side){
             get_input_from_player();
         }else{
             engine->engine_driver();
+
+            if(player_side){
+                white_used_time += engine->time_used_per_turn;
+            } else {
+                black_used_time += engine->time_used_per_turn;
+            }
         }
         end_game();
     }
@@ -57,6 +70,10 @@ void Run::end_game(){
             std::cout << (board.get_turn() ? "White " : "Black ") << "wins by checkmate" << std::endl;
         } else { std::cout << "Draw by stalemate" << std::endl; }
         run = false;
+    } else if(white_used_time > WHITE_TIME){
+        std::cout << "Black wins on time " << std::endl;
+    } else if(black_used_time > BLACK_TIME){
+        std::cout << "White wins on time " << std::endl;
     }
 }
 
@@ -111,8 +128,24 @@ int Run::movegenTest(int depth){
     return num_nodes;
 }
 
+std::string Run::get_colour_choice(){
+    std::string input;
+    std::cout << "Provide colour choice (w/b) " << std::endl;
+    std::cout << ">>: ";
+    std::cin >> input;
+
+    while(input != "w" && input != "b"){
+        std::cout << ">>: ";
+        std::cin >> input;
+    }
+
+    return input;
+}
+
 void Run::get_input_from_player(){
     board.view_board();
+
+    player_start_time = high_resolution_clock::now();
     
     std::string input;
     std::cout << ">> ";
@@ -143,7 +176,7 @@ int Run::get_perft_depth(){
     std::cout << ">>: ";
     std::cin >> input;
 
-    while(!isStringDigit(input)){
+    while(!isStringDigit(input) || (input == "0")){
         std::cout << ">>: ";
         std::cin >> input;
     }
@@ -197,6 +230,14 @@ void Run::make_player_move(const std::tuple<std::string, std::string, std::strin
         std::cout << "There's no piece at the square chosen"<< std::endl;
     } else {
         if(movegen.move_is_legal(move)){
+            player_end_time = high_resolution_clock::now();
+
+            if(player_side){
+                black_used_time += duration_cast<seconds>(player_end_time - player_start_time);
+            } else {
+                white_used_time += duration_cast<seconds>(player_end_time - player_start_time);
+            }
+
             board.make_move(move);
             movegen.generate_moves();
         } else {

@@ -405,7 +405,21 @@ piece_names Board::get_piece_on_square(uint square) const {
 }
 
 void Board::view_board(){
-    std::cout << ((turn == WHITE) ? "white" : "black") << " to move" << std::endl; 
+
+    int square_offset;
+    std::string turn_to_print, letters_to_print;
+
+    if(turn == WHITE){
+        turn_to_print = "white";
+        letters_to_print = "   a  b  c  d  e  f  g  h";
+        square_offset = 63;
+    } else {
+        turn_to_print = "black";
+        letters_to_print = "   h  g  f  e  d  c  b  a";
+        square_offset = 0;
+    }
+
+    std::cout << turn_to_print << " to move" << std::endl; 
     std::cout << "Half move clock: " << hm_clock << std::endl;
     std::cout << "  =======================" << std::endl;
                                             
@@ -413,20 +427,20 @@ void Board::view_board(){
     piece_names name;
 
     for(int i = 0; i < 64; ++i){                
-        name = get_piece_on_square(63-i);
+        name = get_piece_on_square(abs(square_offset-i));
 
         letter = name_to_char(name);
 
         if((i+1) % 8 == 0){
-            std::cout << " " << letter << "| \n";
+            std::cout << " " << letter << "|" << std::endl;
         }else if(i % 8 == 0){
-            std::cout << 8-(i / 8) << "| " << letter << " ";
+            std::cout << 1 + (abs(square_offset-i) / 8) << "| " << letter << " ";
         }else{
             std::cout << " " << letter << " ";
         }
     }
     std::cout << "  ======================="  << std::endl;
-    std::cout << "   a  b  c  d  e  f  g  h" << std::endl;
+    std::cout << letters_to_print << std::endl;
 }
 
 inline void Board::set_piece_bitboard(const piece_names& piece_name, const U64& bitboard) {

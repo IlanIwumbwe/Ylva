@@ -6,6 +6,9 @@
 #include "engine.h"
 #include <map>
 
+const seconds WHITE_TIME = seconds(2500);
+const seconds BLACK_TIME = seconds(2500);
+
 class Run{
     public:
         Run(std::string& fen, game_modes mode);
@@ -26,6 +29,8 @@ class Run{
 
         void get_input_from_player();
 
+        std::string get_colour_choice();
+
         int get_perft_depth();
 
         void set_engine(int& depth);
@@ -34,10 +39,6 @@ class Run{
 
         void make_player_move(const std::tuple<std::string, std::string, std::string>& str_move);
 
-        /// Convert to move turns use string input into 'Move' object. This is checked for validity by searching in generated moves 
-        /// If not present, the move wasn't valid
-        /// This function allows users to make nonsense moves, but they won't be made since they won't exist in generated moves
-        /// This simplifies this function which is nice
         int convert_to_move(const std::tuple<std::string, std::string, std::string>& str_move, Move& move);
         
     private:
@@ -47,6 +48,11 @@ class Run{
         bool run = true;
 
         std::unique_ptr<Engine> engine;
+
+        colour player_side;
+
+        seconds white_used_time = seconds(0), black_used_time = seconds(0);
+        _V2::system_clock::time_point player_start_time, player_end_time;
 };
 
 #endif

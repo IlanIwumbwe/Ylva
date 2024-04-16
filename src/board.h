@@ -4,6 +4,9 @@
 #include "defs.h"
 #include "move.h"
 #include <assert.h>
+#include <chrono>
+
+using namespace std::chrono;
 
 struct State{
     uint8_t castling_rights;  
