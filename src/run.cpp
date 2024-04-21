@@ -237,7 +237,7 @@ void Run::make_player_move(const std::tuple<std::string, std::string, std::strin
             } else {
                 white_used_time += duration_cast<seconds>(player_end_time - player_start_time);
             }
-
+            
             board.make_move(move);
             movegen.generate_moves();
         } else {

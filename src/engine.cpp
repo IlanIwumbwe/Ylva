@@ -1,8 +1,10 @@
 #include "engine.h"
 
-/// The values for this table are got from https://rustic-chess.org/search/ordering/mvv_lva.html
+// most valuable victim, least valuable attacker heuristic
 
 /*
+    The values for this table are got from https://rustic-chess.org/search/ordering/mvv_lva.html
+
     attacker none should not be possible
     victim none having a score of 0 here means we don't have to check whether a move is a capture move
     moves that attack the king can't capture the king so therefore gain no bonus
@@ -25,6 +27,86 @@ const int MVV_LVA[7][7] = {
     {0, 25, 20, 21, 22, 24, 23},    // victim = Knight, attacker = None, Pawn, King, Queen, Rook, Knight, Bishop
     {0, 35, 30, 31, 32, 34, 33}     // victim = Bishop, attacker = None, Pawn, King, Queen, Rook, Knight, Bishop
 };
+
+// piece square tables
+
+/*
+    These have been copied from: https://www.chessprogramming.org/Simplified_Evaluation_Function
+    The point of these is to score positions which promote pieces into favourable squares more highly than positions that don't
+
+    Because of my convention, to index this boards by square, you have to do 63 - square 
+*/
+
+const int PAWN[32] = {
+    0,  0,  0,  0, 
+    50, 50, 50, 50,
+    10, 10, 20, 30,
+    5,  5, 10, 25, 
+    0,  0,  0, 20, 
+    5, -5,-10,  0, 
+    5, 10, 10,-20, 
+    0,  0,  0,  0
+};
+
+const int KNIGHT[32] = {
+    -50,-40,-30,-30
+    -40,-20,  0,  0
+    -30,  0, 10, 15
+    -30,  5, 15, 20
+    -30,  0, 15, 20
+    -30,  5, 10, 15
+    -40,-20,  0,  5
+    -50,-40,-30,-30
+};
+
+const int BISHOP[32] = {
+    -20,-10,-10,-10
+    -10,  0,  0,  0
+    -10,  0,  5, 10
+    -10,  5,  5, 10
+    -10,  0, 10, 10
+    -10, 10, 10, 10
+    -10,  5,  0,  0
+    -20,-10,-10,-10
+};
+
+const int ROOK[32] = {
+    0,  0,  0,  0, 
+    5, 10, 10, 10, 
+    -5,  0,  0,  0,
+    -5,  0,  0,  0,
+    -5,  0,  0,  0,
+    -5,  0,  0,  0,
+    -5,  0,  0,  0,
+    0,  0,  0,  5
+};
+
+const int QUEEN[32] = {
+    -20,-10,-10, -5,
+    -10,  0,  0,  0,
+    -10,  0,  5,  5,
+    -5,  0,  5,  5, 
+     0,  0,  5,  5, 
+    -10,  5,  5,  5,
+    -10,  0,  5,  0,
+    -20,-10,-10, -5 
+};
+
+// middlegame scores only
+/// TODO: think about how to merge both middlegame and endgame tables nicely
+const int KING[32] = {
+    30,-40,-40,-50,
+    -30,-40,-40,-50,
+    -30,-40,-40,-50,
+    -30,-40,-40,-50,
+    -20,-30,-30,-40,
+    -10,-20,-20,-20,
+    20, 20,  0,  0, 
+    20, 30, 10,  0,  
+};
+
+/// To index these tables, make sure to subtract one from the piece index
+const int* PIECE_SQUARE_TABLES[6] = {PAWN, KING, QUEEN, ROOK, KNIGHT, BISHOP};
 
 /// Minimax with no optimisations
 int Enginev0::plain_minimax(int depth){
@@ -137,14 +219,19 @@ void Enginev2::set_move_heuristics(std::vector<Move>& moves){
         from_piece = board->get_piece_on_square(move.get_from());
         to_piece = board->get_piece_on_square(move.get_to());
 
-        int from_ind = map_piece_index(from_piece);
-        int to_ind = map_piece_index(to_piece);
+        int from_piece_as_index = map_piece_index(from_piece);
+        int to_piece_as_index = map_piece_index(to_piece);
 
         // use mvv_lva to sort capture moves by how much material they will gain 
-        move.value += MVV_LVA[to_ind][from_ind];
+        move.value += MVV_LVA[to_piece_as_index][from_piece_as_index];
 
         // move.value += (CAPTURE_VAL_POWER * std::max(0, get_piece_value[to_ind] - get_piece_value[from_ind]));
-        
+
+        if(!move.is_capture()){
+            int to_square_as_index = map_square_index(move.get_to());
+            move.value += PIECE_SQUARE_TABLES[from_piece_as_index-1][to_square_as_index];
+        }
+
         // promotion is good
         move.value += (PROMOTION_POWER & (int)(move.is_promo()));
 
@@ -176,7 +263,7 @@ int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
 
     std::vector<Move> moves = movegen->generate_moves(); 
 
-    if(moves.size() == 0){
+    if(movegen->no_legal_moves()){
         if(movegen->ally_king_in_check()){
             return -infinity;  // checkmate
         } else {
@@ -238,31 +325,6 @@ int Enginev2::quiescence(int alpha, int beta){
     }
 
     return alpha;
-}
-
-/*
-    Perform static exchange evaluation on destination square to see whether after a series of captures, making this capture
-    is a winning move
-    https://www.chessprogramming.org/Static_Exchange_Evaluation
-*/
-int Enginev2::SEE(uint square, int side){
-    int value = 0;
-
-    U64 piece = movegen->get_smallest_attackers(square, side);
-    piece_names to_piece = board->get_piece_on_square(square);
-    int to_ind = map_piece_index(to_piece);
-
-    int to_piece_value = get_piece_value[to_ind];
-
-    if(piece != None){
-        board->capture_piece(to_piece, set_bit(square));
-
-        value = std::max(0, to_piece_value - SEE(square, ~side));
-
-        board->uncapture_piece(set_bit(square), to_piece);
-    }
-
-    return value;
 }
 
 Move Enginev2::search_position(std::vector<Move>& moves, int search_depth){

@@ -64,6 +64,7 @@ void MoveGen::generate_legal_captures(){
 
     if(turn == WHITE){
         ally_king = white_king;
+        enemy_king = black_king;
         ally_pieces = whites_minus_king;
         diag_pinners = black_bishops | black_queens;
         nondiag_pinners = black_rooks | black_queens;
@@ -73,7 +74,8 @@ void MoveGen::generate_legal_captures(){
         K_captures_moves();
     } else {
         ally_king = black_king;
-        ally_pieces = blacks_minus_king;
+        enemy_king = white_king;
+        ally_pieces = blacks_minus_king;    
         diag_pinners = white_bishops | white_queens;
         nondiag_pinners = white_rooks | white_queens;
 
@@ -117,6 +119,7 @@ void MoveGen::generate_legal_moves(){
 
     if(turn == WHITE){
         ally_king = white_king;
+        enemy_king = black_king;
         ally_pieces = whites_minus_king;
         diag_pinners = black_bishops | black_queens;
         nondiag_pinners = black_rooks | black_queens;
@@ -127,6 +130,7 @@ void MoveGen::generate_legal_moves(){
         K_quiet_moves();
     } else {
         ally_king = black_king;
+        enemy_king = white_king;
         ally_pieces = blacks_minus_king;
         diag_pinners = white_bishops | white_queens;
         nondiag_pinners = white_rooks | white_queens;

@@ -177,6 +177,14 @@ uint alg_to_int(const std::string& square){
     return 8*((square[1]-'0')-1) + (104-square[0]);
 }
 
+int file(const uint& square){
+    return square % 8;
+}
+
+int rank(const uint& square){
+    return square / 8;
+}
+
 std::string int_to_alg(const uint& square){
     char fileind = 104 - (square % 8);
     int rankind = (square / 8) + 1;
@@ -198,4 +206,12 @@ uint count_set_bits(U64 bitboard){
 
 int map_piece_index(int piece) {
     return piece % 8;
+}
+
+uint map_square_index(uint square){
+    square = 63 - square;
+    int x = file(square);
+    int y = rank(square);
+
+    return 4*y + std::min(7-x, x);
 }

@@ -111,10 +111,19 @@ void printbitboard(const U64& number);
 
 uint alg_to_int(const std::string& square);
 
+int rank(const uint& square);
+
+int file(const uint& square);
+
 std::string int_to_alg(const uint& square);
 
 uint count_set_bits(U64 bitboard);
 
 int map_piece_index(int piece);
+
+/// @brief Given a square, return an index that can access the value from piece square tables. 
+/// @param square 
+/// @return piece square tables index (uint)
+uint map_square_index(uint square);
 
 #endif

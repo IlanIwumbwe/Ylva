@@ -12,7 +12,7 @@ class Eval{
     public:
         Eval();
 
-        Eval(Board* _board);
+        Eval(Board* _board, MoveGen* _movegen);
 
         int Evaluation();
 
@@ -20,10 +20,13 @@ class Eval{
 
         int count_white_material();
 
+        int king_movement_endgame_eval();
+
         int nodes_searched = 0;
 
     private:
         Board* board;
+        MoveGen* movegen;
 };
 
 #endif

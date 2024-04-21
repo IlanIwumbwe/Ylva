@@ -144,12 +144,14 @@ class MoveGen{
             return get_rook_attacks(occupied, square) | get_bishop_attacks(occupied, square);
         }
 
+        U64 occupied, ally_king, enemy_king;
+
     private:
         U64 tos;
         Board* board;
-        U64 occupied, whites, blacks, whites_minus_king, blacks_minus_king;
+        U64 whites, blacks, whites_minus_king, blacks_minus_king;
         U64 king_danger_squares, checkers, push_mask, capture_mask;
-        U64 white_pawns, black_pawns, white_king, black_king, ally_king, ally_pieces;
+        U64 white_pawns, black_pawns, white_king, black_king, ally_pieces;
         U64 white_bishops, black_bishops, white_queens, black_queens, white_rooks, black_rooks, white_knights, black_knights;
         U64 diag_pinners, nondiag_pinners, pinned_pieces = 0;
         colour turn;

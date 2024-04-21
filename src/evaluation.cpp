@@ -2,7 +2,7 @@
 
 Eval::Eval(){}
 
-Eval::Eval(Board* _board) : board(_board) {}
+Eval::Eval(Board* _board, MoveGen* _movegen) : board(_board), movegen(_movegen) {}
 
 int Eval::count_white_material(){
     int material = 0;
@@ -28,17 +28,11 @@ int Eval::count_black_material(){
     return material;
 }
 
-
 int Eval::Evaluation(){
-    auto perspective = board->get_turn() ? -1 : 1;
-    
-    return perspective * (count_white_material() - count_black_material());
+    int perspective = board->get_turn() ? -1 : 1;
+    int eval = count_white_material() - count_black_material();
+
+    return (perspective * eval);
 }
-
- 
-
-
-
-
 
 

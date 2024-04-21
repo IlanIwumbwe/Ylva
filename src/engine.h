@@ -12,7 +12,7 @@ using namespace std::chrono;
 
 class Engine{
     public:
-        Engine(Board* _board, MoveGen* _movegen, int _depth) : board(_board), movegen(_movegen), depth(_depth), eval(board){}
+        Engine(Board* _board, MoveGen* _movegen, int _depth) : board(_board), movegen(_movegen), depth(_depth), eval(board, movegen){}
 
         virtual Move get_engine_move() = 0;
 
@@ -69,8 +69,6 @@ class Enginev2 : public Engine{
         int quiescence(int alpha, int beta);
 
         Move search_position(std::vector<Move>& moves, int search_depth);
-
-        int SEE(uint square, int side);
 };
 
 #endif
