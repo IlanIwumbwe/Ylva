@@ -33,8 +33,6 @@ const int MVV_LVA[7][7] = {
 /*
     These have been copied from: https://www.chessprogramming.org/Simplified_Evaluation_Function
     The point of these is to score positions which promote pieces into favourable squares more highly than positions that don't
-
-    Because of my convention, to index this boards by square, you have to do 63 - square 
 */
 
 const int PAWN[32] = {
