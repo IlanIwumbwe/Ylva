@@ -32,8 +32,8 @@ The engine favours positions where the side to move has a material gain after th
 
 - Move ordering: Alpha beta pruning works best when it starts by searching good moves first, because then it can prune more branches. We don't know exactly what the good moves are of course, but we can guess what moves are better to start with. For instance: moves capturing high value pieces with lower value ones, promotion moves, and moves avoiding squares attacked by opponent pawns are often good. The score and pick approach is used, as explained [here](https://rustic-chess.org/search/ordering/how.html).
 
-- Piece square tables: A rudimentary nudge given to the engine to tell it which squares are often good for certain pieces. I used the values explained [here](https://www.chessprogramming.org/Simplified_Evaluation_Function). Since these tables are symmetric between the d and e files, I figured out a way to store only half the values, but play around with the square passed from the chessboard such that it is able to index into the array and get the correct value. Currently, these are only used for move ordering, but there are [plans](https://github.com/IlanIwumbwe/Ylva/issues/2) to add them as an evaluation on a given position, where they are more powerful.
- 
+- Piece square tables: A rudimentary nudge given to the engine to tell it which squares are often good for certain pieces. I used the values explained [here](https://www.chessprogramming.org/Simplified_Evaluation_Function). Since these tables are symmetric between the d and e files, only half the values are stored, and the square index is manipulated to be able to index a 32 element array. 
+
 - [Quiescence search](https://www.chessprogramming.org/Quiescence_Search): Statically evaluating positions when depth == 0 is dangerous because if you capture a pawn with your queen on the next move, the evaluation will think this is a good move, but what if the move after that caputres the queen? Then you have actually blundered your queen. So at depth 0, we start a new search, which looks only at capture moves, and the final positions that get evaluated have no captures available.
 
 ## Todos

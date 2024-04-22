@@ -104,7 +104,7 @@ const int KING[32] = {
 };
 
 /// To index these tables, make sure to subtract one from the piece index
-const int* PIECE_SQUARE_TABLES[6] = {PAWN, KING, QUEEN, ROOK, KNIGHT, BISHOP};
+const int* PSQT[6] = {PAWN, KING, QUEEN, ROOK, KNIGHT, BISHOP};
 
 /// Minimax with no optimisations
 int Enginev0::plain_minimax(int depth){
@@ -217,18 +217,20 @@ void Enginev2::set_move_heuristics(std::vector<Move>& moves){
         from_piece = board->get_piece_on_square(move.get_from());
         to_piece = board->get_piece_on_square(move.get_to());
 
-        int from_piece_as_index = map_piece_index(from_piece);
-        int to_piece_as_index = map_piece_index(to_piece);
+        int from_piece_as_index = convert_piece_to_index(from_piece);
+        int to_piece_as_index = convert_piece_to_index(to_piece);
 
         // use mvv_lva to sort capture moves by how much material they will gain 
         move.value += MVV_LVA[to_piece_as_index][from_piece_as_index];
 
         // move.value += (CAPTURE_VAL_POWER * std::max(0, get_piece_value[to_ind] - get_piece_value[from_ind]));
 
+        /*
         if(!move.is_capture()){
-            int to_square_as_index = map_square_index(move.get_to());
-            move.value += PIECE_SQUARE_TABLES[from_piece_as_index-1][to_square_as_index];
+            int to_square_as_index = convert_square_to_index(move.get_to());
+            move.value += PSQT[from_piece_as_index-1][to_square_as_index];
         }
+        */
 
         // promotion is good
         move.value += (PROMOTION_POWER & (int)(move.is_promo()));

@@ -204,11 +204,11 @@ uint count_set_bits(U64 bitboard){
     return count;
 }
 
-int map_piece_index(int piece) {
+int convert_piece_to_index(int piece) {
     return piece % 8;
 }
 
-uint map_square_index(uint square){
+uint convert_square_to_index(uint square){
     square = 63 - square;
     int x = file(square);
     int y = rank(square);

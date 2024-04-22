@@ -89,6 +89,8 @@ extern U64 king_attack_set[64];
 
 extern U64 RAYS[8][64];
 
+extern const int* PSQT[6];
+
 void populate_attack_sets();
 
 void populate_rays();
@@ -119,11 +121,11 @@ std::string int_to_alg(const uint& square);
 
 uint count_set_bits(U64 bitboard);
 
-int map_piece_index(int piece);
+int convert_piece_to_index(int piece);
 
 /// @brief Given a square, return an index that can access the value from piece square tables. 
 /// @param square 
 /// @return piece square tables index (uint)
-uint map_square_index(uint square);
+uint convert_square_to_index(uint square);
 
 #endif

@@ -55,9 +55,10 @@ void Board::make_move(const Move& move){
     if(!move.is_promo()){
         // place piece at to square if not promotion move
         from_piece_bitboard |= set_bit(to);
+        consider_psqt(from_piece_name, to);
         
         if(flags == 4){
-            capture_piece(to_piece_name, set_bit(to));
+            capture_piece(to, to_piece_name);
         } else if(flags == 5){
             recent_capture = ep_capture(from_piece_colour, to);
         } else if(flags == 2){
@@ -76,7 +77,7 @@ void Board::make_move(const Move& move){
 
         if(move.is_capture()){
             // move is a promotion with capture move
-            capture_piece(to_piece_name, set_bit(to));
+            capture_piece(to, to_piece_name);
         } 
         hm_clock = 0;
         
@@ -84,11 +85,15 @@ void Board::make_move(const Move& move){
         promotion_piece_bitboard = get_piece_bitboard(promo_piece_name);
         promotion_piece_bitboard |= set_bit(to);
         set_piece_bitboard(promo_piece_name, promotion_piece_bitboard);
+
+        consider_psqt(promo_piece_name, to);
     }
 
     // remove piece from initial square in its bitboard, then set the bitboard
     from_piece_bitboard &= ~set_bit(from);
     set_piece_bitboard(from_piece_name, from_piece_bitboard);
+
+    remove_psqt(from_piece_name, from);
 
     add_state(move, recent_capture);
     
@@ -169,6 +174,8 @@ int Board::undo_move(){
         change_turn();
 
         castling_rights = current_state->castling_rights;
+        psqt_scores[0] = current_state->white_pqst;
+        psqt_scores[1] = current_state->black_pqst;
 
         return 0;
     } else {
@@ -194,6 +201,8 @@ piece_names Board::ep_capture(const colour& pawn_colour, const uint& to){
     captured_piece_bitboard = get_piece_bitboard(captured_piece_name);
     captured_piece_bitboard &= ~set_bit(captured_piece_square);
     set_piece_bitboard(captured_piece_name, captured_piece_bitboard);
+
+    remove_psqt(captured_piece_name, captured_piece_square);
 
     hm_clock = 0;
 
@@ -222,18 +231,24 @@ void Board::ep_uncapture(const colour& pawn_colour, const uint& to){
 }
 
 void Board::castle_kingside(const uint& king_square, const colour& king_colour){
-    auto rook_type = (king_colour) ? r : R;
+    piece_names rook_type = (king_colour) ? r : R;
     U64 rook_bitboard = get_piece_bitboard(rook_type);
 
+    int old_rook_square = king_square - 3, new_rook_square = king_square - 1;
+
     // remove rook from initial square, put at new square
-    rook_bitboard &= ~set_bit(king_square - 3);
-    rook_bitboard |= set_bit(king_square - 1);
+    rook_bitboard &= ~set_bit(old_rook_square);
+    rook_bitboard |= set_bit(new_rook_square);
     set_piece_bitboard(rook_type, rook_bitboard); 
+
+    remove_psqt(rook_type, old_rook_square);
+    consider_psqt(rook_type, new_rook_square);
+
     hm_clock++;
 }
 
 void Board::uncastle_kingside(const uint& king_square, const colour& king_colour){
-    auto rook_type = (king_colour) ? r : R;
+    piece_names rook_type = (king_colour) ? r : R;
     U64 rook_bitboard = get_piece_bitboard(rook_type);
 
     // remove rook from new square, put at initial square
@@ -244,18 +259,24 @@ void Board::uncastle_kingside(const uint& king_square, const colour& king_colour
 }
 
 void Board::castle_queenside(const uint& king_square, const colour& king_colour){
-    auto rook_type = (king_colour) ? r : R;
+    piece_names rook_type = (king_colour) ? r : R;
     U64 rook_bitboard = get_piece_bitboard(rook_type);
+
+    int old_rook_square = king_square + 4, new_rook_square = king_square + 1;
 
     // remove rook from initial square, put at new square
     rook_bitboard &= ~set_bit(king_square + 4);
     rook_bitboard |= set_bit(king_square + 1);
     set_piece_bitboard(rook_type, rook_bitboard); 
+
+    remove_psqt(rook_type, old_rook_square);
+    consider_psqt(rook_type, new_rook_square);
+    
     hm_clock++;
 }   
 
 void Board::uncastle_queenside(const uint& king_square, const colour& king_colour){
-    auto rook_type = (king_colour) ? r : R;
+    piece_names rook_type = (king_colour) ? r : R;
     U64 rook_bitboard = get_piece_bitboard(rook_type);
 
     // remove rook from initial square, put at new square
@@ -266,10 +287,13 @@ void Board::uncastle_queenside(const uint& king_square, const colour& king_colou
 }   
 
 /// Perform normal capture
-void Board::capture_piece(const piece_names& to_piece_name, const U64& square_bitboard){
+void Board::capture_piece(int square, const piece_names& to_piece_name){
     auto captured_piece_bitboard = get_piece_bitboard(to_piece_name);
-    captured_piece_bitboard &= ~square_bitboard;
+    captured_piece_bitboard &= ~set_bit(square);
     set_piece_bitboard(to_piece_name, captured_piece_bitboard);
+
+    remove_psqt(to_piece_name, square);
+
     hm_clock = 0;
 }
 
@@ -316,6 +340,12 @@ void Board::init_from_fen(const std::vector<std::string>& parts){
         auto maybe_move = init_enpassant_square(parts[3]);
         init_halfmove_clock(parts[4]);
         init_fullmoves(parts[5]);
+
+        // init psqt score
+        apply_psqt();
+
+        std::cout << "white psqt: " << psqt_scores[0] << std::endl;
+        std::cout << "black psqt: " << psqt_scores[1] << std::endl;
 
         add_state(maybe_move, None);
     }
@@ -419,6 +449,9 @@ void Board::view_board(){
         square_offset = 0;
     }
 
+    // std::cout << "white psqt: " << psqt_scores[0] << std::endl;
+    // std::cout << "black psqt: " << psqt_scores[1] << std::endl;
+
     std::cout << turn_to_print << " to move" << std::endl; 
     std::cout << "Half move clock: " << hm_clock << std::endl;
     std::cout << "  =======================" << std::endl;
@@ -465,7 +498,7 @@ U64 Board::get_entire_bitboard() const {
 /// after a new move has been made, create a new state. Store the new castling rights, the half move clock, the move that led to this state,
 /// and the piece if any that got captured when that move was made
 void Board::add_state(Move prev_move, piece_names recent_capture){
-    auto new_current = std::make_shared<State>(castling_rights, hm_clock, recent_capture, prev_move);
+    auto new_current = std::make_shared<State>(castling_rights, hm_clock, recent_capture, prev_move, psqt_scores[0], psqt_scores[1]);
         
     new_current->prev_state = current_state;
     current_state = new_current;
@@ -476,3 +509,38 @@ void Board::revert_state(){
     current_state = current_state->prev_state;
 }
 
+void Board::apply_psqt(){
+    U64 piece_bitboard;
+    int colour_index;
+    int square;
+
+    for(auto pair : bitboards){
+        piece_bitboard = pair.second;
+        colour_index = (pair.first > 7); 
+
+        while(piece_bitboard){
+            square = std::abs(63*colour_index - get_lsb(piece_bitboard));
+            square = convert_square_to_index(square);
+            psqt_scores[colour_index] += PSQT[(pair.first % 8)-1][square];
+
+            piece_bitboard &= (piece_bitboard - 1);
+        }
+    }
+}
+
+void Board::consider_psqt(piece_names piece, int square){
+    int colour_index = (piece > 7);
+
+    square = std::abs(63*colour_index - square);
+    square = convert_square_to_index(square);
+    psqt_scores[colour_index] += PSQT[(piece % 8)-1][square];
+}
+
+
+void Board::remove_psqt(piece_names piece, int square){
+    int colour_index = (piece > 7);
+
+    square = std::abs(63*colour_index - square);
+    square = convert_square_to_index(square);
+    psqt_scores[colour_index] -= PSQT[(piece % 8)-1][square];
+}
