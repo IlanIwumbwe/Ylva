@@ -30,9 +30,9 @@ int Eval::count_black_material(){
 
 int Eval::Evaluation(){
     int perspective = board->get_turn() ? -1 : 1;
-    int eval = count_white_material() - count_black_material();
+    int eval = (count_white_material() - count_black_material()) + 0.3*(board->psqt_scores[0] - board->psqt_scores[1]);
 
-    return (perspective * eval);
+    return perspective * eval;
 }
 
 

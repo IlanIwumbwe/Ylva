@@ -13,16 +13,18 @@ struct State{
     int hm_clock;
     piece_names recent_capture;
     Move prev_move; 
+    int white_pqst, black_pqst;
     std::shared_ptr<State> prev_state = NULL;
 
     static int state_id;
 
-    State(uint8_t cr, int hmc, piece_names rcap, Move prev){
+    State(uint8_t cr, int hmc, piece_names rcap, Move prev, int w_pqst, int b_pqst){
         castling_rights = cr;
         hm_clock = hmc;
         recent_capture = rcap;
         prev_move = prev;
-
+        white_pqst = w_pqst;
+        black_pqst = b_pqst;
         state_id++;
     }
 };
@@ -49,7 +51,7 @@ class Board{
 
         void uncastle_queenside(const uint& king_square, const colour& king_colour);
         
-        void capture_piece(const piece_names& to_piece_name, const U64& square_bitboard);
+        void capture_piece(int square, const piece_names& to_piece_name);
 
         void uncapture_piece(const U64& square_bitboard, piece_names& recent_capture);
 
@@ -99,6 +101,15 @@ class Board{
         void add_state(Move prev_move, piece_names recent_capture);
 
         void revert_state();
+
+        void apply_psqt();
+
+        void consider_psqt(piece_names piece, int square);
+
+        void remove_psqt(piece_names piece, int square);
+
+        // index 0 is white, index 1 is black
+        int psqt_scores[2] = {0};
 
     private:        
         // informaton from fen string
