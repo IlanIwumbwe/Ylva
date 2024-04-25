@@ -26,7 +26,7 @@ Slider piece move generation is really costly, and various techniques such as [m
 
 ### Evaluation
 
-The engine favours positions where the side to move has a material gain after the move is made
+The engine favours positions where the side to move has a material gain after the move is made. A PSQT score for white and black is kept for each position that is reached, which is also considered in the evaluation. This allows Ylva to favour positions where pieces are placed in more natural squares.
 
 ### Search 
 
