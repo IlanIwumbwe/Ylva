@@ -78,6 +78,8 @@ extern std::unordered_map<char, piece_names> char_to_name;
 
 extern std::unordered_map<std::string, uint> promo_flags;
 
+extern std::unordered_map<uint, std::string> print_promo_flag;
+
 extern int get_piece_value[7];
 
 extern uint p_flags[4];
@@ -95,7 +97,7 @@ void populate_attack_sets();
 
 void populate_rays();
 
-char name_to_char(const piece_names& name);
+std::string name_to_char(const piece_names& name);
 
 void knight_attacks(U64 bitboard, U64& output);
 

@@ -10,6 +10,9 @@
 
 using namespace std::chrono;
 
+#define PROMOTION_POWER 5
+#define PAWN_ATTACK_POWER 2
+
 class Engine{
     public:
         Engine(Board* _board, MoveGen* _movegen, int _depth) : board(_board), movegen(_movegen), depth(_depth), eval(board, movegen){}

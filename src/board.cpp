@@ -456,7 +456,7 @@ void Board::view_board(){
     std::cout << "Half move clock: " << hm_clock << std::endl;
     std::cout << "  =======================" << std::endl;
                                             
-    char letter;
+    std::string letter;
     piece_names name;
 
     for(int i = 0; i < 64; ++i){                

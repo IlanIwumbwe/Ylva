@@ -106,6 +106,19 @@ const int KING[32] = {
 /// To index these tables, make sure to subtract one from the piece index
 const int* PSQT[6] = {PAWN, KING, QUEEN, ROOK, KNIGHT, BISHOP};
 
+/// Swap the move at this start index with the move that has the highest score
+void Enginev2::pick_move(std::vector<Move>& moves, int start_index){
+
+    for(size_t i = start_index+1; i < moves.size(); ++i){
+        if(moves[i].value > moves[start_index].value){
+            // swap
+            Move tmp = moves[start_index];
+            moves[start_index] = moves[i];
+            moves[i] = tmp;
+        }
+    }
+}
+
 /// Minimax with no optimisations
 int Enginev0::plain_minimax(int depth){
     if(depth == 0){
@@ -209,52 +222,6 @@ Move Enginev1::get_engine_move(){
     return best_move;
 }
 
-/// Given a set of moves, use hueristics to guess its quality. Used for move ordering
-void Enginev2::set_move_heuristics(std::vector<Move>& moves){
-    piece_names from_piece, to_piece;
-
-    for(Move& move : moves){
-        from_piece = board->get_piece_on_square(move.get_from());
-        to_piece = board->get_piece_on_square(move.get_to());
-
-        int from_piece_as_index = convert_piece_to_index(from_piece);
-        int to_piece_as_index = convert_piece_to_index(to_piece);
-
-        // use mvv_lva to sort capture moves by how much material they will gain 
-        move.value += MVV_LVA[to_piece_as_index][from_piece_as_index];
-
-        // move.value += (CAPTURE_VAL_POWER * std::max(0, get_piece_value[to_ind] - get_piece_value[from_ind]));
-
-        /*
-        if(!move.is_capture()){
-            int to_square_as_index = convert_square_to_index(move.get_to());
-            move.value += PSQT[from_piece_as_index-1][to_square_as_index];
-        }
-        */
-
-        // promotion is good
-        move.value += (PROMOTION_POWER & (int)(move.is_promo()));
-
-        // moving into square attacked by enemy pawn is bad   
-        U64 pawn_attackers = movegen->get_pawn_attackers(move.get_to(), ~board->get_turn());
-
-        move.value -= (PAWN_ATTACK_POWER * count_set_bits(pawn_attackers));
-    }
-}
-
-/// Swap the move at this start index with the move that has the highest score
-void Enginev2::pick_move(std::vector<Move>& moves, int start_index){
-
-    for(int i = start_index+1; i < (int)moves.size(); ++i){
-        if(moves[i].value > moves[start_index].value){
-            // swap
-            Move tmp = moves[start_index];
-            moves[start_index] = moves[i];
-            moves[i] = tmp;
-        }
-    }
-}
-
 int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
     if(depth == 0){
         // return eval.Evaluation(); 
@@ -272,15 +239,17 @@ int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
     } 
 
     int curr_eval = 0;
+    Move pv_move;
 
     set_move_heuristics(moves);
 
     for(int i = 0; i < (int)moves.size(); ++i){
         pick_move(moves, i);
-
         make_move(moves[i]);
+
         curr_eval = -ab_move_ordering(depth-1, -beta, -alpha);
         alpha = std::max(curr_eval, alpha);
+
         board->undo_move();
 
         if(curr_eval >= beta){
@@ -289,6 +258,32 @@ int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
     }
 
     return alpha;
+}
+
+/// Given a set of moves, use hueristics to guess its quality. Used for move ordering
+void Enginev2::set_move_heuristics(std::vector<Move>& moves){
+    piece_names from_piece, to_piece;
+    uint move_flag;
+
+    for(Move& move : moves){
+        from_piece = board->get_piece_on_square(move.get_from());
+        to_piece = board->get_piece_on_square(move.get_to());
+        move_flag = move.get_flags();
+
+        int from_piece_as_index = convert_piece_to_index(from_piece);
+        int to_piece_as_index = convert_piece_to_index(to_piece);
+
+        // use mvv_lva to sort capture moves by how much material they will gain 
+        move.value += MVV_LVA[to_piece_as_index][from_piece_as_index];
+
+        // promotion is good
+        move.value += PROMOTION_POWER * (int)move.is_promo() * ((move_flag & 0x7) + 1);
+
+        // moving into square attacked by enemy pawn is bad   
+        U64 pawn_attackers = movegen->get_pawn_attackers(move.get_to(), ~board->get_turn());
+
+        move.value -= (PAWN_ATTACK_POWER * count_set_bits(pawn_attackers));
+    }
 }
  
 /*
@@ -334,13 +329,10 @@ Move Enginev2::search_position(std::vector<Move>& moves, int search_depth){
     set_move_heuristics(moves);
 
     for(int i = 0; i < (int)moves.size()-1; ++i){
-        pick_move(moves, i);
+        pick_move(moves, i);   
 
         make_move(moves[i]);
-
         curr_eval = -ab_move_ordering(search_depth-1,-infinity, infinity);
-
-        moves[i].value += curr_eval; 
 
         if(curr_eval > best_eval){
             best_eval = curr_eval;
@@ -348,7 +340,6 @@ Move Enginev2::search_position(std::vector<Move>& moves, int search_depth){
         }
 
         board->undo_move();
-
     }
 
     return best_move; 
@@ -368,7 +359,7 @@ Move Enginev2::get_engine_move(){
     
     // one shot search
     best_move = search_position(legal_moves, depth);
-    
+
     return best_move;
 }
 
