@@ -381,6 +381,8 @@ void Engine::engine_driver(){
 
     time_used_per_turn = duration_cast<seconds>(end-start);
 
+    eval.nodes_searched = 0;
+
     board->make_move(move);
     movegen->generate_moves();
 }

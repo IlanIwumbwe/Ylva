@@ -126,8 +126,8 @@ uint count_set_bits(U64 bitboard);
 int convert_piece_to_index(int piece);
 
 /// @brief Given a square, return an index that can access the value from piece square tables. 
-/// @param square 
+/// @param square, colour_index 
 /// @return piece square tables index (uint)
-uint convert_square_to_index(uint square);
+uint convert_square_to_index(uint square, int colour_index);
 
 #endif

@@ -219,8 +219,10 @@ int convert_piece_to_index(int piece) {
     return piece % 8;
 }
 
-uint convert_square_to_index(uint square){
-    square = 63 - square;
+uint convert_square_to_index(uint square, int colour_index){
+    colour_index = 1-colour_index;
+    square = abs(63*colour_index - square);
+
     int x = file(square);
     int y = rank(square);
 
