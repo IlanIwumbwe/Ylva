@@ -185,7 +185,6 @@ void MoveGen::generate_legal_moves(){
 /// Setup a bitboard of all pinned pieces on the board. This mask is used to remove pinned pieces when such that moves aren't generated for them
 /// in main move generator. Instead, pinned pieces' moves are generated separately at right after king moves are generated
 void MoveGen::get_pinned_pieces(){ 
-    // TODO
     uint ally_king_sq = get_lsb(ally_king), pinner_sq;
     U64 potential_pin;
 

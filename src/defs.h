@@ -78,6 +78,8 @@ extern std::unordered_map<char, piece_names> char_to_name;
 
 extern std::unordered_map<std::string, uint> promo_flags;
 
+extern std::unordered_map<uint, std::string> print_promo_flag;
+
 extern int get_piece_value[7];
 
 extern uint p_flags[4];
@@ -95,7 +97,7 @@ void populate_attack_sets();
 
 void populate_rays();
 
-char name_to_char(const piece_names& name);
+std::string name_to_char(const piece_names& name);
 
 void knight_attacks(U64 bitboard, U64& output);
 
@@ -124,8 +126,8 @@ uint count_set_bits(U64 bitboard);
 int convert_piece_to_index(int piece);
 
 /// @brief Given a square, return an index that can access the value from piece square tables. 
-/// @param square 
+/// @param square, colour_index 
 /// @return piece square tables index (uint)
-uint convert_square_to_index(uint square);
+uint convert_square_to_index(uint square, int colour_index);
 
 #endif

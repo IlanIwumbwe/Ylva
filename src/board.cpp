@@ -456,7 +456,7 @@ void Board::view_board(){
     std::cout << "Half move clock: " << hm_clock << std::endl;
     std::cout << "  =======================" << std::endl;
                                             
-    char letter;
+    std::string letter;
     piece_names name;
 
     for(int i = 0; i < 64; ++i){                
@@ -519,8 +519,7 @@ void Board::apply_psqt(){
         colour_index = (pair.first > 7); 
 
         while(piece_bitboard){
-            square = std::abs(63*colour_index - get_lsb(piece_bitboard));
-            square = convert_square_to_index(square);
+            square = convert_square_to_index(get_lsb(piece_bitboard), colour_index);
             psqt_scores[colour_index] += PSQT[(pair.first % 8)-1][square];
 
             piece_bitboard &= (piece_bitboard - 1);
@@ -531,8 +530,7 @@ void Board::apply_psqt(){
 void Board::consider_psqt(piece_names piece, int square){
     int colour_index = (piece > 7);
 
-    square = std::abs(63*colour_index - square);
-    square = convert_square_to_index(square);
+    square = convert_square_to_index(square, colour_index);
     psqt_scores[colour_index] += PSQT[(piece % 8)-1][square];
 }
 
@@ -540,7 +538,6 @@ void Board::consider_psqt(piece_names piece, int square){
 void Board::remove_psqt(piece_names piece, int square){
     int colour_index = (piece > 7);
 
-    square = std::abs(63*colour_index - square);
-    square = convert_square_to_index(square);
+    square = convert_square_to_index(square, colour_index);
     psqt_scores[colour_index] -= PSQT[(piece % 8)-1][square];
 }
