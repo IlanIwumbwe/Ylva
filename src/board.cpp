@@ -344,9 +344,6 @@ void Board::init_from_fen(const std::vector<std::string>& parts){
         // init psqt score
         apply_psqt();
 
-        std::cout << "white psqt: " << psqt_scores[0] << std::endl;
-        std::cout << "black psqt: " << psqt_scores[1] << std::endl;
-
         add_state(maybe_move, None);
     }
 }

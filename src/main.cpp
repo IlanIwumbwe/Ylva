@@ -1,5 +1,6 @@
 #include <iostream>
 #include <unistd.h>
+#include <cstring>
 #include "run.h"
 
 int main(int argc, char* argv[]){

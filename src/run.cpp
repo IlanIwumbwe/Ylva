@@ -34,8 +34,8 @@ void Run::run_PVE(){
     player_side = (colour_choice == "w") ? WHITE : BLACK;
 
     while(run){
-        std::cout << "\nwhite time: " << white_used_time.count() << std::endl; 
-        std::cout << "black time: " << black_used_time.count() << std::endl; 
+        std::cout << "\nwhite time: " << white_used_time.count() << " seconds" << std::endl; 
+        std::cout << "black time: " << black_used_time.count() << " seconds" << std::endl; 
 
         if(board.get_turn() == player_side){
             get_input_from_player();
