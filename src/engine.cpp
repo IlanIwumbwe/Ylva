@@ -239,7 +239,6 @@ int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
     } 
 
     int curr_eval = 0;
-    Move pv_move;
 
     set_move_heuristics(moves);
 
@@ -348,14 +347,6 @@ Move Enginev2::search_position(std::vector<Move>& moves, int search_depth){
 Move Enginev2::get_engine_move(){
     Move best_move;
     std::vector<Move> legal_moves = movegen->get_legal_moves();
-
-    // iterative deepening
-    /*
-    for(int current_depth = 1; current_depth <= depth; ++current_depth){
-        eval.nodes_searched = 0;
-        best_move = search_position(legal_moves, current_depth);
-    }
-    */
     
     // one shot search
     best_move = search_position(legal_moves, depth);
@@ -375,7 +366,7 @@ void Engine::engine_driver(){
 
     milliseconds duration = duration_cast<milliseconds>(end-start);
 
-    std::cout << "Nodes searched: " << eval.nodes_searched << std::endl;
+    std::cout << "Nodes searched: " << std::dec << eval.nodes_searched << std::endl;
     std::cout << "Time taken: " << std::to_string(duration.count()) << " ms" << std::endl;
     std::cout << move << std::endl;
 
@@ -385,6 +376,7 @@ void Engine::engine_driver(){
 
     board->make_move(move);
     movegen->generate_moves();
+    generate_position_key(board);
 }
 
 

@@ -4,6 +4,7 @@
 #include "board.h"
 #include "movegen.h"
 #include "engine.h"
+#include "zobrist.h"
 #include <map>
 
 const seconds WHITE_TIME = seconds(2500);

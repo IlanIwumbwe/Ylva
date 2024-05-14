@@ -5,6 +5,7 @@
 #include "board.h"
 #include "movegen.h"
 #include "evaluation.h"
+#include "zobrist.h"
 #include <random>
 #include <chrono>
 

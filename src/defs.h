@@ -38,6 +38,14 @@ typedef unsigned int uint;
 
 #define infinity std::numeric_limits<int>::max()
 
+// macro to generate a random 64 bit number since std::rand gives 16 bit number
+
+#define RAND64 ((U64)std::rand() + \
+                ((U64)std::rand() << 15) + \
+                ((U64)std::rand() << 30) + \
+                ((U64)std::rand() << 45) + \
+                (((U64)std::rand() & 0xf) << 60)) 
+
 typedef enum {
     None = 0,
     P = 1 , 
@@ -125,9 +133,8 @@ uint count_set_bits(U64 bitboard);
 
 int convert_piece_to_index(int piece);
 
-/// @brief Given a square, return an index that can access the value from piece square tables. 
-/// @param square, colour_index 
-/// @return piece square tables index (uint)
+int convert_piece_to_zobrist_index(int piece);
+
 uint convert_square_to_index(uint square, int colour_index);
 
 #endif

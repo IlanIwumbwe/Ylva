@@ -2,6 +2,7 @@
 #define MOVE_H
 
 #include "defs.h"
+
 class Move{
     public:
         Move(){

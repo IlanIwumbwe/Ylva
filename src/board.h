@@ -15,16 +15,19 @@ struct State{
     Move prev_move; 
     int white_pqst, black_pqst;
     std::shared_ptr<State> prev_state = NULL;
-
+    int ep_square;
+    
     static int state_id;
 
-    State(uint8_t cr, int hmc, piece_names rcap, Move prev, int w_pqst, int b_pqst){
+    State(uint8_t cr, int hmc, piece_names rcap, Move prev, int w_pqst, int b_pqst, int ep_sq){
         castling_rights = cr;
         hm_clock = hmc;
         recent_capture = rcap;
         prev_move = prev;
         white_pqst = w_pqst;
         black_pqst = b_pqst;
+        ep_square = ep_sq;
+
         state_id++;
     }
 };
@@ -83,6 +86,10 @@ class Board{
 
         inline void change_turn(){turn = (colour)~turn;}
 
+        inline int get_ep_square()const{return ep_square;}
+
+        inline u_int8_t get_castling_rights()const{return castling_rights & 0xf;}
+
         piece_names get_piece_on_square(uint square) const;
 
         void view_board();
@@ -110,6 +117,8 @@ class Board{
 
         // index 0 is white, index 1 is black
         int psqt_scores[2] = {0};
+
+        U64 hash_key = 0;
 
     private:        
         // informaton from fen string

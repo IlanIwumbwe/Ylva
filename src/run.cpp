@@ -3,6 +3,7 @@
 Run::Run(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(mode) {
     // generate moves for the start state (no moves made yet)
     movegen.generate_moves();
+    generate_position_key(&board);
 
     if(mode == PVP){
         run_PVP();
@@ -240,6 +241,8 @@ void Run::make_player_move(const std::tuple<std::string, std::string, std::strin
             
             board.make_move(move);
             movegen.generate_moves();
+            generate_position_key(&board);
+
         } else {
             std::cout << "Move entered is not valid " << std::endl;
             std::cout << "legals" << std::endl;

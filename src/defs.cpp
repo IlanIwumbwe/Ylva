@@ -215,10 +215,20 @@ uint count_set_bits(U64 bitboard){
     return count;
 }
 
+/// @brief Given a piece as integer, map it to an index to a 7 element array
+/// @param piece 
+/// @return 
 int convert_piece_to_index(int piece) {
     return piece % 8;
 }
 
+int convert_piece_to_zobrist_index(int piece){
+    return (piece > 7) ? piece - 2 : piece;
+}
+
+/// @brief Given a square, return an index that can access the value from piece square tables. 
+/// @param square, colour_index 
+/// @return piece square tables index (uint)
 uint convert_square_to_index(uint square, int colour_index){
     colour_index = 1-colour_index;
     square = abs(63*colour_index - square);

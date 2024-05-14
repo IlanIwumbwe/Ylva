@@ -67,8 +67,18 @@ void Board::make_move(const Move& move){
             castle_queenside(from, from_piece_colour);
         } else {
             // quiet moves and double pawn pushes
-            if(from_piece_name == P || from_piece_name == p){hm_clock = 0;} // pawn advance
-            else{hm_clock++;}  // other quiet moves
+            if(from_piece_name == P){
+                hm_clock = 0;
+                ep_square = (flags == 1) ? to - 8 : 0;
+        
+            } else if(from_piece_name == p){
+                hm_clock = 0;
+                ep_square = (flags == 1) ? to + 8 : 0;
+            } else{
+                // other quiet moves
+                hm_clock++;
+                ep_square = 0;
+            }  
         }
     
     } else {
@@ -176,6 +186,7 @@ int Board::undo_move(){
         castling_rights = current_state->castling_rights;
         psqt_scores[0] = current_state->white_pqst;
         psqt_scores[1] = current_state->black_pqst;
+        ep_square = current_state->ep_square;
 
         return 0;
     } else {
@@ -446,11 +457,13 @@ void Board::view_board(){
         square_offset = 0;
     }
 
-    // std::cout << "white psqt: " << psqt_scores[0] << std::endl;
-    // std::cout << "black psqt: " << psqt_scores[1] << std::endl;
-
     std::cout << turn_to_print << " to move" << std::endl; 
     std::cout << "Half move clock: " << hm_clock << std::endl;
+
+    if(ep_square != 0){
+        std::cout << "En-passant square: " << int_to_alg(ep_square) << std::endl;
+    }
+    
     std::cout << "  =======================" << std::endl;
                                             
     std::string letter;
@@ -471,6 +484,7 @@ void Board::view_board(){
     }
     std::cout << "  ======================="  << std::endl;
     std::cout << letters_to_print << std::endl;
+    std::cout << "Key: " << std::uppercase << std::hex << hash_key << std::endl; 
 }
 
 inline void Board::set_piece_bitboard(const piece_names& piece_name, const U64& bitboard) {
@@ -495,8 +509,8 @@ U64 Board::get_entire_bitboard() const {
 /// after a new move has been made, create a new state. Store the new castling rights, the half move clock, the move that led to this state,
 /// and the piece if any that got captured when that move was made
 void Board::add_state(Move prev_move, piece_names recent_capture){
-    auto new_current = std::make_shared<State>(castling_rights, hm_clock, recent_capture, prev_move, psqt_scores[0], psqt_scores[1]);
-        
+    auto new_current = std::make_shared<State>(castling_rights, hm_clock, recent_capture, prev_move, psqt_scores[0], psqt_scores[1], ep_square);
+
     new_current->prev_state = current_state;
     current_state = new_current;
 }

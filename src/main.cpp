@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <cstring>
 #include "run.h"
+#include "zobrist.h"
 
 int main(int argc, char* argv[]){
     std::string fen = "";
@@ -39,6 +40,7 @@ int main(int argc, char* argv[]){
 
     populate_attack_sets();
     populate_rays();
+    init_hash_keys();
 
     Run game_loop(fen, mode);
 
