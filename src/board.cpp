@@ -104,10 +104,12 @@ void Board::make_move(const Move& move){
     set_piece_bitboard(from_piece_name, from_piece_bitboard);
 
     remove_psqt(from_piece_name, from);
-
-    add_state(move, recent_capture);
     
     change_turn();
+
+    generate_position_key(this);
+
+    add_state(move, recent_capture);
 }
 
 int Board::get_prev_move(Move& prev_move){
@@ -187,6 +189,8 @@ int Board::undo_move(){
         psqt_scores[0] = current_state->white_pqst;
         psqt_scores[1] = current_state->black_pqst;
         ep_square = current_state->ep_square;
+
+        generate_position_key(this);
 
         return 0;
     } else {
@@ -551,4 +555,32 @@ void Board::remove_psqt(piece_names piece, int square){
 
     square = convert_square_to_index(square, colour_index);
     psqt_scores[colour_index] -= PSQT[(piece % 8)-1][square];
+}
+
+void generate_position_key(Board* position){
+    U64 occupied = position->get_entire_bitboard();
+    int sq, piece_index, ep_square = position->get_ep_square();
+    piece_names piece_on_square;
+    U64 final_key = 0;
+
+    while(occupied){
+        sq = get_lsb(occupied);
+        piece_on_square = position->get_piece_on_square(sq);
+        piece_index = convert_piece_to_zobrist_index(piece_on_square);
+        final_key ^= Piece_keys[piece_index][sq];
+
+        occupied &= (occupied - 1);
+    }
+
+    if(position->get_turn()){
+        final_key ^= Turn_key;
+    }
+
+    if(ep_square){
+        final_key ^= Piece_keys[None][ep_square];
+    }
+
+    final_key ^= Castle_key[position->get_castling_rights()];
+
+    position->hash_key = final_key;
 }

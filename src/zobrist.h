@@ -2,9 +2,11 @@
 #define ZOBRIST_H
 
 #include "defs.h"
-#include "board.h"
+
+extern U64 Piece_keys[13][64];
+extern U64 Turn_key;
+extern U64 Castle_key[16];
 
 void init_hash_keys();
-void generate_position_key(Board* position);
 
 #endif

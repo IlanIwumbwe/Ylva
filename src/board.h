@@ -3,6 +3,7 @@
 
 #include "defs.h"
 #include "move.h"
+#include "zobrist.h"
 #include <assert.h>
 #include <chrono>
 
@@ -16,7 +17,7 @@ struct State{
     int white_pqst, black_pqst;
     std::shared_ptr<State> prev_state = NULL;
     int ep_square;
-    
+
     static int state_id;
 
     State(uint8_t cr, int hmc, piece_names rcap, Move prev, int w_pqst, int b_pqst, int ep_sq){
@@ -134,5 +135,7 @@ class Board{
         // maintain state
         std::shared_ptr<State> current_state = NULL;
 };
+
+void generate_position_key(Board* position);
 
 #endif

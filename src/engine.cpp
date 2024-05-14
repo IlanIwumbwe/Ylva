@@ -376,7 +376,6 @@ void Engine::engine_driver(){
 
     board->make_move(move);
     movegen->generate_moves();
-    generate_position_key(board);
 }
 
 
