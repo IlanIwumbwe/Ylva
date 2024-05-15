@@ -135,10 +135,12 @@ bool move_exists(std::vector<Move>& legal_moves, Move move){
 /// @brief Get principle variation from pv table
 /// @param depth 
 /// @param position 
-int Engine::get_pv_line(int depth, std::vector<Move>& legal_moves){
+int Engine::get_pv_line(int depth, std::vector<Move>& initial_legal_moves){
     Move move = Move(probe_pv_table(board));
     int count = 0;
     int initial_ply = board->ply;
+    std::vector<Move> legal_moves = initial_legal_moves;
+
 
     // std::cout << "Pos before pv line: " << std::hex << board->hash_key << std::endl; 
 
@@ -147,8 +149,9 @@ int Engine::get_pv_line(int depth, std::vector<Move>& legal_moves){
         assert(count < MAX_DEPTH);
 
         if(move_exists(legal_moves, move)){
-            make_move(move);
+            board->make_move(move);
             board->pv_array[count++] = move.get_move();
+            legal_moves = movegen->generate_moves();
         } else {
             break;
         }
@@ -424,7 +427,14 @@ void Engine::engine_driver(){
 
     std::cout << "Nodes searched: " << std::dec << eval.nodes_searched << std::endl;
     std::cout << "Time taken: " << std::to_string(duration.count()) << " ms" << std::endl;
-    std::cout << best_move << std::endl;
+    
+    std::cout << "Principal variation " << std::endl;
+
+    for(int i = 0; i < pv_lenth; ++i){
+        std::cout << Move(board->pv_array[i]) << " ";
+    }
+
+    std::cout << "\n";
 
     time_used_per_turn = duration_cast<seconds>(end-start);
 

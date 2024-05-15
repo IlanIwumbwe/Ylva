@@ -34,7 +34,7 @@ class Engine{
         /// @param depth 
         /// @param legal_moves 
         /// @return 
-        int get_pv_line(int depth, std::vector<Move>& legal_moves);
+        int get_pv_line(int depth, std::vector<Move>& initial_legal_moves);
 
         seconds time_used_per_turn = seconds(0);
 
