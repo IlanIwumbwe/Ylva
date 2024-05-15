@@ -38,6 +38,8 @@ typedef unsigned int uint;
 
 #define infinity std::numeric_limits<int>::max()
 
+#define MAX_DEPTH 64
+
 // macro to generate a random 64 bit number since std::rand gives 16 bit number
 
 #define RAND64 ((U64)std::rand() + \
@@ -45,6 +47,22 @@ typedef unsigned int uint;
                 ((U64)std::rand() << 30) + \
                 ((U64)std::rand() << 45) + \
                 (((U64)std::rand() & 0xf) << 60)) 
+
+/// @brief A single PV entry stores the best move in a position identified by its hash key
+struct PV_entry {
+    uint16_t move;
+    U64 hash_key;
+};
+
+/// @brief Pointer to memory allocated for PV entries by malloc
+struct PV_Table {
+    PV_entry* pv_entries;
+    int num_of_entries;
+};
+
+void init_pv_table(PV_Table* table, int PV_size);
+
+void clear_pv_table(PV_Table* table);
 
 typedef enum {
     None = 0,

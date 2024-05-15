@@ -8,6 +8,8 @@ Board::Board (const std::string& _fen){
     std::vector<std::string>parts = splitString((_fen == "") ? STARTING_FEN : removeWhiteSpace(_fen), ' ');
     
     init_from_fen(parts);
+    // init pv table, pass size in bytes for the table
+    init_pv_table(&pv_table, 0x200000);
 }
 
 /// Make move given as input on the board
@@ -110,6 +112,8 @@ void Board::make_move(const Move& move){
     generate_position_key(this);
 
     add_state(move, recent_capture);
+
+    ply++;
 }
 
 int Board::get_prev_move(Move& prev_move){
@@ -191,6 +195,8 @@ int Board::undo_move(){
         ep_square = current_state->ep_square;
 
         generate_position_key(this);
+
+        ply--;
 
         return 0;
     } else {
@@ -583,4 +589,28 @@ void generate_position_key(Board* position){
     final_key ^= Castle_key[position->get_castling_rights()];
 
     position->hash_key = final_key;
+}
+
+/// @brief Store a move into the PV table
+/// @param position 
+/// @param move 
+void store_pv_move(Board* position, uint16_t move){
+    int index = position->hash_key % position->pv_table.num_of_entries;
+
+    assert((0 <= index) && (index <= position->pv_table.num_of_entries - 1));
+
+    position->pv_table.pv_entries[index].move = move;
+    position->pv_table.pv_entries[index].hash_key = position->hash_key;
+}
+
+/// @brief Get the move from pv table if this position has been stored
+/// @param position 
+uint16_t probe_pv_table(Board* position){
+    int index = position->hash_key % position->pv_table.num_of_entries;
+
+    if(position->pv_table.pv_entries[index].hash_key == position->hash_key){
+        return position->pv_table.pv_entries[index].move;
+    } else {
+        return 0;
+    }
 }

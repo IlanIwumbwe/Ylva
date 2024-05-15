@@ -238,3 +238,27 @@ uint convert_square_to_index(uint square, int colour_index){
 
     return 4*y + std::min(7-x, x);
 }
+
+/// @brief Dynamically allocate number of entries for the PV table based on the size in bytes required
+/// @param table 
+/// @param PV_size 
+void init_pv_table(PV_Table* table, int PV_size){
+    table->num_of_entries = PV_size / sizeof(PV_entry);
+    table->num_of_entries -= 2; 
+    free(table->pv_entries);  
+    table->pv_entries = (PV_entry*) malloc(table->num_of_entries * sizeof(PV_entry));
+    clear_pv_table(table);
+
+    std::cout << "Initialised PV table with " << table->num_of_entries << " entries " << std::endl;
+}
+
+/// @brief Set all position hash keys and moves to 0 (0ULL for hash as it is 64 bit)
+/// @param table 
+void clear_pv_table(PV_Table* table){
+    PV_entry* entry;
+
+    for(entry = table->pv_entries; entry < table->pv_entries + table->num_of_entries; ++entry){
+        entry->hash_key = 0ULL;
+        entry->move = 0;
+    }
+}

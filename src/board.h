@@ -37,6 +37,8 @@ class Board{
     public:
         Board (const std::string& _fen);
 
+        ~Board(){free(pv_table.pv_entries);}
+
         void make_move(const Move& move);
 
         int get_prev_move(Move& prev_move);
@@ -121,6 +123,12 @@ class Board{
 
         U64 hash_key = 0;
 
+        // pv table
+        PV_Table pv_table;
+        uint16_t pv_array[MAX_DEPTH];
+
+        int ply;
+
     private:        
         // informaton from fen string
         colour turn;
@@ -137,5 +145,9 @@ class Board{
 };
 
 void generate_position_key(Board* position);
+
+void store_pv_move(Board* position, uint16_t move);
+
+uint16_t probe_pv_table(Board* position);
 
 #endif

@@ -119,6 +119,54 @@ void Enginev2::pick_move(std::vector<Move>& moves, int start_index){
     }
 }
 
+/// @brief Check that the move was legal in the original position
+/// @param legal_moves 
+/// @param move 
+bool move_exists(std::vector<Move>& legal_moves, Move move){
+    for(Move v_move : legal_moves){
+        if(v_move == move){
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/// @brief Get principle variation from pv table
+/// @param depth 
+/// @param position 
+int Engine::get_pv_line(int depth, std::vector<Move>& legal_moves){
+    Move move = Move(probe_pv_table(board));
+    int count = 0;
+    int initial_ply = board->ply;
+
+    // std::cout << "Pos before pv line: " << std::hex << board->hash_key << std::endl; 
+
+    while(!move.is_no_move() && (count < depth)){
+
+        assert(count < MAX_DEPTH);
+
+        if(move_exists(legal_moves, move)){
+            make_move(move);
+            board->pv_array[count++] = move.get_move();
+        } else {
+            break;
+        }
+
+        move = probe_pv_table(board);
+    }
+
+    // std::cout << "Pos after checking for pv line: " << std::hex << board->hash_key << std::endl; 
+
+    while(board->ply != initial_ply){
+        board->undo_move();
+    }
+
+    // std::cout << "Pos after getting pv line: " << std::hex << board->hash_key << std::endl; 
+
+    return count;
+}
+
 /// Minimax with no optimisations
 int Enginev0::plain_minimax(int depth){
     if(depth == 0){
@@ -140,32 +188,32 @@ int Enginev0::plain_minimax(int depth){
     for(Move& move : moves){
         make_move(move);
         curr_eval = -plain_minimax(depth-1);
-        best_eval = std::max(curr_eval, best_eval);
         board->undo_move();
+
+        if(curr_eval > best_eval){
+            best_eval = curr_eval;
+            store_pv_move(board, move.get_move());
+        }
     }
 
     return best_eval;
 }  
 
-Move Enginev0::get_engine_move(){
+void Enginev0::get_engine_move(std::vector<Move>& legal_moves){
     int best_eval = -infinity, curr_eval;
-    std::vector<Move> legal_moves = movegen->get_legal_moves();
-    Move best_move = legal_moves[0];
 
     for(Move& move : legal_moves){
         make_move(move);
 
         curr_eval = -plain_minimax(depth-1);
 
+        board->undo_move();
+
         if(curr_eval > best_eval){
             best_eval = curr_eval;
-            best_move = move;
+            store_pv_move(board, move.get_move());
         }   
-
-        board->undo_move();
     }
-
-    return best_move;
 }
 
 /// Minimax with alpha beta
@@ -189,9 +237,12 @@ int Enginev1::alpha_beta_minimax(int depth, int alpha, int beta){
     for(Move& move : moves){
         make_move(move);
         curr_eval = -alpha_beta_minimax(depth-1, -beta, -alpha);
-        
-        alpha = std::max(curr_eval, alpha);
         board->undo_move();
+
+        if(curr_eval > alpha){
+            alpha = curr_eval;
+            store_pv_move(board, move.get_move());
+        }
 
         if(curr_eval >= beta){
             return beta;
@@ -201,25 +252,21 @@ int Enginev1::alpha_beta_minimax(int depth, int alpha, int beta){
     return alpha;
 }
 
-Move Enginev1::get_engine_move(){
+void Enginev1::get_engine_move(std::vector<Move>& legal_moves){
     int best_eval = -infinity, curr_eval;
-    std::vector<Move> legal_moves = movegen->get_legal_moves();
-    Move best_move = legal_moves[0];
 
     for(Move& move : legal_moves){
         make_move(move);
 
         curr_eval = -alpha_beta_minimax(depth-1,-infinity, infinity);
 
+        board->undo_move();
+
         if(curr_eval > best_eval){
             best_eval = curr_eval;
-            best_move = move;
+            store_pv_move(board, move.get_move());
         }
-
-        board->undo_move();
     }
-
-    return best_move;
 }
 
 int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
@@ -242,14 +289,18 @@ int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
 
     set_move_heuristics(moves);
 
-    for(int i = 0; i < (int)moves.size(); ++i){
+    for(size_t i = 0; i < moves.size(); ++i){
         pick_move(moves, i);
         make_move(moves[i]);
 
         curr_eval = -ab_move_ordering(depth-1, -beta, -alpha);
-        alpha = std::max(curr_eval, alpha);
 
         board->undo_move();
+
+        if(curr_eval > alpha){
+            alpha = curr_eval;
+            store_pv_move(board, moves[i].get_move());
+        }
 
         if(curr_eval >= beta){
             return beta;
@@ -304,11 +355,12 @@ int Enginev2::quiescence(int alpha, int beta){
     
     set_move_heuristics(capture_moves);
 
-    for(int i = 0; i < (int)capture_moves.size(); ++i){
+    for(size_t i = 0; i < capture_moves.size(); ++i){
         pick_move(capture_moves, i);
-
         make_move(capture_moves[i]);
+
         curr_eval = -quiescence(-beta, -alpha);
+
         board->undo_move();
 
         alpha = std::max(curr_eval, alpha);
@@ -321,46 +373,50 @@ int Enginev2::quiescence(int alpha, int beta){
     return alpha;
 }
 
-Move Enginev2::search_position(std::vector<Move>& moves, int search_depth){
+void Enginev2::search_position(std::vector<Move>& moves, int search_depth){
     int best_eval = -infinity, curr_eval;
-    Move best_move = moves[0];
 
     set_move_heuristics(moves);
 
-    for(int i = 0; i < (int)moves.size()-1; ++i){
+    for(size_t i = 0; i < moves.size(); ++i){
         pick_move(moves, i);   
-
         make_move(moves[i]);
+
         curr_eval = -ab_move_ordering(search_depth-1,-infinity, infinity);
+
+        board->undo_move();
 
         if(curr_eval > best_eval){
             best_eval = curr_eval;
-            best_move = moves[i];
+            store_pv_move(board, moves[i].get_move());
         }
-
-        board->undo_move();
     }
-
-    return best_move; 
 }
 
-Move Enginev2::get_engine_move(){
-    Move best_move;
-    std::vector<Move> legal_moves = movegen->get_legal_moves();
-    
-    // one shot search
-    best_move = search_position(legal_moves, depth);
+void Enginev2::get_engine_move(std::vector<Move>& legal_moves){
 
-    return best_move;
+    // one shot search
+    search_position(legal_moves, depth);
 }
 
 
 void Engine::engine_driver(){
     board->view_board();   
+    std::vector<Move> legal_moves = movegen->get_legal_moves();
 
     auto start = high_resolution_clock::now();
 
-    Move move = get_engine_move();
+    get_engine_move(legal_moves);
+    int pv_lenth = get_pv_line(depth, legal_moves);
+
+    if(legal_moves.size() == 0 || pv_lenth == 0){
+        std::cout << "pv len: " << pv_lenth << ", leg: " << legal_moves.size() << std::endl;
+    }
+    
+    assert(pv_lenth > 0);
+
+    // best move is top of pv array
+    Move best_move(board->pv_array[0]);
 
     auto end = high_resolution_clock::now();
 
@@ -368,14 +424,15 @@ void Engine::engine_driver(){
 
     std::cout << "Nodes searched: " << std::dec << eval.nodes_searched << std::endl;
     std::cout << "Time taken: " << std::to_string(duration.count()) << " ms" << std::endl;
-    std::cout << move << std::endl;
+    std::cout << best_move << std::endl;
 
     time_used_per_turn = duration_cast<seconds>(end-start);
 
     eval.nodes_searched = 0;
 
-    board->make_move(move);
+    board->make_move(best_move);
     movegen->generate_moves();
 }
+
 
 

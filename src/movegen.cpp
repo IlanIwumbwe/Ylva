@@ -43,7 +43,7 @@ std::vector<Move> MoveGen::generate_moves(bool _captures_only){
 }
 
 bool MoveGen::move_is_legal(Move& move){
-    for(auto v_move : legal_moves){
+    for(Move v_move : legal_moves){
         if(v_move == move){return true;}
     }
     

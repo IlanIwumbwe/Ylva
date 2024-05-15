@@ -13,6 +13,8 @@ class Move{
             move = ((flags & 0xf) << 12) | ((from & 0x3f) << 6) | (to & 0x3f);
         }
 
+        Move(uint16_t _move) : move(_move) {}
+
         uint get_to() const {return move & 0x3f;}
         uint get_from() const {return (move >> 6) & 0x3f;}
         uint get_flags() const {return (move >> 12) & 0xf;}
@@ -26,6 +28,8 @@ class Move{
 
         bool operator==(Move a) const {return move == a.get_move();}
         bool operator!=(Move a) const {return move != a.get_move();}
+
+        bool is_no_move(){return move == 0;}
 
         std::string str_move(){
             return int_to_alg(get_from()) + int_to_alg(get_to()) + print_promo_flag[get_flags()];
