@@ -4,7 +4,6 @@ Run::Run(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(
     // generate moves for the start state (no moves made yet)
     movegen.generate_moves();
     generate_position_key(&board);
-    
 
     if(mode == PVP){
         run_PVP();
@@ -98,7 +97,7 @@ void Run::perftDriver(int& depth, const std::vector<Move>& moves){
         num_pos = movegenTest(depth-1);
         board.undo_move();
 
-        std::cout << move << " " << num_pos << std::endl;
+        std::cout << move << " " << std::dec << num_pos << std::endl;
         total_pos += num_pos;
     }
 
@@ -108,7 +107,7 @@ void Run::perftDriver(int& depth, const std::vector<Move>& moves){
 
     std::cout << "nodes " << std::to_string(total_pos) << std::endl;
 
-    std::cout << "Time taken: " << std::to_string(duration.count()) << " ms" << std::endl;
+    std::cout << "time taken " << std::to_string(duration.count()) << " ms" << std::endl;
     std::cout << "\n";
 }
 
@@ -239,7 +238,7 @@ void Run::make_player_move(const std::tuple<std::string, std::string, std::strin
             } else {
                 white_used_time += duration_cast<seconds>(player_end_time - player_start_time);
             }
-            
+
             board.make_move(move);
             movegen.generate_moves();
 

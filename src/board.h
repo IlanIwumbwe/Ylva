@@ -150,4 +150,5 @@ void store_pv_move(Board* position, uint16_t move);
 
 uint16_t probe_pv_table(Board* position);
 
+
 #endif

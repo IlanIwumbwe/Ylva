@@ -34,7 +34,7 @@ class Engine{
         /// @param depth 
         /// @param legal_moves 
         /// @return 
-        int get_pv_line(int depth, std::vector<Move>& initial_legal_moves);
+        int get_pv_line(int depth);
 
         seconds time_used_per_turn = seconds(0);
 
@@ -74,14 +74,14 @@ class Enginev2 : public Engine{
 
         int ab_move_ordering(int depth, int alpha, int beta);
 
-        void pick_move(std::vector<Move>& moves, int start_index);
-
         void set_move_heuristics(std::vector<Move>& moves);
 
         int quiescence(int alpha, int beta);
 
         void search_position(std::vector<Move>& moves, int search_depth);
 };
+
+void pick_move(std::vector<Move>& moves, int start_index);
 
 bool move_exists(std::vector<Move>& legal_moves, Move move);
 #endif

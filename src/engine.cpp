@@ -107,7 +107,7 @@ const int KING[32] = {
 const int* PSQT[6] = {PAWN, KING, QUEEN, ROOK, KNIGHT, BISHOP};
 
 /// Swap the move at this start index with the move that has the highest score
-void Enginev2::pick_move(std::vector<Move>& moves, int start_index){
+void pick_move(std::vector<Move>& moves, int start_index){
 
     for(size_t i = start_index+1; i < moves.size(); ++i){
         if(moves[i].value > moves[start_index].value){
@@ -135,37 +135,24 @@ bool move_exists(std::vector<Move>& legal_moves, Move move){
 /// @brief Get principle variation from pv table
 /// @param depth 
 /// @param position 
-int Engine::get_pv_line(int depth, std::vector<Move>& initial_legal_moves){
+int Engine::get_pv_line(int depth){
     Move move = Move(probe_pv_table(board));
     int count = 0;
     int initial_ply = board->ply;
-    std::vector<Move> legal_moves = initial_legal_moves;
-
-
-    // std::cout << "Pos before pv line: " << std::hex << board->hash_key << std::endl; 
 
     while(!move.is_no_move() && (count < depth)){
 
         assert(count < MAX_DEPTH);
 
-        if(move_exists(legal_moves, move)){
-            board->make_move(move);
-            board->pv_array[count++] = move.get_move();
-            legal_moves = movegen->generate_moves();
-        } else {
-            break;
-        }
-
+        // Assuming that the board position we just probed is actually the correct one (no hash collision)
+        board->make_move(move);
+        board->pv_array[count++] = move.get_move();
         move = probe_pv_table(board);
     }
-
-    // std::cout << "Pos after checking for pv line: " << std::hex << board->hash_key << std::endl; 
 
     while(board->ply != initial_ply){
         board->undo_move();
     }
-
-    // std::cout << "Pos after getting pv line: " << std::hex << board->hash_key << std::endl; 
 
     return count;
 }
@@ -406,34 +393,39 @@ void Enginev2::get_engine_move(std::vector<Move>& legal_moves){
 void Engine::engine_driver(){
     board->view_board();   
     std::vector<Move> legal_moves = movegen->get_legal_moves();
+    Move best_move;
 
     auto start = high_resolution_clock::now();
 
     get_engine_move(legal_moves);
-    int pv_lenth = get_pv_line(depth, legal_moves);
-
-    if(legal_moves.size() == 0 || pv_lenth == 0){
-        std::cout << "pv len: " << pv_lenth << ", leg: " << legal_moves.size() << std::endl;
-    }
+    int pv_lenth = get_pv_line(depth);
     
-    assert(pv_lenth > 0);
-
-    // best move is top of pv array
-    Move best_move(board->pv_array[0]);
+    if(pv_lenth == 0){
+        std::cout << "Hash collided " << std::endl;
+        // Choose best move according to heuristics
+        pick_move(legal_moves, 0);
+        best_move = legal_moves[0];
+    } else {
+        // best move is top of pv array
+        best_move = Move(board->pv_array[0]);
+    }
 
     auto end = high_resolution_clock::now();
 
     milliseconds duration = duration_cast<milliseconds>(end-start);
 
-    std::cout << "Nodes searched: " << std::dec << eval.nodes_searched << std::endl;
-    std::cout << "Time taken: " << std::to_string(duration.count()) << " ms" << std::endl;
+    std::cout << "Nodes searched: " << std::dec << eval.nodes_searched;
+    std::cout << ", Time taken: " << std::to_string(duration.count()) << " ms";
     
-    std::cout << "Principal variation " << std::endl;
-
+    std::cout << ", PV line: ";
+    
     for(int i = 0; i < pv_lenth; ++i){
         std::cout << Move(board->pv_array[i]) << " ";
     }
 
+    std::cout << "\n";
+
+    std::cout << "Best move: " << best_move << std::endl;
     std::cout << "\n";
 
     time_used_per_turn = duration_cast<seconds>(end-start);

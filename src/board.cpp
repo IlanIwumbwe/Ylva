@@ -9,7 +9,7 @@ Board::Board (const std::string& _fen){
     
     init_from_fen(parts);
     // init pv table, pass size in bytes for the table
-    init_pv_table(&pv_table, 0x200000);
+    init_pv_table(&pv_table, 0x400000);
 }
 
 /// Make move given as input on the board
@@ -582,7 +582,7 @@ void generate_position_key(Board* position){
         final_key ^= Turn_key;
     }
 
-    if(ep_square){
+    if(ep_square != 0){
         final_key ^= Piece_keys[None][ep_square];
     }
 
@@ -614,3 +614,4 @@ uint16_t probe_pv_table(Board* position){
         return 0;
     }
 }
+
