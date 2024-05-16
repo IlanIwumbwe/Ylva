@@ -67,22 +67,18 @@ void Board::make_move(const Move& move){
             castle_kingside(from, from_piece_colour);
         } else if(flags == 3){
             castle_queenside(from, from_piece_colour);
+        } else if (flags == 1){
+            assert(from_piece_name == P || from_piece_name == p);
+
+            hm_clock = 0;
+            ep_square = (from_piece_name == P) ? to - 8 : to + 8;
+
         } else {
-            // quiet moves and double pawn pushes
-            if(from_piece_name == P){
-                hm_clock = 0;
-                ep_square = (flags == 1) ? to - 8 : 0;
+            // other quiet moves
+            hm_clock++;
+            ep_square = 0;
+        }   
         
-            } else if(from_piece_name == p){
-                hm_clock = 0;
-                ep_square = (flags == 1) ? to + 8 : 0;
-            } else{
-                // other quiet moves
-                hm_clock++;
-                ep_square = 0;
-            }  
-        }
-    
     } else {
         // set the name of to_piece to that of the piece we want to promote to
         // set the bitboard of the piece that's been promoted to
@@ -90,7 +86,8 @@ void Board::make_move(const Move& move){
         if(move.is_capture()){
             // move is a promotion with capture move
             capture_piece(to, to_piece_name);
-        } 
+        }
+
         hm_clock = 0;
         
         promo_piece_name = get_promo_piece(flags, from_piece_colour); // piece that we want to promote to
@@ -106,9 +103,9 @@ void Board::make_move(const Move& move){
     set_piece_bitboard(from_piece_name, from_piece_bitboard);
 
     remove_psqt(from_piece_name, from);
-    
-    change_turn();
 
+    change_turn();
+    
     generate_position_key(this);
 
     add_state(move, recent_capture);
@@ -160,12 +157,15 @@ int Board::undo_move(){
                 uncastle_kingside(from, from_piece_colour); 
             } else if(flags == 3){
                 uncastle_queenside(from, from_piece_colour); 
-            } else {
-                // quiet moves and double pawn pushes
-                if(from_piece_name == P || from_piece_name == p){hm_clock = current_state->hm_clock;} // pawn advance
-                else{hm_clock--;}  // other quiet moves
-            }
+            } else if (flags == 1){
+                assert(from_piece_name == P || from_piece_name == p);
 
+                hm_clock = current_state->hm_clock;
+            
+            } else {
+                hm_clock--;
+            }
+            
         } else {
             // remove piece that was promoted to
             promo_piece_name = get_piece_on_square(to); // piece that we wanted to promote to
@@ -272,10 +272,13 @@ void Board::uncastle_kingside(const uint& king_square, const colour& king_colour
     piece_names rook_type = (king_colour) ? r : R;
     U64 rook_bitboard = get_piece_bitboard(rook_type);
 
+    int old_rook_square = king_square - 1, new_rook_square = king_square - 3;
+
     // remove rook from new square, put at initial square
-    rook_bitboard |= set_bit(king_square - 3);
-    rook_bitboard &= ~set_bit(king_square - 1);
+    rook_bitboard |= set_bit(new_rook_square);
+    rook_bitboard &= ~set_bit(old_rook_square);
     set_piece_bitboard(rook_type, rook_bitboard); 
+
     hm_clock--;
 }
 
@@ -300,10 +303,13 @@ void Board::uncastle_queenside(const uint& king_square, const colour& king_colou
     piece_names rook_type = (king_colour) ? r : R;
     U64 rook_bitboard = get_piece_bitboard(rook_type);
 
+    int old_rook_square = king_square + 1, new_rook_square = king_square + 4;
+
     // remove rook from initial square, put at new square
-    rook_bitboard |= set_bit(king_square + 4);
-    rook_bitboard &= ~set_bit(king_square + 1);
+    rook_bitboard |= set_bit(new_rook_square);
+    rook_bitboard &= ~set_bit(old_rook_square);
     set_piece_bitboard(rook_type, rook_bitboard); 
+
     hm_clock--;
 }   
 
