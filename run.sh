@@ -14,6 +14,7 @@ menu(){
     echo "    2. Play against friend"
     echo "    3. Engine vs Engine"
     echo "    4. Run Perft" 
+    echo "    5. UCI test (Under Development)" 
 
     read -p "    >> " choice
 }
@@ -28,17 +29,20 @@ echo "                 YLVA                "
 echo -e "=====================================\n"   
 
 menu
-ask_fen
 
 case $choice in
     1) 
         $executable -f "$fen" -m "pve";;
-    2) 
+    2)  ask_fen
         $executable -f "$fen" -m "pvp" ;;
     3) 
-        $executable -f "$fen" -m "eve" ;; 
+        ask_fen 
+        $executable -f "$fen" -m "eve" ;;
     4) 
+        ask_fen
         $executable -f "$fen" -m "perft" ;;
+    5) 
+        $executable -f "$fen" -m "uci" ;;
     *) 
         exit ;;  
 esac

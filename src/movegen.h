@@ -8,7 +8,9 @@
 /// Given a board state, generate all valid moves in that state
 class MoveGen{
     public:
-        MoveGen(Board* current_state);
+        MoveGen();
+
+        void set_state(Board* current_state){board = current_state;}
 
         std::vector<Move> generate_moves(bool _captures_only = false);
 
@@ -144,7 +146,7 @@ class MoveGen{
             return get_rook_attacks(occupied, square) | get_bishop_attacks(occupied, square);
         }
 
-        U64 occupied, ally_king, enemy_king;
+        U64 occupied, ally_king, enemy_king, pawns;
 
     private:
         U64 tos;

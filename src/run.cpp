@@ -1,21 +1,31 @@
 #include "run.h"
 
-Run::Run(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(mode) {
-    // generate moves for the start state (no moves made yet)
-    movegen.generate_moves();
-    generate_position_key(&board);
-
+Run::Run(std::string& fen, game_modes mode) : mode(mode) {
     if(mode == PVP){
+        board.init_from_fen(fen);  
+        movegen.set_state(&board);
+        movegen.generate_moves();    
         run_PVP();
     } else if(mode == PVE){
+        board.init_from_fen(fen);  
+        movegen.set_state(&board);    
+        movegen.generate_moves();   
         int depth = get_perft_depth();
         set_engine(depth);
         run_PVE();
     } else if(mode == EVE) {
+        board.init_from_fen(fen);  
+        movegen.set_state(&board); 
+        movegen.generate_moves();      
         int depth = get_perft_depth();
         set_engine(depth);
         run_EVE();
+    } else if(mode == UCI){
+        run_PVE_UCI();
     } else if(mode == PERFT){
+        board.init_from_fen(fen);  
+        movegen.set_state(&board);   
+        movegen.generate_moves();   
         run_perft();
     } else {
         std::cerr << "Unexpected mode " << mode << std::endl;
@@ -23,9 +33,8 @@ Run::Run(std::string& fen, game_modes mode) : board(fen), movegen(&board), mode(
 }
 
 void Run::run_PVP(){
-    while (run){
+    while (!end_game()){
         get_input_from_player();
-        end_game();
     }
 }
 
@@ -34,7 +43,7 @@ void Run::run_PVE(){
 
     player_side = (colour_choice == "w") ? WHITE : BLACK;
 
-    while(run){
+    while(!end_game()){
         std::cout << "\nwhite time: " << white_used_time.count() << " seconds" << std::endl; 
         std::cout << "black time: " << black_used_time.count() << " seconds" << std::endl; 
 
@@ -49,40 +58,43 @@ void Run::run_PVE(){
                 black_used_time += engine->time_used_per_turn;
             }
         }
-        end_game();
     }
+}
+
+void Run::run_PVE_UCI(){
+    Uci uci(&board, &movegen);
+    uci.uci_communication();
 }
 
 void Run::run_EVE(){
-    while(run){
+    while(!end_game()){
         engine->engine_driver();
-        end_game();
     }
 }
 
-void Run::end_game(){
-    if(board.get_hm_clock() == 101){
+bool Run::end_game(){
+    if(board.get_hm_clock() == 100){
         std::cout << "Draw by 50 move rule" << std::endl;
         board.view_board();
-        run = false;
     } else if(movegen.no_legal_moves()){
         board.view_board();
         if(movegen.ally_king_in_check()){
             std::cout << (board.get_turn() ? "White " : "Black ") << "wins by checkmate" << std::endl;
         } else { std::cout << "Draw by stalemate" << std::endl; }
-        run = false;
     } else if(white_used_time > WHITE_TIME){
         std::cout << "Black wins on time " << std::endl;
     } else if(black_used_time > BLACK_TIME){
         std::cout << "White wins on time " << std::endl;
-    }
+    } else {return !run;} 
+
+    return true;
 }
 
 void Run::run_perft(){
     board.view_board();
     std::vector<Move> moves = movegen.generate_moves();
 
-    while(run){
+    while(!end_game()){
         int depth = get_perft_depth();
         perftDriver(depth, moves);
     }
@@ -165,7 +177,8 @@ void Run::get_input_from_player(){
     } else if(input == "quit"){
         run = false;
     } else if (std::regex_match(input, MOVE_FORMAT)){
-        parse_player_move(input);
+        std::tuple<std::string, std::string, std::string> str_move = parse_player_move(input);
+        make_player_move(str_move);
     } else {
         std::cout << "Inputs are undo, quit or a chess move in long algebraic format" << std::endl;
     }
@@ -207,106 +220,29 @@ void Run::set_engine(int& depth){
     }
 }
 
-void Run::parse_player_move(std::string& str_move){
-    auto move_size = str_move.size();
-    std::string from(1, str_move[0]);
-    from += str_move[1];
-
-    std::string to(1,str_move[2]);
-    to += str_move[3];
-
-    std::string promo_piece = "";
-
-    if(move_size == 5){promo_piece = str_move[4];}
-
-    make_player_move(std::make_tuple(from, to, promo_piece));
-}
-
 void Run::make_player_move(const std::tuple<std::string, std::string, std::string>& str_move){
     Move move(0,0,0);
 
-    auto check = convert_to_move(str_move, move);
-    
-    if(check != 0){
-        std::cout << "There's no piece at the square chosen"<< std::endl;
-    } else {
-        if(movegen.move_is_legal(move)){
-            player_end_time = high_resolution_clock::now();
+    auto check = convert_to_move(str_move, &movegen, move);
 
-            if(player_side){
-                black_used_time += duration_cast<seconds>(player_end_time - player_start_time);
-            } else {
-                white_used_time += duration_cast<seconds>(player_end_time - player_start_time);
-            }
+    if(check == 0){
+        player_end_time = high_resolution_clock::now();
 
-            board.make_move(move);
-            movegen.generate_moves();
-
+        if(player_side){
+            black_used_time += duration_cast<seconds>(player_end_time - player_start_time);
         } else {
-            std::cout << "Move entered is not valid " << std::endl;
-            std::cout << "legals" << std::endl;
-            for(auto move : movegen.get_legal_moves()){
-                std::cout << move << std::endl;
-            }
-            get_input_from_player();
+            white_used_time += duration_cast<seconds>(player_end_time - player_start_time);
         }
+
+        board.make_move(move);     
+        movegen.generate_moves();   
+    } else {
+        std::cout << "Move entered is not valid " << std::endl;
+        std::cout << "legals" << std::endl;
+        for(auto move : movegen.get_legal_moves()){
+            std::cout << move << std::endl;
+        }
+        get_input_from_player();
     }
 }
 
-/// Convert to move turns use string input into 'Move' object. This is checked for validity by searching in generated moves 
-/// If not present, the move wasn't valid
-/// This function allows users to make nonsense moves, but they won't be made since they won't exist in generated moves
-/// This simplifies this function which is nice
-int Run::convert_to_move(const std::tuple<std::string, std::string, std::string>& str_move, Move& move){
-    uint from, to, flags;
-
-    auto [from_str, to_str, promo_piece] = str_move;
-
-    int diff = 0;
-    piece_names moving_piece;
-
-    from = alg_to_int(from_str);
-    to = alg_to_int(to_str);
-    moving_piece = board.get_piece_on_square(from);
-
-    diff = from - to;
-
-    if(moving_piece == None){
-        return -1;
-    } else {
-        if(promo_piece == ""){
-            // no promotion
-
-            if(board.is_occupied(to)){
-                flags = 4;
-            } else {
-                if(moving_piece == P || moving_piece == p){
-                    if(abs(diff) == 9 || abs(diff) == 7){
-                        flags = 5;
-                    } else if(diff == 16 || diff == -16){
-                        flags = 1;
-                    } else {
-                        flags = 0;
-                    }
-                } else if(moving_piece == K || moving_piece == k){
-                    if(diff == 2){
-                        flags = 2;
-                    } else if(diff == -2){
-                        flags = 3;
-                    } else {
-                        flags = 0;
-                    } 
-                } else {
-                    flags = 0;
-                }
-            }
-
-        } else {
-            // wants to promote
-            flags = (board.is_occupied(to)) ? promo_flags[promo_piece+"c"] : promo_flags[promo_piece];
-        }
-
-        move = Move(from,to,flags);
-        return 0;
-    }
-}

@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[]){
     std::string fen = "";
-    game_modes mode = PVP;
+    game_modes mode = PVE;
     int opt;
 
     while ((opt = getopt(argc, argv, "f:m:")) != -1) {
@@ -21,8 +21,8 @@ int main(int argc, char* argv[]){
                     mode = PVE;
                 } else if(strcmp(optarg,"eve") == 0){
                     mode = EVE;
-                } else if(strcmp(optarg,"benchmark") == 0){
-                    mode = BENCHMARK;
+                } else if(strcmp(optarg,"uci") == 0){
+                    mode = UCI;
                 } else {
                     mode = PERFT;
                 }
@@ -41,6 +41,10 @@ int main(int argc, char* argv[]){
     populate_attack_sets();
     populate_rays();
     init_hash_keys();
+
+    if(fen == ""){
+        fen = STARTING_FEN;
+    }
 
     Run game_loop(fen, mode);
 

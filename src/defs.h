@@ -13,6 +13,7 @@
 #include <bitset>
 #include <regex>
 #include <cmath>
+#include <assert.h>
 
 typedef uint64_t U64;
 typedef unsigned int uint;
@@ -85,7 +86,7 @@ typedef enum{
     BLACK = -1,
 } colour;
 
-typedef enum{PVE, EVE, PVP, PERFT, BENCHMARK} game_modes;
+typedef enum{PVE, EVE, PVP, PERFT, UCI} game_modes;
  
 typedef enum{north, east, west, south, noEa, soEa, noWe, soWe} dirs;
 
@@ -130,6 +131,10 @@ void knight_attacks(U64 bitboard, U64& output);
 void king_attacks(U64 bitboard, U64& output);
 
 std::vector<std::string> splitString(const std::string& input, const char& delimiter);
+
+std::string get_first(const std::string& input, const char& delimiter);
+
+bool get_next_uci_param(const std::string& input, std::string& substr, std::string other_word, size_t from);
 
 std::string removeWhiteSpace(std::string str);
 

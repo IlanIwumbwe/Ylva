@@ -35,7 +35,7 @@ struct State{
 
 class Board{
     public:
-        Board (const std::string& _fen);
+        Board ();
 
         ~Board(){free(pv_table.pv_entries);}
 
@@ -67,7 +67,13 @@ class Board{
 
         piece_names get_promo_piece(const uint& flags, const colour& from_piece_colour);
 
-        void init_from_fen(const std::vector<std::string>& parts);
+        void init_from_fen(const std::string fen);
+
+        void clear_bitboards(){
+            for(auto& it : bitboards){
+                it.second = 0ULL;
+            }
+        }
 
         void init_board_state(const std::string& board_string);
         

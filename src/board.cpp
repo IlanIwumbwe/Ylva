@@ -3,11 +3,7 @@
 
 int State::state_id = 0;
 
-Board::Board (const std::string& _fen){
-    // parse FEN string
-    std::vector<std::string>parts = splitString((_fen == "") ? STARTING_FEN : removeWhiteSpace(_fen), ' ');
-    
-    init_from_fen(parts);
+Board::Board (){    
     // init pv table, pass size in bytes for the table
     init_pv_table(&pv_table, 0x400000);
 }
@@ -356,7 +352,10 @@ piece_names Board::get_promo_piece(const uint& flags, const colour& from_piece_c
     }
 }
 
-void Board::init_from_fen(const std::vector<std::string>& parts){
+void Board::init_from_fen(const std::string fen){
+    // parse FEN string
+    std::vector<std::string>parts = splitString(removeWhiteSpace(fen), ' ');
+
     if(parts.size() != 6){
         std::cerr << "Fen string format incorrect" << std::endl;
         exit(0);
@@ -372,6 +371,7 @@ void Board::init_from_fen(const std::vector<std::string>& parts){
         apply_psqt();
 
         add_state(maybe_move, None);
+        generate_position_key(this);
     }
 }
 

@@ -138,12 +138,42 @@ std::vector<std::string> splitString(const std::string& input, const char& delim
     std::istringstream iss(input);
     std::vector<std::string> parts;
     std::string part;
-
+    
     while (std::getline(iss, part, delimiter)) {
         parts.push_back(part);
     }
 
     return parts;
+}
+
+std::string get_first(const std::string& input, const char& delimiter) {
+    std::istringstream iss(input);
+    std::string part;
+    
+    while (std::getline(iss, part, delimiter)) {
+        return part;
+    }
+
+    return "";
+}
+
+/// @brief Get substring up to a certain character or newline
+/// @param input 
+/// @param substr 
+/// @param other_word 
+/// @param from 
+/// @return True if successful, False if not
+bool get_next_uci_param(const std::string& input, std::string& substr, std::string other_word, size_t from){
+    std::string::size_type pos = input.find(other_word[0]);
+
+    if(pos == std::string::npos){
+        substr = input.substr(from, pos-from);
+        return (from != input.size());
+    } else {
+        assert(from <= pos);
+        substr = input.substr(from, pos-from);
+        return !input.compare(pos, other_word.size(), other_word);
+    }
 }
 
 std::string removeWhiteSpace(std::string str){
