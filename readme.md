@@ -42,7 +42,7 @@ The engine favours positions where the side to move has a material gain after th
 
 ## Demo
 
-[ylvademo.webm](https://github.com/IlanIwumbwe/Ylva/assets/56346800/b5a2fcb3-06a8-4974-ad82-ac3ec28ec9f6)
+[ylvademo.webm](https://github.com/IlanIwumbwe/Ylva/assets/56346800/6b959679-0bea-4945-80bd-503cae72308c)
 
 ## License
 MIT
