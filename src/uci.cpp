@@ -19,7 +19,7 @@ int convert_to_move(const std::tuple<std::string, std::string, std::string>& str
 
     diff = from - to;
 
-    if(promo_piece == ""){
+    if(promo_piece == " "){
         // no promotion
         if(movegen->occupied & to_bitboard){
             flags = 4;
@@ -55,6 +55,9 @@ int convert_to_move(const std::tuple<std::string, std::string, std::string>& str
     return !movegen->move_is_legal(move);
 }
 
+/// @brief Parse move and return tuple
+/// @param str_move 
+/// @return from, to, promotion_piece
 std::tuple<std::string, std::string, std::string> parse_player_move(std::string& str_move){
     auto move_size = str_move.size();
     std::string from(1, str_move[0]);
@@ -63,7 +66,7 @@ std::tuple<std::string, std::string, std::string> parse_player_move(std::string&
     std::string to(1,str_move[2]);
     to += str_move[3];
 
-    std::string promo_piece = "";
+    std::string promo_piece = " ";
 
     if(move_size == 5){promo_piece = str_move[4];}
 
@@ -74,6 +77,7 @@ void Uci::uci_communication(){
 
     while(run){
         std::getline(std::cin, input);
+        input_size = input.size();
 
         std::string first = get_first(input, ' ');
 
@@ -105,41 +109,44 @@ void Uci::process_uci(){
 void Uci::process_position(){
     pointer+=9;
 
-    if(!input.compare(pointer, 3, "fen")){
-        pointer += 3;
+    if(!input.compare(pointer, 3, "fen") || !input.compare(pointer, 8, "startpos")){
         std::string fen;
-        bool check = get_next_uci_param(input, fen, "moves", pointer);
-        pointer+=fen.size();
+        bool check;
+
+        if(input[pointer] == 'f'){
+            pointer += 4;
+            check = get_next_uci_param(input, fen, "moves", pointer);
+            pointer+=fen.size();
+        } else{
+            check = get_next_uci_param(input, fen, "moves", pointer);
+            fen = STARTING_FEN;
+            pointer += 9;
+        }
+
         fen = removeWhiteSpace(fen);
 
         if(check){
-            board->init_from_fen((fen == "startpos") ? STARTING_FEN : fen);  
+            board->init_from_fen(fen);  
             movegen->set_state(board); 
             movegen->generate_moves();
 
-            if(pointer != input.size()){
+            if(pointer < input_size){
                 pointer += 6;
 
-                std::vector<Move> moves;
                 std::string _move;
                 Move move;
 
-                while(pointer < input.size()){
+                while(pointer < input_size){
                     _move = input.substr(pointer, 5);
                     std::tuple<std::string, std::string, std::string> str_move = parse_player_move(_move);
 
                     if(convert_to_move(str_move, movegen, move) == 0){
-                        moves.push_back(move);
+                        board->make_move(move);
+                        movegen->generate_moves();
                     } else {
-                        moves.clear();
                         break;
                     }
                     pointer += 5;
-                }
-
-                for(Move move : moves){
-                    board->make_move(move);
-                    movegen->generate_moves();
                 }
             }
         }

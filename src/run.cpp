@@ -8,6 +8,8 @@ Run::Run(std::string& fen, game_modes mode) : mode(mode) {
         run_PVP();
     } else if(mode == PVE){
         board.init_from_fen(fen);  
+        // init pv table, pass size in bytes for the table
+        init_pv_table(&board.pv_table, 0x400000);
         movegen.set_state(&board);    
         movegen.generate_moves();   
         int depth = get_perft_depth();
@@ -15,6 +17,8 @@ Run::Run(std::string& fen, game_modes mode) : mode(mode) {
         run_PVE();
     } else if(mode == EVE) {
         board.init_from_fen(fen);  
+        // init pv table, pass size in bytes for the table
+        init_pv_table(&board.pv_table, 0x400000);
         movegen.set_state(&board); 
         movegen.generate_moves();      
         int depth = get_perft_depth();
@@ -120,6 +124,7 @@ void Run::perftDriver(int& depth, const std::vector<Move>& moves){
     std::cout << "nodes " << std::to_string(total_pos) << std::endl;
 
     std::cout << "time taken " << std::to_string(duration.count()) << " ms" << std::endl;
+    std::cout << "nodes per second " << std::to_string(trunc(total_pos / (duration.count() / 1000.0))) << " nodes/sec" << std::endl;
     std::cout << "\n";
 }
 

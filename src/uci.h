@@ -11,7 +11,10 @@ std::tuple<std::string, std::string, std::string> parse_player_move(std::string&
 
 class Uci{
     public:
-        Uci(Board* _board, MoveGen* _movegen) : board(_board), movegen(_movegen) {}
+        Uci(Board* _board, MoveGen* _movegen) : board(_board), movegen(_movegen) {
+            // init pv table, pass size in bytes for the table
+            init_pv_table(&board->pv_table, 0x400000);
+        }
         void uci_communication();
         void process_uci();
         void process_position();
@@ -21,6 +24,8 @@ class Uci{
         size_t pointer = 0;
         Board* board;
         MoveGen* movegen;
+
+        size_t input_size = 0;
 
         bool run = true;
 };

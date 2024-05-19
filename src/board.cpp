@@ -3,10 +3,7 @@
 
 int State::state_id = 0;
 
-Board::Board (){    
-    // init pv table, pass size in bytes for the table
-    init_pv_table(&pv_table, 0x400000);
-}
+Board::Board (){}
 
 /// Make move given as input on the board
 void Board::make_move(const Move& move){
