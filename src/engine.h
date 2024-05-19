@@ -5,6 +5,7 @@
 #include "board.h"
 #include "movegen.h"
 #include "evaluation.h"
+#include "zobrist.h"
 #include <random>
 #include <chrono>
 
@@ -17,7 +18,9 @@ class Engine{
     public:
         Engine(Board* _board, MoveGen* _movegen, int _depth) : board(_board), movegen(_movegen), depth(_depth), eval(board, movegen){}
 
-        virtual Move get_engine_move() = 0;
+        /// @brief Get best move from a set of legal moves in that position
+        /// @param legal_moves 
+        virtual void get_engine_move(std::vector<Move>& legal_moves) = 0;
 
         void engine_driver();
         
@@ -26,6 +29,12 @@ class Engine{
             board->make_move(move);    
             eval.nodes_searched += 1;
         }
+        
+        /// @brief Get PV line given the legal moves that are in this position
+        /// @param depth 
+        /// @param legal_moves 
+        /// @return 
+        int get_pv_line(int depth);
 
         seconds time_used_per_turn = seconds(0);
 
@@ -41,7 +50,7 @@ class Enginev0 : public Engine{
     public:
         Enginev0(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
 
-        Move get_engine_move() override;
+        void get_engine_move(std::vector<Move>& legal_moves) override;
 
         int plain_minimax(int depth);
 };
@@ -51,7 +60,7 @@ class Enginev1 : public Engine{
     public:
         Enginev1(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
 
-        Move get_engine_move() override;
+        void get_engine_move(std::vector<Move>& legal_moves) override;
 
         int alpha_beta_minimax(int depth, int alpha, int beta);
 };
@@ -61,17 +70,18 @@ class Enginev2 : public Engine{
     public:
         Enginev2(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
 
-        Move get_engine_move() override;
+        void get_engine_move(std::vector<Move>& legal_moves) override;
 
         int ab_move_ordering(int depth, int alpha, int beta);
-
-        void pick_move(std::vector<Move>& moves, int start_index);
 
         void set_move_heuristics(std::vector<Move>& moves);
 
         int quiescence(int alpha, int beta);
 
-        Move search_position(std::vector<Move>& moves, int search_depth);
+        void search_position(std::vector<Move>& moves, int search_depth);
 };
 
+void pick_move(std::vector<Move>& moves, int start_index);
+
+bool move_exists(std::vector<Move>& legal_moves, Move move);
 #endif

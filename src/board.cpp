@@ -3,12 +3,7 @@
 
 int State::state_id = 0;
 
-Board::Board (const std::string& _fen){
-    // parse FEN string
-    std::vector<std::string>parts = splitString((_fen == "") ? STARTING_FEN : removeWhiteSpace(_fen), ' ');
-    
-    init_from_fen(parts);
-}
+Board::Board (){}
 
 /// Make move given as input on the board
 void Board::make_move(const Move& move){
@@ -65,12 +60,18 @@ void Board::make_move(const Move& move){
             castle_kingside(from, from_piece_colour);
         } else if(flags == 3){
             castle_queenside(from, from_piece_colour);
+        } else if (flags == 1){
+            assert(from_piece_name == P || from_piece_name == p);
+
+            hm_clock = 0;
+            ep_square = (from_piece_name == P) ? to - 8 : to + 8;
+
         } else {
-            // quiet moves and double pawn pushes
-            if(from_piece_name == P || from_piece_name == p){hm_clock = 0;} // pawn advance
-            else{hm_clock++;}  // other quiet moves
-        }
-    
+            // other quiet moves
+            hm_clock++;
+            ep_square = 0;
+        }   
+        
     } else {
         // set the name of to_piece to that of the piece we want to promote to
         // set the bitboard of the piece that's been promoted to
@@ -78,7 +79,8 @@ void Board::make_move(const Move& move){
         if(move.is_capture()){
             // move is a promotion with capture move
             capture_piece(to, to_piece_name);
-        } 
+        }
+
         hm_clock = 0;
         
         promo_piece_name = get_promo_piece(flags, from_piece_colour); // piece that we want to promote to
@@ -95,9 +97,13 @@ void Board::make_move(const Move& move){
 
     remove_psqt(from_piece_name, from);
 
-    add_state(move, recent_capture);
-    
     change_turn();
+    
+    generate_position_key(this);
+
+    add_state(move, recent_capture);
+
+    ply++;
 }
 
 int Board::get_prev_move(Move& prev_move){
@@ -144,12 +150,15 @@ int Board::undo_move(){
                 uncastle_kingside(from, from_piece_colour); 
             } else if(flags == 3){
                 uncastle_queenside(from, from_piece_colour); 
-            } else {
-                // quiet moves and double pawn pushes
-                if(from_piece_name == P || from_piece_name == p){hm_clock = current_state->hm_clock;} // pawn advance
-                else{hm_clock--;}  // other quiet moves
-            }
+            } else if (flags == 1){
+                assert(from_piece_name == P || from_piece_name == p);
 
+                hm_clock = current_state->hm_clock;
+            
+            } else {
+                hm_clock--;
+            }
+            
         } else {
             // remove piece that was promoted to
             promo_piece_name = get_piece_on_square(to); // piece that we wanted to promote to
@@ -176,6 +185,11 @@ int Board::undo_move(){
         castling_rights = current_state->castling_rights;
         psqt_scores[0] = current_state->white_pqst;
         psqt_scores[1] = current_state->black_pqst;
+        ep_square = current_state->ep_square;
+
+        generate_position_key(this);
+
+        ply--;
 
         return 0;
     } else {
@@ -251,10 +265,13 @@ void Board::uncastle_kingside(const uint& king_square, const colour& king_colour
     piece_names rook_type = (king_colour) ? r : R;
     U64 rook_bitboard = get_piece_bitboard(rook_type);
 
+    int old_rook_square = king_square - 1, new_rook_square = king_square - 3;
+
     // remove rook from new square, put at initial square
-    rook_bitboard |= set_bit(king_square - 3);
-    rook_bitboard &= ~set_bit(king_square - 1);
+    rook_bitboard |= set_bit(new_rook_square);
+    rook_bitboard &= ~set_bit(old_rook_square);
     set_piece_bitboard(rook_type, rook_bitboard); 
+
     hm_clock--;
 }
 
@@ -279,10 +296,13 @@ void Board::uncastle_queenside(const uint& king_square, const colour& king_colou
     piece_names rook_type = (king_colour) ? r : R;
     U64 rook_bitboard = get_piece_bitboard(rook_type);
 
+    int old_rook_square = king_square + 1, new_rook_square = king_square + 4;
+
     // remove rook from initial square, put at new square
-    rook_bitboard |= set_bit(king_square + 4);
-    rook_bitboard &= ~set_bit(king_square + 1);
+    rook_bitboard |= set_bit(new_rook_square);
+    rook_bitboard &= ~set_bit(old_rook_square);
     set_piece_bitboard(rook_type, rook_bitboard); 
+
     hm_clock--;
 }   
 
@@ -329,7 +349,10 @@ piece_names Board::get_promo_piece(const uint& flags, const colour& from_piece_c
     }
 }
 
-void Board::init_from_fen(const std::vector<std::string>& parts){
+void Board::init_from_fen(const std::string fen){
+    // parse FEN string
+    std::vector<std::string>parts = splitString(removeWhiteSpace(fen), ' ');
+
     if(parts.size() != 6){
         std::cerr << "Fen string format incorrect" << std::endl;
         exit(0);
@@ -345,6 +368,7 @@ void Board::init_from_fen(const std::vector<std::string>& parts){
         apply_psqt();
 
         add_state(maybe_move, None);
+        generate_position_key(this);
     }
 }
 
@@ -446,11 +470,13 @@ void Board::view_board(){
         square_offset = 0;
     }
 
-    // std::cout << "white psqt: " << psqt_scores[0] << std::endl;
-    // std::cout << "black psqt: " << psqt_scores[1] << std::endl;
-
     std::cout << turn_to_print << " to move" << std::endl; 
     std::cout << "Half move clock: " << hm_clock << std::endl;
+
+    if(ep_square != 0){
+        std::cout << "En-passant square: " << int_to_alg(ep_square) << std::endl;
+    }
+    
     std::cout << "  =======================" << std::endl;
                                             
     std::string letter;
@@ -471,6 +497,7 @@ void Board::view_board(){
     }
     std::cout << "  ======================="  << std::endl;
     std::cout << letters_to_print << std::endl;
+    std::cout << "Key: " << std::uppercase << std::hex << hash_key << std::endl; 
 }
 
 inline void Board::set_piece_bitboard(const piece_names& piece_name, const U64& bitboard) {
@@ -495,8 +522,8 @@ U64 Board::get_entire_bitboard() const {
 /// after a new move has been made, create a new state. Store the new castling rights, the half move clock, the move that led to this state,
 /// and the piece if any that got captured when that move was made
 void Board::add_state(Move prev_move, piece_names recent_capture){
-    auto new_current = std::make_shared<State>(castling_rights, hm_clock, recent_capture, prev_move, psqt_scores[0], psqt_scores[1]);
-        
+    auto new_current = std::make_shared<State>(castling_rights, hm_clock, recent_capture, prev_move, psqt_scores[0], psqt_scores[1], ep_square);
+
     new_current->prev_state = current_state;
     current_state = new_current;
 }
@@ -538,3 +565,56 @@ void Board::remove_psqt(piece_names piece, int square){
     square = convert_square_to_index(square, colour_index);
     psqt_scores[colour_index] -= PSQT[(piece % 8)-1][square];
 }
+
+void generate_position_key(Board* position){
+    U64 occupied = position->get_entire_bitboard();
+    int sq, piece_index, ep_square = position->get_ep_square();
+    piece_names piece_on_square;
+    U64 final_key = 0;
+
+    while(occupied){
+        sq = get_lsb(occupied);
+        piece_on_square = position->get_piece_on_square(sq);
+        piece_index = convert_piece_to_zobrist_index(piece_on_square);
+        final_key ^= Piece_keys[piece_index][sq];
+
+        occupied &= (occupied - 1);
+    }
+
+    if(position->get_turn()){
+        final_key ^= Turn_key;
+    }
+
+    if(ep_square != 0){
+        final_key ^= Piece_keys[None][ep_square];
+    }
+
+    final_key ^= Castle_key[position->get_castling_rights()];
+
+    position->hash_key = final_key;
+}
+
+/// @brief Store a move into the PV table
+/// @param position 
+/// @param move 
+void store_pv_move(Board* position, uint16_t move){
+    int index = position->hash_key % position->pv_table.num_of_entries;
+
+    assert((0 <= index) && (index <= position->pv_table.num_of_entries - 1));
+
+    position->pv_table.pv_entries[index].move = move;
+    position->pv_table.pv_entries[index].hash_key = position->hash_key;
+}
+
+/// @brief Get the move from pv table if this position has been stored
+/// @param position 
+uint16_t probe_pv_table(Board* position){
+    int index = position->hash_key % position->pv_table.num_of_entries;
+
+    if(position->pv_table.pv_entries[index].hash_key == position->hash_key){
+        return position->pv_table.pv_entries[index].move;
+    } else {
+        return 0;
+    }
+}
+

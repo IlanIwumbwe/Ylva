@@ -3,6 +3,7 @@
 
 #include "defs.h"
 #include "move.h"
+#include "zobrist.h"
 #include <assert.h>
 #include <chrono>
 
@@ -15,23 +16,28 @@ struct State{
     Move prev_move; 
     int white_pqst, black_pqst;
     std::shared_ptr<State> prev_state = NULL;
+    int ep_square;
 
     static int state_id;
 
-    State(uint8_t cr, int hmc, piece_names rcap, Move prev, int w_pqst, int b_pqst){
+    State(uint8_t cr, int hmc, piece_names rcap, Move prev, int w_pqst, int b_pqst, int ep_sq){
         castling_rights = cr;
         hm_clock = hmc;
         recent_capture = rcap;
         prev_move = prev;
         white_pqst = w_pqst;
         black_pqst = b_pqst;
+        ep_square = ep_sq;
+
         state_id++;
     }
 };
 
 class Board{
     public:
-        Board (const std::string& _fen);
+        Board ();
+
+        ~Board(){free(pv_table.pv_entries);}
 
         void make_move(const Move& move);
 
@@ -61,7 +67,13 @@ class Board{
 
         piece_names get_promo_piece(const uint& flags, const colour& from_piece_colour);
 
-        void init_from_fen(const std::vector<std::string>& parts);
+        void init_from_fen(const std::string fen);
+
+        void clear_bitboards(){
+            for(auto& it : bitboards){
+                it.second = 0ULL;
+            }
+        }
 
         void init_board_state(const std::string& board_string);
         
@@ -82,6 +94,10 @@ class Board{
         inline int get_hm_clock(){return hm_clock;}
 
         inline void change_turn(){turn = (colour)~turn;}
+
+        inline int get_ep_square()const{return ep_square;}
+
+        inline u_int8_t get_castling_rights()const{return castling_rights & 0xf;}
 
         piece_names get_piece_on_square(uint square) const;
 
@@ -111,6 +127,14 @@ class Board{
         // index 0 is white, index 1 is black
         int psqt_scores[2] = {0};
 
+        U64 hash_key = 0;
+
+        // pv table
+        PV_Table pv_table;
+        uint16_t pv_array[MAX_DEPTH];
+
+        int ply;
+
     private:        
         // informaton from fen string
         colour turn;
@@ -125,5 +149,12 @@ class Board{
         // maintain state
         std::shared_ptr<State> current_state = NULL;
 };
+
+void generate_position_key(Board* position);
+
+void store_pv_move(Board* position, uint16_t move);
+
+uint16_t probe_pv_table(Board* position);
+
 
 #endif

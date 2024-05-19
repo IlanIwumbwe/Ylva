@@ -138,12 +138,42 @@ std::vector<std::string> splitString(const std::string& input, const char& delim
     std::istringstream iss(input);
     std::vector<std::string> parts;
     std::string part;
-
+    
     while (std::getline(iss, part, delimiter)) {
         parts.push_back(part);
     }
 
     return parts;
+}
+
+std::string get_first(const std::string& input, const char& delimiter) {
+    std::istringstream iss(input);
+    std::string part;
+    
+    while (std::getline(iss, part, delimiter)) {
+        return part;
+    }
+
+    return "";
+}
+
+/// @brief Get substring up to a certain character or newline
+/// @param input 
+/// @param substr 
+/// @param other_word 
+/// @param from 
+/// @return True if successful, False if not
+bool get_next_uci_param(const std::string& input, std::string& substr, std::string other_word, size_t from){
+    std::string::size_type pos = input.find(other_word[0]);
+
+    if(pos == std::string::npos){
+        substr = input.substr(from, pos-from);
+        return (from != input.size());
+    } else {
+        assert(from <= pos);
+        substr = input.substr(from, pos-from);
+        return !input.compare(pos, other_word.size(), other_word);
+    }
 }
 
 std::string removeWhiteSpace(std::string str){
@@ -215,10 +245,20 @@ uint count_set_bits(U64 bitboard){
     return count;
 }
 
+/// @brief Given a piece as integer, map it to an index to a 7 element array
+/// @param piece 
+/// @return 
 int convert_piece_to_index(int piece) {
     return piece % 8;
 }
 
+int convert_piece_to_zobrist_index(int piece){
+    return (piece > 7) ? piece - 2 : piece;
+}
+
+/// @brief Given a square, return an index that can access the value from piece square tables. 
+/// @param square, colour_index 
+/// @return piece square tables index (uint)
 uint convert_square_to_index(uint square, int colour_index){
     colour_index = 1-colour_index;
     square = abs(63*colour_index - square);
@@ -227,4 +267,28 @@ uint convert_square_to_index(uint square, int colour_index){
     int y = rank(square);
 
     return 4*y + std::min(7-x, x);
+}
+
+/// @brief Dynamically allocate number of entries for the PV table based on the size in bytes required
+/// @param table 
+/// @param PV_size 
+void init_pv_table(PV_Table* table, int PV_size){
+    table->num_of_entries = PV_size / sizeof(PV_entry);
+    table->num_of_entries -= 2; 
+    free(table->pv_entries);  
+    table->pv_entries = (PV_entry*) malloc(table->num_of_entries * sizeof(PV_entry));
+    clear_pv_table(table);
+
+    std::cout << "Initialised PV table with " << table->num_of_entries << " entries " << std::endl;
+}
+
+/// @brief Set all position hash keys and moves to 0 (0ULL for hash as it is 64 bit)
+/// @param table 
+void clear_pv_table(PV_Table* table){
+    PV_entry* entry;
+
+    for(entry = table->pv_entries; entry < table->pv_entries + table->num_of_entries; ++entry){
+        entry->hash_key = 0ULL;
+        entry->move = 0;
+    }
 }

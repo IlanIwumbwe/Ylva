@@ -8,7 +8,7 @@ Welcome to *Ylva*, a minimal chess engine in the terminal.
 
 Ylva will see improvements over time.
 
-**Not** UCI compliant. 
+**Not** UCI compliant. (*This is being worked on*)
 
 Run using `run.sh`. This brings up a menu, with options to play with a friend, with the engine, engine v engine, or run Perft.
  

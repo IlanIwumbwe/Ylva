@@ -4,6 +4,8 @@
 #include "board.h"
 #include "movegen.h"
 #include "engine.h"
+#include "zobrist.h"
+#include "uci.h"
 #include <map>
 
 const seconds WHITE_TIME = seconds(2500);
@@ -17,9 +19,11 @@ class Run{
 
         void run_PVE();
 
+        void run_PVE_UCI();
+
         void run_EVE();
 
-        void end_game();
+        bool end_game();
 
         void run_perft();
 
@@ -35,11 +39,7 @@ class Run{
 
         void set_engine(int& depth);
 
-        void parse_player_move(std::string& str_move);
-
         void make_player_move(const std::tuple<std::string, std::string, std::string>& str_move);
-
-        int convert_to_move(const std::tuple<std::string, std::string, std::string>& str_move, Move& move);
         
     private:
         Board board;

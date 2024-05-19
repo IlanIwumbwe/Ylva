@@ -1,7 +1,7 @@
 #include "movegen.h"
 
 /// Given a board state, generate all valid moves in that state
-MoveGen::MoveGen(Board* current_state) : board(current_state), prev_move(0,0,0) {
+MoveGen::MoveGen() : prev_move(0,0,0) {
 }
 
 std::vector<Move> MoveGen::generate_moves(bool _captures_only){
@@ -24,6 +24,8 @@ std::vector<Move> MoveGen::generate_moves(bool _captures_only){
     whites = white_pawns | white_king | white_knights | white_bishops | white_queens | white_rooks;
     blacks = black_pawns | black_king | black_knights | black_bishops | black_queens | black_rooks;
 
+    pawns = white_pawns | black_pawns;
+
     occupied = whites | blacks;
     blacks_minus_king = blacks & ~black_king;
     whites_minus_king = whites & ~white_king;
@@ -43,7 +45,7 @@ std::vector<Move> MoveGen::generate_moves(bool _captures_only){
 }
 
 bool MoveGen::move_is_legal(Move& move){
-    for(auto v_move : legal_moves){
+    for(Move v_move : legal_moves){
         if(v_move == move){return true;}
     }
     
