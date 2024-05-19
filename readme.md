@@ -12,7 +12,7 @@ Ylva will see improvements over time.
 
 Run using `run.sh`. This brings up a menu, with options to play with a friend, with the engine, engine v engine, or run Perft.
  
-Current move generation speed is `~500k` nodes/second. Proper benchmarking to be done in the future.
+Current move generation speed is `~1million` nodes/second.
 
 ## Notable techniques
 
