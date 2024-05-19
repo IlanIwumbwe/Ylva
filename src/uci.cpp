@@ -89,6 +89,12 @@ void Uci::uci_communication(){
             board->clear_bitboards();        
         } else if(first == "quit"){
             run = false;
+        } else if(first == "isready"){
+            process_isready();
+        } else if(first == "debug"){
+            process_debug();
+        } else if(first == "print"){
+            board->view_board();
         }
 
         pointer = 0;
@@ -97,12 +103,31 @@ void Uci::uci_communication(){
     }
 }
 
+void Uci::process_isready(){
+    // init pv table, pass size in bytes for the table
+    init_pv_table(&board->pv_table, 0x400000);
+
+    std::cout << "readyok" << std::endl;
+}
+
+void Uci::process_debug(){
+    pointer += 6;
+
+    std::string next = input.substr(pointer);
+
+    if(next == "on"){
+        debug = true;
+    } else if(next == "off"){
+        debug = false;
+    }
+
+}
+
 void Uci::process_uci(){
     std::cout << "id name Ylva\n";
     std::cout << "id author Ilan Iwumbwe\n";
 
     // send_options
-
     std::cout << "uciok\n";
 }
 
@@ -151,7 +176,5 @@ void Uci::process_position(){
             }
         }
     }
-
-    board->view_board();
 }
 

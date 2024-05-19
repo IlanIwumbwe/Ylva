@@ -49,6 +49,8 @@ typedef unsigned int uint;
                 ((U64)std::rand() << 45) + \
                 (((U64)std::rand() & 0xf) << 60)) 
 
+extern bool debug;
+
 /// @brief A single PV entry stores the best move in a position identified by its hash key
 struct PV_entry {
     uint16_t move;

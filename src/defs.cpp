@@ -2,6 +2,8 @@
 
 namespace fs = std::filesystem;
 
+bool debug = false;
+
 dirInfo dir_info[8] = {
     {north, 8, RANK(8), south},
     {east, -1, H_FILE, west},
@@ -278,8 +280,10 @@ void init_pv_table(PV_Table* table, int PV_size){
     free(table->pv_entries);  
     table->pv_entries = (PV_entry*) malloc(table->num_of_entries * sizeof(PV_entry));
     clear_pv_table(table);
-
-    std::cout << "Initialised PV table with " << table->num_of_entries << " entries " << std::endl;
+    
+    if(debug){
+        std::cout << "info string initialised PV table with " << table->num_of_entries << " entries " << std::endl;
+    }
 }
 
 /// @brief Set all position hash keys and moves to 0 (0ULL for hash as it is 64 bit)
@@ -291,4 +295,6 @@ void clear_pv_table(PV_Table* table){
         entry->hash_key = 0ULL;
         entry->move = 0;
     }
+
+    if(debug){std::cout << "info string cleared PV table " << std::endl;}
 }

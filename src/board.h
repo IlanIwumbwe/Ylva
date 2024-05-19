@@ -73,6 +73,8 @@ class Board{
             for(auto& it : bitboards){
                 it.second = 0ULL;
             }
+
+            if(debug){std::cout << "info string cleared all bitboards" << std::endl;}
         }
 
         void init_board_state(const std::string& board_string);
