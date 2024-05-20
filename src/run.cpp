@@ -4,33 +4,35 @@ Run::Run(std::string& fen, game_modes mode) : mode(mode) {
     if(mode == PVP){
         board.init_from_fen(fen);  
         movegen.set_state(&board);
-        movegen.generate_moves();    
+        movegen.generate_moves();   
+
         run_PVP();
+
     } else if(mode == PVE){
         board.init_from_fen(fen);  
         // init pv table, pass size in bytes for the table
         init_pv_table(&board.pv_table, 0x400000);
         movegen.set_state(&board);    
         movegen.generate_moves();   
+
         int depth = get_perft_depth();
         set_engine(depth);
         run_PVE();
+
     } else if(mode == EVE) {
         board.init_from_fen(fen);  
         // init pv table, pass size in bytes for the table
         init_pv_table(&board.pv_table, 0x400000);
         movegen.set_state(&board); 
         movegen.generate_moves();      
+
         int depth = get_perft_depth();
         set_engine(depth);
         run_EVE();
+
     } else if(mode == UCI){
         run_PVE_UCI();
-    } else if(mode == PERFT){
-        board.init_from_fen(fen);  
-        movegen.set_state(&board);   
-        movegen.generate_moves();   
-        run_perft();
+        
     } else {
         std::cerr << "Unexpected mode " << mode << std::endl;
     }
@@ -92,58 +94,6 @@ bool Run::end_game(){
     } else {return !run;} 
 
     return true;
-}
-
-void Run::run_perft(){
-    board.view_board();
-    std::vector<Move> moves = movegen.generate_moves();
-
-    while(!end_game()){
-        int depth = get_perft_depth();
-        perftDriver(depth, moves);
-    }
-}
-
-void Run::perftDriver(int& depth, const std::vector<Move>& moves){
-    int num_pos = 0, total_pos = 0;
-    auto start = high_resolution_clock::now();
-
-    for(auto move : moves){
-        board.make_move(move);
-        num_pos = movegenTest(depth-1);
-        board.undo_move();
-
-        std::cout << move << " " << std::dec << num_pos << std::endl;
-        total_pos += num_pos;
-    }
-
-    auto end = high_resolution_clock::now();
-
-    auto duration = duration_cast<milliseconds>(end-start);
-
-    std::cout << "nodes " << std::to_string(total_pos) << std::endl;
-
-    std::cout << "time taken " << std::to_string(duration.count()) << " ms" << std::endl;
-    std::cout << "nodes per second " << std::to_string(trunc(total_pos / (duration.count() / 1000.0))) << " nodes/sec" << std::endl;
-    std::cout << "\n";
-}
-
-int Run::movegenTest(int depth){
-    std::vector<Move> moves = movegen.generate_moves();
-    
-    if(depth == 0){
-        return 1;
-    }
-
-    int num_nodes = 0;    
-
-    for(auto move : moves){
-        board.make_move(move);
-        num_nodes += movegenTest(depth-1);                               
-        board.undo_move();
-    }
-
-    return num_nodes;
 }
 
 std::string Run::get_colour_choice(){

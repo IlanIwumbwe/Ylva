@@ -25,12 +25,6 @@ class Run{
 
         bool end_game();
 
-        void run_perft();
-
-        void perftDriver(int& depth, const std::vector<Move>& moves);
-
-        int movegenTest(int depth);
-
         void get_input_from_player();
 
         std::string get_colour_choice();

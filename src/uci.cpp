@@ -73,20 +73,79 @@ std::tuple<std::string, std::string, std::string> parse_player_move(std::string&
     return std::make_tuple(from, to, promo_piece);
 }
 
-void Uci::uci_communication(){
+/// Just the ones I've implemented 
+bool is_valid_go_param(std::string token){
+    return (token == "wtime") || (token == "btime") || (token == "winc") || (token == "binc") || (token == "depth") || (token == "searchmoves")
+    || (token == "perft");
+}
 
+int Uci::movegen_test(int depth){
+    std::vector<Move> moves = movegen->generate_moves();
+    
+    if(depth == 0){
+        return 1;
+    }
+
+    int num_nodes = 0;    
+
+    for(auto move : moves){
+        board->make_move(move);
+        num_nodes += movegen_test(depth-1);                               
+        board->undo_move();
+    }
+
+    return num_nodes;
+}
+
+void Uci::perft_driver(int& depth){
+    int num_pos = 0, total_pos = 0;
+    auto start = high_resolution_clock::now();
+
+    // run perft on starting from legal moves in positionn loaded in by position command
+    for(auto move : moves_to_search){
+        board->make_move(move);
+        num_pos = movegen_test(depth-1);
+        board->undo_move();
+
+        std::cout << move << " " << std::dec << num_pos << std::endl;
+        total_pos += num_pos;
+    }
+
+    auto end = high_resolution_clock::now();
+
+    auto duration = duration_cast<milliseconds>(end-start);
+
+    std::cout << "nodes " << std::to_string(total_pos) << std::endl;
+
+    std::cout << "time taken " << std::to_string(duration.count()) << " ms" << std::endl;
+    std::cout << "nodes per second " << std::to_string(trunc(total_pos / (duration.count() / 1000.0))) << " nodes/sec" << std::endl;
+    std::cout << "\n";
+}
+
+void Uci::uci_communication(){
     while(run){
         std::getline(std::cin, input);
         input_size = input.size();
 
-        std::string first = get_first(input, ' ');
+        tokens = get_tokens(input, UCI_COMMAND_FORMAT);
+
+        /*
+        for(auto i : tokens){
+            std::cout << i << std::endl;
+        }*/
+
+        assert(tokens.size() > 0);
+
+        std::string first = tokens[0];
 
         if(first == "uci"){
             process_uci();
         } else if(first == "position"){
+            position_got = true;
             process_position();
         } else if(first == "ucinewgame"){
-            board->clear_bitboards();        
+            board->clear_bitboards();
+            position_got = false;        
         } else if(first == "quit"){
             run = false;
         } else if(first == "isready"){
@@ -95,6 +154,8 @@ void Uci::uci_communication(){
             process_debug();
         } else if(first == "print"){
             board->view_board();
+        } else if(first == "go" && position_got){
+            process_go();
         }
 
         pointer = 0;
@@ -106,8 +167,7 @@ void Uci::uci_communication(){
 void Uci::process_isready(){
     // init pv table, pass size in bytes for the table
     init_pv_table(&board->pv_table, 0x400000);
-
-    std::cout << "readyok" << std::endl;
+    std::cout << "readyok\n";
 }
 
 void Uci::process_debug(){
@@ -132,49 +192,82 @@ void Uci::process_uci(){
 }
 
 void Uci::process_position(){
-    pointer+=9;
+    std::string fen, curr_token;
+    pointer ++; // move over "position"
 
-    if(!input.compare(pointer, 3, "fen") || !input.compare(pointer, 8, "startpos")){
-        std::string fen;
-        bool check;
+    curr_token = current_token();
 
-        if(input[pointer] == 'f'){
-            pointer += 4;
-            check = get_next_uci_param(input, fen, "moves", pointer);
-            pointer+=fen.size();
-        } else{
-            check = get_next_uci_param(input, fen, "moves", pointer);
+    if((curr_token == "startpos") || (curr_token == "fen")){
+
+        if(curr_token == "startpos"){
             fen = STARTING_FEN;
-            pointer += 9;
-        }
+        } else {
+            pointer++; // point to fen string
+            fen = current_token();
+        } 
+        
+        pointer++; // move over <fen>
 
-        fen = removeWhiteSpace(fen);
+        board->init_from_fen(fen);  
+        movegen->set_state(board); 
+        moves_to_search = movegen->generate_moves();
 
-        if(check){
-            board->init_from_fen(fen);  
-            movegen->set_state(board); 
-            movegen->generate_moves();
+        if(current_token() == "moves"){
+            pointer ++; // move over "moves"
 
-            if(pointer < input_size){
-                pointer += 6;
+            while(current_token() != ""){
+                token_s_arg = tokens[pointer];
+                
+                std::tuple<std::string, std::string, std::string> str_move = parse_player_move(token_s_arg);
 
-                std::string _move;
-                Move move;
-
-                while(pointer < input_size){
-                    _move = input.substr(pointer, 5);
-                    std::tuple<std::string, std::string, std::string> str_move = parse_player_move(_move);
-
-                    if(convert_to_move(str_move, movegen, move) == 0){
-                        board->make_move(move);
-                        movegen->generate_moves();
-                    } else {
-                        break;
-                    }
-                    pointer += 5;
+                if(convert_to_move(str_move, movegen, _move) == 0){
+                    board->make_move(_move);
+                    movegen->generate_moves();
+                } else {
+                    break;
                 }
+                pointer++;
             }
+
+            moves_to_search = movegen->get_legal_moves();
         }
     }
 }
+
+void Uci::process_go(){
+    std::vector<std::string> moves;
+    std::string curr_token;
+
+    pointer++; // move over "go"
+
+    curr_token = current_token();
+
+    while((curr_token != "") && (is_valid_go_param(curr_token))){
+        pointer++; // prepare argument, technically here curr_token is the previous token
+
+        if(current_token() == ""){break;} // no argument
+
+        if(curr_token == "wtime"){
+            std::cout << curr_token << " not implemented yet " << std::endl;
+        } else if (curr_token == "btime"){
+            std::cout << curr_token << " not implemented yet " << std::endl;
+        } else if(curr_token == "binc"){
+            std::cout << curr_token << " not implemented yet " << std::endl;
+        } else if (curr_token == "winc"){  
+            std::cout << curr_token << " not implemented yet " << std::endl;
+        } else if(curr_token == "depth"){
+            std::cout << curr_token << " not implemented yet " << std::endl;
+        } else if(curr_token == "searchmoves"){
+            
+        } else if(curr_token == "perft" && is_valid_num(current_token())){
+            token_i_arg = std::stoi(current_token());
+            perft_driver(token_i_arg);
+        }
+
+        pointer++; // move over argument
+        curr_token = current_token();
+    }
+}
+
+
 
