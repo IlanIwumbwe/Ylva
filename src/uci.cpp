@@ -171,9 +171,9 @@ void Uci::process_isready(){
 }
 
 void Uci::process_debug(){
-    pointer += 6;
+    pointer ++; // move over "debug" 
 
-    std::string next = input.substr(pointer);
+    std::string next = current_token();
 
     if(next == "on"){
         debug = true;
