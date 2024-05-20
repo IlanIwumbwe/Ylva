@@ -1,10 +1,6 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-#define STARTING_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-#define MOVE_FORMAT std::regex(R"([a-h][1-8][a-h][1-8](q|r|n|b)?)")
-#define VERSION_FORMAT std::regex(R"(v[0-2])")
-
 #include <cstdint>
 #include <iostream>
 #include <filesystem>
@@ -17,6 +13,11 @@
 
 typedef uint64_t U64;
 typedef unsigned int uint;
+
+#define STARTING_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#define MOVE_FORMAT std::regex(R"([a-h][1-8][a-h][1-8](q|r|n|b)?)")
+#define VERSION_FORMAT std::regex(R"(v[0-2])")
+#define UCI_COMMAND_FORMAT std::regex(R"(([A-Za-z1-8]+/?){8} [wb] ([KQkq]+|-) ([a-f1-8]+|-) [0-9]+ [1-9]+|[a-z0-9]+|[a-z]+|[0-9]+)")
 
 #define CAPTURE_FLAG 0x4000
 #define PROMO_FLAG 0x8000
@@ -88,7 +89,7 @@ typedef enum{
     BLACK = -1,
 } colour;
 
-typedef enum{PVE, EVE, PVP, PERFT, UCI} game_modes;
+typedef enum{PVE, EVE, PVP, UCI} game_modes;
  
 typedef enum{north, east, west, south, noEa, soEa, noWe, soWe} dirs;
 
@@ -161,5 +162,9 @@ int convert_piece_to_index(int piece);
 int convert_piece_to_zobrist_index(int piece);
 
 uint convert_square_to_index(uint square, int colour_index);
+
+std::vector<std::string> get_tokens(std::string& input, std::regex pattern);
+
+bool is_valid_num(const std::string& numString);
 
 #endif

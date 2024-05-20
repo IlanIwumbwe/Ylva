@@ -148,36 +148,6 @@ std::vector<std::string> splitString(const std::string& input, const char& delim
     return parts;
 }
 
-std::string get_first(const std::string& input, const char& delimiter) {
-    std::istringstream iss(input);
-    std::string part;
-    
-    while (std::getline(iss, part, delimiter)) {
-        return part;
-    }
-
-    return "";
-}
-
-/// @brief Get substring up to a certain character or newline
-/// @param input 
-/// @param substr 
-/// @param other_word 
-/// @param from 
-/// @return True if successful, False if not
-bool get_next_uci_param(const std::string& input, std::string& substr, std::string other_word, size_t from){
-    std::string::size_type pos = input.find(other_word[0]);
-
-    if(pos == std::string::npos){
-        substr = input.substr(from, pos-from);
-        return (from != input.size());
-    } else {
-        assert(from <= pos);
-        substr = input.substr(from, pos-from);
-        return !input.compare(pos, other_word.size(), other_word);
-    }
-}
-
 std::string removeWhiteSpace(std::string str){
     std::regex pattern(R"(^\s+|\s+$|\t|\n)");
 
@@ -271,6 +241,8 @@ uint convert_square_to_index(uint square, int colour_index){
     return 4*y + std::min(7-x, x);
 }
 
+// This way of initialising the PV tables was layed out in Bluefever Software's video: https://www.youtube.com/watch?v=AlwyJFG466M
+
 /// @brief Dynamically allocate number of entries for the PV table based on the size in bytes required
 /// @param table 
 /// @param PV_size 
@@ -297,4 +269,24 @@ void clear_pv_table(PV_Table* table){
     }
 
     if(debug){std::cout << "info string cleared PV table " << std::endl;}
+}
+
+std::vector<std::string> get_tokens(std::string& input, std::regex pattern){
+    std::vector<std::string> tokens;
+
+    std::sregex_iterator iter(input.begin(), input.end(), pattern);
+    std::sregex_iterator end;
+
+    while (iter != end) {
+        tokens.push_back(iter->str());
+        ++iter;
+    }
+
+    return tokens;
+}
+
+bool is_valid_num(const std::string& numString){
+    auto pattern = std::regex(R"([0-9]+)");
+
+    return std::regex_match(numString, pattern);
 }

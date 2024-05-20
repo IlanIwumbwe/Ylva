@@ -23,9 +23,8 @@ int main(int argc, char* argv[]){
                     mode = EVE;
                 } else if(strcmp(optarg,"uci") == 0){
                     mode = UCI;
-                } else {
-                    mode = PERFT;
                 }
+                
                 break;
             default:
                 break;

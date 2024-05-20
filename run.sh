@@ -13,8 +13,7 @@ menu(){
     echo "    1. Play against engine"
     echo "    2. Play against friend"
     echo "    3. Engine vs Engine"
-    echo "    4. Run Perft" 
-    echo "    5. UCI test (Under Development)" 
+    echo "    4. UCI test (Under Development)" 
 
     read -p "    >> " choice
 }
@@ -31,17 +30,16 @@ echo -e "=====================================\n"
 menu
 
 case $choice in
-    1) 
+    1)  
+        ask_fen
         $executable -f "$fen" -m "pve";;
+        
     2)  ask_fen
         $executable -f "$fen" -m "pvp" ;;
     3) 
         ask_fen 
         $executable -f "$fen" -m "eve" ;;
     4) 
-        ask_fen
-        $executable -f "$fen" -m "perft" ;;
-    5) 
         $executable -f "$fen" -m "uci" ;;
     *) 
         exit ;;  
