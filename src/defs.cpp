@@ -1,4 +1,9 @@
 #include "defs.h"
+#ifdef WIN32
+#include "windows.h"
+#else
+#include "time.h"
+#endif
 
 namespace fs = std::filesystem;
 
@@ -289,4 +294,11 @@ bool is_valid_num(const std::string& numString){
     auto pattern = std::regex(R"([0-9]+)");
 
     return std::regex_match(numString, pattern);
+}
+
+// time in ms 
+// https://stackoverflow.com/questions/19555121/how-to-get-current-timestamp-in-milliseconds-since-1970-just-the-way-java-gets
+U64 time_in_ms() {
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }

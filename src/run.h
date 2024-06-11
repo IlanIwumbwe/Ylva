@@ -8,9 +8,6 @@
 #include "uci.h"
 #include <map>
 
-const seconds WHITE_TIME = seconds(2500);
-const seconds BLACK_TIME = seconds(2500);
-
 class Run{
     public:
         Run(std::string& fen, game_modes mode);
@@ -41,12 +38,9 @@ class Run{
         game_modes mode;
         bool run = true;
 
-        std::unique_ptr<Engine> engine;
+        std::shared_ptr<Engine> engine;
 
         colour player_side;
-
-        seconds white_used_time = seconds(0), black_used_time = seconds(0);
-        _V2::system_clock::time_point player_start_time, player_end_time;
 };
 
 #endif

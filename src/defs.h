@@ -40,7 +40,7 @@ typedef unsigned int uint;
 
 #define infinity std::numeric_limits<int>::max()
 
-#define MAX_DEPTH 64
+#define MAX_DEPTH 16
 
 // macro to generate a random 64 bit number since std::rand gives 16 bit number
 
@@ -89,7 +89,7 @@ typedef enum{
     BLACK = -1,
 } colour;
 
-typedef enum{PVE, EVE, PVP, UCI} game_modes;
+typedef enum{PVP, UCI} game_modes;
  
 typedef enum{north, east, west, south, noEa, soEa, noWe, soWe} dirs;
 
@@ -166,5 +166,7 @@ uint convert_square_to_index(uint square, int colour_index);
 std::vector<std::string> get_tokens(std::string& input, std::regex pattern);
 
 bool is_valid_num(const std::string& numString);
+
+U64 time_in_ms();
 
 #endif

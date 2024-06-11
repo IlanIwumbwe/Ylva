@@ -7,22 +7,19 @@
 #include "evaluation.h"
 #include "zobrist.h"
 #include <random>
-#include <chrono>
-
-using namespace std::chrono;
 
 #define PROMOTION_POWER 5
 #define PAWN_ATTACK_POWER 2
 
 class Engine{
     public:
-        Engine(Board* _board, MoveGen* _movegen, int _depth) : board(_board), movegen(_movegen), depth(_depth), eval(board, movegen){}
+        Engine(Board* _board, MoveGen* _movegen) : board(_board), movegen(_movegen), eval(board, movegen){}
 
         /// @brief Get best move from a set of legal moves in that position
         /// @param legal_moves 
         virtual void get_engine_move(std::vector<Move>& legal_moves) = 0;
 
-        void engine_driver();
+        void engine_driver(std::vector<Move>& legal_moves);
         
         /// Make move on the board, and increament nodes searched counter
         inline void make_move(Move move){
@@ -36,19 +33,27 @@ class Engine{
         /// @return 
         int get_pv_line(int depth);
 
-        seconds time_used_per_turn = seconds(0);
+        void set_depth(int d){depth = d;}
 
-    protected:
+        bool stop_thinking();
+
         Board* board;
         MoveGen* movegen;
-        int depth = 4;
+
+        bool time_set = false;
+        U64 start_time, stop_time;
+
+    protected:
+        int depth = MAX_DEPTH;
+        int pv_pointer = 0, pv_length = 0;
         Eval eval;
+        Move best_move;
 };
 
 /// v0 has a plain minimax search algorithm
 class Enginev0 : public Engine{
     public:
-        Enginev0(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
+        Enginev0(Board* _board, MoveGen* _movegen) : Engine(_board, _movegen) {}
 
         void get_engine_move(std::vector<Move>& legal_moves) override;
 
@@ -58,7 +63,7 @@ class Enginev0 : public Engine{
 /// v1 has minimax optimised with alpha beta pruning
 class Enginev1 : public Engine{
     public:
-        Enginev1(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
+        Enginev1(Board* _board, MoveGen* _movegen) : Engine(_board, _movegen) {}
 
         void get_engine_move(std::vector<Move>& legal_moves) override;
 
@@ -68,7 +73,7 @@ class Enginev1 : public Engine{
 /// @brief v2 has alpha beta minimax, and other optimisations
 class Enginev2 : public Engine{
     public:
-        Enginev2(Board* _board, MoveGen* _movegen, int _depth) : Engine(_board, _movegen, _depth) {}
+        Enginev2(Board* _board, MoveGen* _movegen) : Engine(_board, _movegen) {}
 
         void get_engine_move(std::vector<Move>& legal_moves) override;
 
@@ -84,4 +89,7 @@ class Enginev2 : public Engine{
 void pick_move(std::vector<Move>& moves, int start_index);
 
 bool move_exists(std::vector<Move>& legal_moves, Move move);
+
+void make_first(Move move, std::vector<Move>& moves);
+
 #endif

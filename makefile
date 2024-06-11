@@ -16,7 +16,7 @@ run.o : $(SRC_DIR)/board.h $(SRC_DIR)/movegen.h $(SRC_DIR)/engine.h
 movegen.o : $(SRC_DIR)/board.h $(SRC_DIR)/move.h
 engine.o : $(SRC_DIR)/move.h $(SRC_DIR)/board.h $(SRC_DIR)/movegen.h
 zobrist.o : $(SRC_DIR)/defs.h
-uci.o : $(SRC_DIR)/defs.h
+uci.o : $(SRC_DIR)/defs.h $(SRC_DIR)/engine.h
 evaluation.o : $(SRC_DIR)/board.h
 
 $(TARGET): $(OBJS)

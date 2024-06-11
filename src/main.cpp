@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[]){
     std::string fen = "";
-    game_modes mode = PVE;
+    game_modes mode = UCI;
     int opt;
 
     while ((opt = getopt(argc, argv, "f:m:")) != -1) {
@@ -17,14 +17,9 @@ int main(int argc, char* argv[]){
             case 'm':
                 if(strcmp(optarg,"pvp") == 0){
                     mode = PVP;
-                } else if(strcmp(optarg,"pve") == 0){
-                    mode = PVE;
-                } else if(strcmp(optarg,"eve") == 0){
-                    mode = EVE;
                 } else if(strcmp(optarg,"uci") == 0){
                     mode = UCI;
                 }
-                
                 break;
             default:
                 break;

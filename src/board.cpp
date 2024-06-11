@@ -47,6 +47,8 @@ void Board::make_move(const Move& move){
         }
     }
 
+    ep_square = 0;
+
     if(!move.is_promo()){
         // place piece at to square if not promotion move
         from_piece_bitboard |= set_bit(to);
@@ -69,7 +71,6 @@ void Board::make_move(const Move& move){
         } else {
             // other quiet moves
             hm_clock++;
-            ep_square = 0;
         }   
         
     } else {

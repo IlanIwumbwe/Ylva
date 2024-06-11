@@ -76,7 +76,7 @@ std::tuple<std::string, std::string, std::string> parse_player_move(std::string&
 /// Just the ones I've implemented 
 bool is_valid_go_param(std::string token){
     return (token == "wtime") || (token == "btime") || (token == "winc") || (token == "binc") || (token == "depth") || (token == "searchmoves")
-    || (token == "perft");
+    || (token == "perft") || (token == "movetime") || (token == "movestogo") || (token == "infinite");
 }
 
 int Uci::movegen_test(int depth){
@@ -99,7 +99,7 @@ int Uci::movegen_test(int depth){
 
 void Uci::perft_driver(int& depth){
     int num_pos = 0, total_pos = 0;
-    auto start = high_resolution_clock::now();
+    U64 start = time_in_ms();
 
     // run perft on starting from legal moves in positionn loaded in by position command
     for(auto move : moves_to_search){
@@ -111,14 +111,14 @@ void Uci::perft_driver(int& depth){
         total_pos += num_pos;
     }
 
-    auto end = high_resolution_clock::now();
+    U64 end = time_in_ms();
 
-    auto duration = duration_cast<milliseconds>(end-start);
+    U64 duration = end-start;
 
     std::cout << "nodes " << std::to_string(total_pos) << std::endl;
 
-    std::cout << "time taken " << std::to_string(duration.count()) << " ms" << std::endl;
-    std::cout << "nodes per second " << std::to_string(trunc(total_pos / (duration.count() / 1000.0))) << " nodes/sec" << std::endl;
+    std::cout << "time taken " << std::to_string(duration) << " ms" << std::endl;
+    std::cout << "nodes per second " << std::to_string(trunc(total_pos / (duration / 1000.0))) << " nodes/sec" << std::endl;
     std::cout << "\n";
 }
 
@@ -128,11 +128,6 @@ void Uci::uci_communication(){
         input_size = input.size();
 
         tokens = get_tokens(input, UCI_COMMAND_FORMAT);
-
-        /*
-        for(auto i : tokens){
-            std::cout << i << std::endl;
-        }*/
 
         assert(tokens.size() > 0);
 
@@ -156,6 +151,8 @@ void Uci::uci_communication(){
             board->view_board();
         } else if(first == "go" && position_got){
             process_go();
+        } else if(first == "stop"){
+            // TODO
         }
 
         pointer = 0;
@@ -166,7 +163,8 @@ void Uci::uci_communication(){
 
 void Uci::process_isready(){
     // init pv table, pass size in bytes for the table
-    init_pv_table(&board->pv_table, 0x400000);
+    init_pv_table(&(board->pv_table), 0x400000);
+    engine = std::make_shared<Enginev2>(board, movegen);
     std::cout << "readyok\n";
 }
 
@@ -184,7 +182,7 @@ void Uci::process_debug(){
 }
 
 void Uci::process_uci(){
-    std::cout << "id name Ylva\n";
+    std::cout << "id name "<< engine_name << std::endl;
     std::cout << "id author Ilan Iwumbwe\n";
 
     // send_options
@@ -231,12 +229,18 @@ void Uci::process_position(){
 
             moves_to_search = movegen->get_legal_moves();
         }
+
+        engine_side = board->get_turn();
     }
 }
 
+// implementation of this partly follows Bluefever software's UCI video, part 69
 void Uci::process_go(){
     std::vector<std::string> moves;
     std::string curr_token;
+
+    U64 time = 0, inc = 0;
+    int max_search_depth = MAX_DEPTH, movestogo = 30, movetime = -1;  
 
     pointer++; // move over "go"
 
@@ -247,27 +251,57 @@ void Uci::process_go(){
 
         if(current_token() == ""){break;} // no argument
 
-        if(curr_token == "wtime"){
-            std::cout << curr_token << " not implemented yet " << std::endl;
-        } else if (curr_token == "btime"){
-            std::cout << curr_token << " not implemented yet " << std::endl;
-        } else if(curr_token == "binc"){
-            std::cout << curr_token << " not implemented yet " << std::endl;
-        } else if (curr_token == "winc"){  
-            std::cout << curr_token << " not implemented yet " << std::endl;
+        if(curr_token == "wtime" && engine_side == WHITE){
+            time = std::stoi(current_token());
+        } else if (curr_token == "btime" && engine_side == BLACK){
+            time = std::stoi(current_token());
+        } else if(curr_token == "binc" && engine_side == BLACK){
+            inc = std::stoi(current_token());
+        } else if (curr_token == "winc" && engine_side == WHITE){  
+            inc = std::stoi(current_token());
         } else if(curr_token == "depth"){
-            std::cout << curr_token << " not implemented yet " << std::endl;
+            max_search_depth = std::stoi(current_token());
         } else if(curr_token == "searchmoves"){
-            
+            std::cout << curr_token << " not implemented yet " << std::endl; 
+        } else if (curr_token == "infinite"){
+            ;
+        } else if (curr_token == "movetime"){
+            movetime = std::stoi(current_token());
+        } else if (curr_token == "movestogo"){
+            movestogo = std::stoi(current_token());
         } else if(curr_token == "perft" && is_valid_num(current_token())){
             token_i_arg = std::stoi(current_token());
             perft_driver(token_i_arg);
+            return ;
         }
 
         pointer++; // move over argument
         curr_token = current_token();
     }
-}
 
+    if(max_search_depth != MAX_DEPTH){
+        // if depth has been set, use that, if not, engine uses MAX_DEPTH
+        engine->set_depth(max_search_depth);
+    }
+
+    if(movetime != -1){
+        time = movetime;
+        movestogo = 1;
+    }
+
+    engine->start_time = time_in_ms();
+
+    if(time != 0){
+        engine->time_set = true;
+        time /= movestogo;
+        time -= 50; // take off 50ms for safety
+        engine->stop_time = engine->start_time + time + inc;
+    }
+
+    std::cout << std::dec << "time to think: " << time << " starttime: " << engine->start_time << " stoptime: " << engine->stop_time << " depth: " << max_search_depth << " timeset: " << engine->time_set << std::endl;
+
+    // start a search that can be interrupted at any time by "stop"
+    engine->engine_driver(moves_to_search);
+}
 
 

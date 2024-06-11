@@ -10,10 +10,8 @@ else
 fi
 
 menu(){  
-    echo "    1. Play against engine"
-    echo "    2. Play against friend"
-    echo "    3. Engine vs Engine"
-    echo "    4. UCI test (Under Development)" 
+    echo "    1. Play against friend"
+    echo "    2. UCI test (Under Development)" 
 
     read -p "    >> " choice
 }
@@ -32,17 +30,10 @@ menu
 case $choice in
     1)  
         ask_fen
-        $executable -f "$fen" -m "pve";;
+        $executable -f "$fen" -m "pvp";;
         
-    2)  ask_fen
-        $executable -f "$fen" -m "pvp" ;;
-    3) 
-        ask_fen 
-        $executable -f "$fen" -m "eve" ;;
-    4) 
-        $executable -f "$fen" -m "uci" ;;
-    *) 
-        exit ;;  
+    2)  $executable -f "$fen" -m "uci" ;;
+    *)  exit ;;  
 esac
 
 

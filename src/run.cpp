@@ -8,28 +8,6 @@ Run::Run(std::string& fen, game_modes mode) : mode(mode) {
 
         run_PVP();
 
-    } else if(mode == PVE){
-        board.init_from_fen(fen);  
-        // init pv table, pass size in bytes for the table
-        init_pv_table(&board.pv_table, 0x400000);
-        movegen.set_state(&board);    
-        movegen.generate_moves();   
-
-        int depth = get_perft_depth();
-        set_engine(depth);
-        run_PVE();
-
-    } else if(mode == EVE) {
-        board.init_from_fen(fen);  
-        // init pv table, pass size in bytes for the table
-        init_pv_table(&board.pv_table, 0x400000);
-        movegen.set_state(&board); 
-        movegen.generate_moves();      
-
-        int depth = get_perft_depth();
-        set_engine(depth);
-        run_EVE();
-
     } else if(mode == UCI){
         run_PVE_UCI();
         
@@ -44,38 +22,9 @@ void Run::run_PVP(){
     }
 }
 
-void Run::run_PVE(){
-    std::string colour_choice = get_colour_choice();
-
-    player_side = (colour_choice == "w") ? WHITE : BLACK;
-
-    while(!end_game()){
-        std::cout << "\nwhite time: " << white_used_time.count() << " seconds" << std::endl; 
-        std::cout << "black time: " << black_used_time.count() << " seconds" << std::endl; 
-
-        if(board.get_turn() == player_side){
-            get_input_from_player();
-        }else{
-            engine->engine_driver();
-
-            if(player_side){
-                white_used_time += engine->time_used_per_turn;
-            } else {
-                black_used_time += engine->time_used_per_turn;
-            }
-        }
-    }
-}
-
 void Run::run_PVE_UCI(){
     Uci uci(&board, &movegen);
     uci.uci_communication();
-}
-
-void Run::run_EVE(){
-    while(!end_game()){
-        engine->engine_driver();
-    }
 }
 
 bool Run::end_game(){
@@ -87,10 +36,6 @@ bool Run::end_game(){
         if(movegen.ally_king_in_check()){
             std::cout << (board.get_turn() ? "White " : "Black ") << "wins by checkmate" << std::endl;
         } else { std::cout << "Draw by stalemate" << std::endl; }
-    } else if(white_used_time > WHITE_TIME){
-        std::cout << "Black wins on time " << std::endl;
-    } else if(black_used_time > BLACK_TIME){
-        std::cout << "White wins on time " << std::endl;
     } else {return !run;} 
 
     return true;
@@ -112,8 +57,6 @@ std::string Run::get_colour_choice(){
 
 void Run::get_input_from_player(){
     board.view_board();
-
-    player_start_time = high_resolution_clock::now();
     
     std::string input;
     std::cout << ">> ";
@@ -167,11 +110,11 @@ void Run::set_engine(int& depth){
     }
 
     if(input == "v0"){
-        engine = std::make_unique<Enginev0>(&board, &movegen, depth);
+        engine = std::make_shared<Enginev0>(&board, &movegen);
     } else if(input == "v1"){
-        engine = std::make_unique<Enginev1>(&board, &movegen, depth);
+        engine = std::make_shared<Enginev1>(&board, &movegen);
     } else if(input == "v2"){
-        engine = std::make_unique<Enginev2>(&board, &movegen, depth);
+        engine = std::make_shared<Enginev2>(&board, &movegen);
     }
 }
 
@@ -181,14 +124,6 @@ void Run::make_player_move(const std::tuple<std::string, std::string, std::strin
     auto check = convert_to_move(str_move, &movegen, move);
 
     if(check == 0){
-        player_end_time = high_resolution_clock::now();
-
-        if(player_side){
-            black_used_time += duration_cast<seconds>(player_end_time - player_start_time);
-        } else {
-            white_used_time += duration_cast<seconds>(player_end_time - player_start_time);
-        }
-
         board.make_move(move);     
         movegen.generate_moves();   
     } else {
