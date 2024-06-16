@@ -129,35 +129,35 @@ void Uci::uci_communication(){
 
         tokens = get_tokens(input, UCI_COMMAND_FORMAT);
 
-        assert(tokens.size() > 0);
+        if(input_size > 0){
+            std::string first = tokens[0];
 
-        std::string first = tokens[0];
+            if(first == "uci"){
+                process_uci();
+            } else if(first == "position"){
+                position_got = true;
+                process_position();
+            } else if(first == "ucinewgame"){
+                board->clear_bitboards();
+                position_got = false;        
+            } else if(first == "quit"){
+                run = false;
+            } else if(first == "isready"){
+                process_isready();
+            } else if(first == "debug"){
+                process_debug();
+            } else if(first == "print"){
+                board->view_board();
+            } else if(first == "go" && position_got){
+                process_go();
+            }
 
-        if(first == "uci"){
-            process_uci();
-        } else if(first == "position"){
-            position_got = true;
-            process_position();
-        } else if(first == "ucinewgame"){
-            board->clear_bitboards();
-            position_got = false;        
-        } else if(first == "quit"){
+            pointer = 0;
+            input = "";
+        } else if (engine->quit){
+            // quit from engine think interrupt
             run = false;
-        } else if(first == "isready"){
-            process_isready();
-        } else if(first == "debug"){
-            process_debug();
-        } else if(first == "print"){
-            board->view_board();
-        } else if(first == "go" && position_got){
-            process_go();
-        } else if(first == "stop"){
-            // TODO
         }
-
-        pointer = 0;
-        input = "";
-
     }
 }
 
@@ -302,6 +302,9 @@ void Uci::process_go(){
 
     // start a search that can be interrupted at any time by "stop"
     engine->engine_driver(moves_to_search);
+
+    engine->time_set = false;
+    engine->stopped = false;
 }
 
 

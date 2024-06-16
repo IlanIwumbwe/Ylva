@@ -35,13 +35,15 @@ class Engine{
 
         void set_depth(int d){depth = d;}
 
-        bool stop_thinking();
+        void check_stop_conditions();
+
+        void read_input();
 
         Board* board;
         MoveGen* movegen;
 
-        bool time_set = false;
         U64 start_time, stop_time;
+        bool stopped = false, time_set = false, quit = false;
 
     protected:
         int depth = MAX_DEPTH;
@@ -70,14 +72,14 @@ class Enginev1 : public Engine{
         int alpha_beta_minimax(int depth, int alpha, int beta);
 };
 
-/// @brief v2 has alpha beta minimax, and other optimisations
+/// @brief v2 has alpha beta minimax, move ordering, and best move from previous pv line are searched first
 class Enginev2 : public Engine{
     public:
         Enginev2(Board* _board, MoveGen* _movegen) : Engine(_board, _movegen) {}
 
         void get_engine_move(std::vector<Move>& legal_moves) override;
 
-        int ab_move_ordering(int depth, int alpha, int beta);
+        int ab_search(int depth, int alpha, int beta);
 
         void set_move_heuristics(std::vector<Move>& moves);
 

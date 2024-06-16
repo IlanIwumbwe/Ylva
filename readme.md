@@ -36,13 +36,24 @@ The engine favours positions where the side to move has a material gain after th
 
 - [Quiescence search](https://www.chessprogramming.org/Quiescence_Search): Statically evaluating positions when depth == 0 is dangerous because if you capture a pawn with your queen on the next move, the evaluation will think this is a good move, but what if the move after that caputres the queen? Then you have actually blundered your queen. So at depth 0, we start a new search, which looks only at capture moves, and the final positions that get evaluated have no captures available.
 
+## UCI
+The following UCI commands have been implemented:
+
+
+
 ## Todos
 
 [Future plans for Ylva](https://github.com/IlanIwumbwe/Ylva/issues/2)
 
-## Demo
+## Acknowledgements
+Huge thanks to the resources I have used so far while developing this engine!
 
-[ylvademo.webm](https://github.com/IlanIwumbwe/Ylva/assets/56346800/6b959679-0bea-4945-80bd-503cae72308c)
+- Richard Allbert's, [Vice series](https://bit.ly/3XpdiKU) on his Bluefever Software channel. I followed the same approach as in this series for my PV table, checking for stop conditions during search, and stopping the search when the "stop" command is received from UCI GUI.
+- Marcel Vanthoor's [Rustic chess engine](https://rustic-chess.org)
+- [Chess Programming Wiki](https://www.chessprogramming.org)
+- Sebastian Lague's [video](https://www.youtube.com/watch?v=U4ogK0MIzqk), which was also the original inspiration for Ylva.
+- Oliver Brausch's [Olithink](https://github.com/olithink), specifically his method for peeking std input to check for "stop" command interrupting engine search
+- [Roelof Berkepeis](https://github.com/tissatussa), providing many useful pieces of information and advice. 
 
 ## License
 MIT

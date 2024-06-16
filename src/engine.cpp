@@ -171,12 +171,25 @@ int Engine::get_pv_line(int depth){
 }
 
 /// Check whether thinking time is up for engine, or whether there's stop command from uci GUI
-bool Engine::stop_thinking(){
+void Engine::check_stop_conditions(){
     if(time_set && (time_in_ms() > stop_time)){
-        return true;
+        stopped = true;
     }
 
-    return false;
+    read_input();
+}
+
+void Engine::read_input(){
+    if(input_waiting()){
+        stopped = true;
+
+        std::string input;
+        std::cin >> input;
+
+        if(input == "quit"){
+            quit = true;
+        }
+    }
 }
 
 /// Minimax with no optimisations
@@ -281,7 +294,16 @@ void Enginev1::get_engine_move(std::vector<Move>& legal_moves){
     }
 }
 
-int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
+int Enginev2::ab_search(int depth, int alpha, int beta){
+    // 50 move rule
+    if(board->ply >= 100){
+        return eval.Evaluation();
+    }
+
+    // Check that we are out of time every 2048 nodes
+    if((eval.nodes_searched & 2047) == 0){
+        check_stop_conditions();
+    }
 
     if(depth == 0){
         // return eval.Evaluation(); 
@@ -300,18 +322,23 @@ int Enginev2::ab_move_ordering(int depth, int alpha, int beta){
 
     int curr_eval = 0;
 
+    set_move_heuristics(moves);
+
     if(pv_pointer < pv_length){
         make_first(board->pv_array[pv_pointer++], moves);
     }
-    set_move_heuristics(moves);
 
     for(size_t i = 0; i < moves.size(); ++i){
         pick_move(moves, i);
         make_move(moves[i]);
 
-        curr_eval = -ab_move_ordering(depth-1, -beta, -alpha);
+        curr_eval = -ab_search(depth-1, -beta, -alpha);
 
         board->undo_move();
+
+        if(stopped){
+            return 0;
+        }
 
         if(curr_eval > alpha){
             alpha = curr_eval;
@@ -358,6 +385,16 @@ void Enginev2::set_move_heuristics(std::vector<Move>& moves){
 int Enginev2::quiescence(int alpha, int beta){
     int evaluation = eval.Evaluation();
 
+    // Check that we are out of time every 2048 nodes
+    if((eval.nodes_searched & 2047) == 0){
+        check_stop_conditions();
+    }
+
+    // 50 move rule
+    if(board->ply >= 100){
+        return evaluation;
+    }
+
     if(evaluation >= beta){
         return beta;
     }
@@ -379,6 +416,10 @@ int Enginev2::quiescence(int alpha, int beta){
 
         board->undo_move();
 
+        if(stopped){
+            return 0;
+        }
+
         alpha = std::max(curr_eval, alpha);
 
         if(curr_eval >= beta){
@@ -391,18 +432,18 @@ int Enginev2::quiescence(int alpha, int beta){
 
 void Enginev2::search_position(std::vector<Move>& moves, int depth){
     int best_eval = -infinity, curr_eval;
+    
+    set_move_heuristics(moves);
 
     if(pv_pointer < pv_length){
         make_first(board->pv_array[pv_pointer++], moves);
     }
 
-    set_move_heuristics(moves);
-
     for(size_t i = 0; i < moves.size(); ++i){
         pick_move(moves, i);   
         make_move(moves[i]);
 
-        curr_eval = -ab_move_ordering(depth-1,-infinity, infinity);
+        curr_eval = -ab_search(depth-1,-infinity, infinity);
 
         board->undo_move();
 
@@ -411,6 +452,8 @@ void Enginev2::search_position(std::vector<Move>& moves, int depth){
             store_pv_move(board, moves[i].get_move());
         }
     }
+
+    pv_pointer = 0;
 }
 
 void Enginev2::get_engine_move(std::vector<Move>& legal_moves){
@@ -418,10 +461,17 @@ void Enginev2::get_engine_move(std::vector<Move>& legal_moves){
     Move pv_move;
     U64 time_taken_ms = 0;
 
+    eval.nodes_searched = 0;
+
     for(int d = 1; d <= depth; d++){
         start = time_in_ms();
         search_position(legal_moves, d);
         end = time_in_ms();
+
+        // if forced to stop, use pv line and best move from previous iteration
+        if(stopped){
+            break;
+        }
 
         pv_length = get_pv_line(d);
         time_taken_ms += (end-start);
@@ -432,8 +482,7 @@ void Enginev2::get_engine_move(std::vector<Move>& legal_moves){
             if(debug){
                 std::cout << "info string hash collided " << std::endl;
             }
-            // Choose best move according to heuristics
-            pick_move(legal_moves, 0);
+            // Choose previous PV move
             best_move = legal_moves[0];
         } else {
             // best move is top of pv array
@@ -450,16 +499,11 @@ void Enginev2::get_engine_move(std::vector<Move>& legal_moves){
       
             for(int i = 0; i < pv_length; ++i){
                 pv_move = Move(board->pv_array[i]);
-                std::cout << " " << pv_move;best_move = Move(board->pv_array[pv_pointer]);
+                std::cout << " " << pv_move;
             }
         }
 
         std::cout << "\n";
-
-        // check if need to stop thinking
-        if(stop_thinking()){
-            break;
-        }
     }
 }
 
