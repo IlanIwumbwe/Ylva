@@ -47,6 +47,8 @@ void Board::make_move(const Move& move){
         }
     }
 
+    ep_square = 0;
+
     if(!move.is_promo()){
         // place piece at to square if not promotion move
         from_piece_bitboard |= set_bit(to);
@@ -69,7 +71,6 @@ void Board::make_move(const Move& move){
         } else {
             // other quiet moves
             hm_clock++;
-            ep_square = 0;
         }   
         
     } else {
@@ -602,8 +603,12 @@ void store_pv_move(Board* position, uint16_t move){
 
     assert((0 <= index) && (index <= position->pv_table.num_of_entries - 1));
 
-    position->pv_table.pv_entries[index].move = move;
-    position->pv_table.pv_entries[index].hash_key = position->hash_key;
+    if(!position->pv_table.collides(index, position->hash_key)){
+        position->pv_table.pv_entries[index].move = move;
+        position->pv_table.pv_entries[index].hash_key = position->hash_key;
+    } else if (debug) {
+        std::cout << "PV entry for position with key " << position->hash_key << " is taken by " << position->pv_table.pv_entries[index].hash_key << std::endl;
+    }
 }
 
 /// @brief Get the move from pv table if this position has been stored

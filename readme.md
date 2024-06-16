@@ -8,10 +8,10 @@ Welcome to *Ylva*, a minimal chess engine in the terminal.
 
 Ylva will see improvements over time.
 
-**Not** UCI compliant. (*This is being worked on*)
+A subset of the UCI commands have been implemented, enough to be able to connect to a UCI GUI and test.
 
-Run using `run.sh`. This brings up a menu, with options to play with a friend, with the engine, engine v engine, or run Perft.
- 
+Run `make` to compile into a `ylva` executable, which you can then run in your terminal. Alternatively, add the engine to a UCI GUI.
+
 Current move generation speed is `~1million` nodes/second.
 
 ## Notable techniques
@@ -40,9 +40,15 @@ The engine favours positions where the side to move has a material gain after th
 
 [Future plans for Ylva](https://github.com/IlanIwumbwe/Ylva/issues/2)
 
-## Demo
+## Acknowledgements
+Huge thanks to the resources I have used so far while developing this engine!
 
-[ylvademo.webm](https://github.com/IlanIwumbwe/Ylva/assets/56346800/6b959679-0bea-4945-80bd-503cae72308c)
+- Richard Allbert's, [Vice series](https://bit.ly/3XpdiKU) on his Bluefever Software channel. I followed the same approach as in this series for my PV table, checking for stop conditions during search, and stopping the search when the "stop" command is received from UCI GUI.
+- Marcel Vanthoor's [Rustic chess engine](https://rustic-chess.org)
+- [Chess Programming Wiki](https://www.chessprogramming.org)
+- Sebastian Lague's [video](https://www.youtube.com/watch?v=U4ogK0MIzqk), which was also the original inspiration for Ylva.
+- Oliver Brausch's [Olithink](https://github.com/olithink), specifically his method for peeking std input to check for "stop" command interrupting engine search
+- [Roelof Berkepeis](https://github.com/tissatussa), providing many useful pieces of information and advice. 
 
 ## License
 MIT

@@ -1,5 +1,12 @@
 #include "defs.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/time.h>
+struct timeval tv;
+#endif
+
 namespace fs = std::filesystem;
 
 bool debug = false;
@@ -241,8 +248,6 @@ uint convert_square_to_index(uint square, int colour_index){
     return 4*y + std::min(7-x, x);
 }
 
-// This way of initialising the PV tables was layed out in Bluefever Software's video: https://www.youtube.com/watch?v=AlwyJFG466M
-
 /// @brief Dynamically allocate number of entries for the PV table based on the size in bytes required
 /// @param table 
 /// @param PV_size 
@@ -290,3 +295,41 @@ bool is_valid_num(const std::string& numString){
 
     return std::regex_match(numString, pattern);
 }
+
+#ifdef _WIN32
+U64 time_in_ms(){
+    return GetTickCount();
+}
+
+int peek_stdin(){
+    static int init = 0, pipe;
+    static HANDLE inh;
+    DWORD dw;
+
+    if (!init) {
+        init = 1;
+        inh = GetStdHandle(STD_INPUT_HANDLE);
+        pipe = !GetConsoleMode(inh, &dw);
+    }
+    if (pipe) {
+        if (!PeekNamedPipe(inh, NULL, 0, NULL, &dw, NULL)) return 1;
+        return dw;
+    } else return _kbhit();
+}
+#else
+U64 time_in_ms() {
+	gettimeofday (&tv, NULL);
+	return(tv.tv_sec * 1000LL + (tv.tv_usec / 1000));
+}
+
+int input_waiting(){
+    fd_set readfds;
+
+	FD_ZERO (&readfds);
+	FD_SET (fileno(stdin), &readfds);
+	tv.tv_sec=0; tv.tv_usec=0;
+	select(16, &readfds, 0, 0, &tv);
+
+	return (FD_ISSET(fileno(stdin), &readfds));
+}
+#endif

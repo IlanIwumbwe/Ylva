@@ -40,7 +40,7 @@ typedef unsigned int uint;
 
 #define infinity std::numeric_limits<int>::max()
 
-#define MAX_DEPTH 64
+#define MAX_DEPTH 16
 
 // macro to generate a random 64 bit number since std::rand gives 16 bit number
 
@@ -62,6 +62,13 @@ struct PV_entry {
 struct PV_Table {
     PV_entry* pv_entries;
     int num_of_entries;
+
+    /// Is this position already taken by another position of a different hash?
+    bool collides(int index, U64 test_hash){
+        PV_entry entry = pv_entries[index];
+    
+        return (entry.hash_key > 0) && (entry.hash_key != test_hash);
+    }
 };
 
 void init_pv_table(PV_Table* table, int PV_size);
@@ -89,8 +96,6 @@ typedef enum{
     BLACK = -1,
 } colour;
 
-typedef enum{PVE, EVE, PVP, UCI} game_modes;
- 
 typedef enum{north, east, west, south, noEa, soEa, noWe, soWe} dirs;
 
 typedef enum {diag, nondiag} ray_type;
@@ -135,10 +140,6 @@ void king_attacks(U64 bitboard, U64& output);
 
 std::vector<std::string> splitString(const std::string& input, const char& delimiter);
 
-std::string get_first(const std::string& input, const char& delimiter);
-
-bool get_next_uci_param(const std::string& input, std::string& substr, std::string other_word, size_t from);
-
 std::string removeWhiteSpace(std::string str);
 
 bool isStringDigit(std::string& input);
@@ -166,5 +167,9 @@ uint convert_square_to_index(uint square, int colour_index);
 std::vector<std::string> get_tokens(std::string& input, std::regex pattern);
 
 bool is_valid_num(const std::string& numString);
+
+U64 time_in_ms();
+
+int input_waiting();
 
 #endif

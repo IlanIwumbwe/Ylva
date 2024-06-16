@@ -5,6 +5,7 @@
 #include "board.h"
 #include "movegen.h"
 #include "move.h"
+#include "engine.h"
 
 int convert_to_move(const std::tuple<std::string, std::string, std::string>& str_move, MoveGen* movegen, Move& move);
 std::tuple<std::string, std::string, std::string> parse_player_move(std::string& str_move);
@@ -12,7 +13,11 @@ bool is_valid_go_param(std::string token);
 
 class Uci{
     public:
-        Uci(Board* _board, MoveGen* _movegen) : board(_board), movegen(_movegen) {}
+        Uci(Board* _board, MoveGen* _movegen){
+            board = _board;
+            movegen = _movegen;
+        }
+
         void uci_communication();
 
         std::string current_token(){
@@ -43,6 +48,7 @@ class Uci{
         std::string input;
         size_t pointer = 0;
         std::vector<std::string> tokens;
+        std::shared_ptr<Engine> engine;
         Board* board;
         MoveGen* movegen;
 
@@ -52,8 +58,11 @@ class Uci{
         int token_i_arg;
         Move _move;
 
+        std::string engine_name = "YLVA v1";
+
         bool run = true;
         bool searchpos_got = false, position_got = false;
+        colour engine_side;
 };
 
 #endif
