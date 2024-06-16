@@ -48,7 +48,7 @@ class Engine{
         int pv_length = 0;
 
     protected:
-        int depth = MAX_DEPTH;
+        int depth;  
         int pv_pointer = 0;
         Eval eval;
         Move best_move;

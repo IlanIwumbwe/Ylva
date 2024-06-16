@@ -61,7 +61,6 @@ class Uci{
         std::string engine_name = "YLVA v1";
 
         bool run = true;
-        bool searchpos_got = false, position_got = false;
         colour engine_side;
 };
 
