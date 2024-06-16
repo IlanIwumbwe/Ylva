@@ -45,9 +45,11 @@ class Engine{
         U64 start_time, stop_time;
         bool stopped = false, time_set = false, quit = false;
 
+        int pv_length = 0;
+
     protected:
         int depth = MAX_DEPTH;
-        int pv_pointer = 0, pv_length = 0;
+        int pv_pointer = 0;
         Eval eval;
         Move best_move;
 };

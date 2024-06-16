@@ -8,10 +8,10 @@ Welcome to *Ylva*, a minimal chess engine in the terminal.
 
 Ylva will see improvements over time.
 
-**Not** UCI compliant. (*This is being worked on*)
+A subset of the UCI commands have been implemented, enough to be able to connect to a UCI GUI and test.
 
-Run using `run.sh`. This brings up a menu, with options to play with a friend, with the engine, engine v engine, or run Perft.
- 
+Run `make` to compile into a `ylva` executable, which you can then run in your terminal. Alternatively, add the engine to a UCI GUI.
+
 Current move generation speed is `~1million` nodes/second.
 
 ## Notable techniques
@@ -35,11 +35,6 @@ The engine favours positions where the side to move has a material gain after th
 - Piece square tables: A rudimentary nudge given to the engine to tell it which squares are often good for certain pieces. I used the values explained [here](https://www.chessprogramming.org/Simplified_Evaluation_Function). Since these tables are symmetric between the d and e files, only half the values are stored, and the square index is manipulated to be able to index a 32 element array. 
 
 - [Quiescence search](https://www.chessprogramming.org/Quiescence_Search): Statically evaluating positions when depth == 0 is dangerous because if you capture a pawn with your queen on the next move, the evaluation will think this is a good move, but what if the move after that caputres the queen? Then you have actually blundered your queen. So at depth 0, we start a new search, which looks only at capture moves, and the final positions that get evaluated have no captures available.
-
-## UCI
-The following UCI commands have been implemented:
-
-
 
 ## Todos
 

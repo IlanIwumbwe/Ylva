@@ -206,6 +206,7 @@ void Uci::process_position(){
         
         pointer++; // move over <fen>
 
+        board->clear_bitboards();
         board->init_from_fen(fen);  
         movegen->set_state(board); 
         moves_to_search = movegen->generate_moves();
@@ -214,7 +215,7 @@ void Uci::process_position(){
             pointer ++; // move over "moves"
 
             while(current_token() != ""){
-                token_s_arg = tokens[pointer];
+                token_s_arg = tokens[pointer++];
                 
                 std::tuple<std::string, std::string, std::string> str_move = parse_player_move(token_s_arg);
 
@@ -222,10 +223,18 @@ void Uci::process_position(){
                     board->make_move(_move);
                     movegen->generate_moves();
                 } else {
+                    std::cout << token_s_arg << std::endl;
+                    for (auto m : moves_to_search){
+                        std::cout << m << std::endl;
+                    }
                     break;
                 }
-                pointer++;
             }
+
+            //std::cout << current_token() << std::endl;
+            //for(auto t : tokens){
+            //    std::cout << t << std::endl;
+            //}
 
             moves_to_search = movegen->get_legal_moves();
         }
@@ -279,10 +288,7 @@ void Uci::process_go(){
         curr_token = current_token();
     }
 
-    if(max_search_depth != MAX_DEPTH){
-        // if depth has been set, use that, if not, engine uses MAX_DEPTH
-        engine->set_depth(max_search_depth);
-    }
+    engine->set_depth(max_search_depth);
 
     if(movetime != -1){
         time = movetime;
@@ -303,6 +309,7 @@ void Uci::process_go(){
     // start a search that can be interrupted at any time by "stop"
     engine->engine_driver(moves_to_search);
 
+    engine->pv_length = 0;
     engine->time_set = false;
     engine->stopped = false;
 }

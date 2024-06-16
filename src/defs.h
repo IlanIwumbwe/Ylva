@@ -96,8 +96,6 @@ typedef enum{
     BLACK = -1,
 } colour;
 
-typedef enum{PVP, UCI} game_modes;
- 
 typedef enum{north, east, west, south, noEa, soEa, noWe, soWe} dirs;
 
 typedef enum {diag, nondiag} ray_type;
