@@ -43,6 +43,7 @@ class Uci{
         void process_isready();
         void process_debug();
         void process_go();
+        void process_ucinewgame();
 
     private:
         std::string input;

@@ -137,10 +137,7 @@ void Uci::uci_communication(){
             } else if(first == "position"){
                 process_position();
             } else if(first == "ucinewgame"){
-                board->clear_bitboards();
-                // init pv table, pass size in bytes for the table
-                init_pv_table(&(board->pv_table), 0x400000);
-                engine = std::make_shared<Enginev2>(board, movegen);       
+                process_ucinewgame();    
             } else if(first == "quit"){
                 run = false;
             } else if(first == "isready"){
@@ -160,6 +157,13 @@ void Uci::uci_communication(){
             run = false;
         }
     }
+}
+
+void Uci::process_ucinewgame(){
+    board->clear_bitboards();
+    // init pv table, pass size in bytes for the table
+    init_pv_table(&(board->pv_table), 0x400000);
+    engine = std::make_shared<Enginev2>(board, movegen);  
 }
 
 void Uci::process_isready(){
