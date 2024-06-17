@@ -130,7 +130,7 @@ void Uci::uci_communication(){
         tokens = get_tokens(input, UCI_COMMAND_FORMAT);
 
         if(input_size > 0){
-            std::string first = tokens[0];
+            std::string first = current_token();
 
             if(first == "uci"){
                 process_uci();
@@ -148,7 +148,7 @@ void Uci::uci_communication(){
                 board->view_board();
             } else if(first == "go"){
                 process_go();
-            }
+            } 
 
             pointer = 0;
             input = "";
