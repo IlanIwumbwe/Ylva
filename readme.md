@@ -4,7 +4,7 @@
     <img width="33%" src="ylva.jpg">
 </p>
 
-Welcome to *Ylva*, a minimal chess engine in the terminal. 
+Welcome to *Ylva*
 
 Ylva will see improvements over time.
 
