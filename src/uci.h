@@ -9,7 +9,6 @@
 
 int convert_to_move(const std::tuple<std::string, std::string, std::string>& str_move, MoveGen* movegen, Move& move);
 std::tuple<std::string, std::string, std::string> parse_player_move(std::string& str_move);
-bool is_valid_go_param(std::string token);
 
 class Uci{
     public:

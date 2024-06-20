@@ -73,12 +73,6 @@ std::tuple<std::string, std::string, std::string> parse_player_move(std::string&
     return std::make_tuple(from, to, promo_piece);
 }
 
-/// Just the ones I've implemented 
-bool is_valid_go_param(std::string token){
-    return (token == "wtime") || (token == "btime") || (token == "winc") || (token == "binc") || (token == "depth") || (token == "searchmoves")
-    || (token == "perft") || (token == "movetime") || (token == "movestogo") || (token == "infinite");
-}
-
 int Uci::movegen_test(int depth){
     std::vector<Move> moves = movegen->generate_moves();
     
@@ -257,7 +251,7 @@ void Uci::process_go(){
 
     curr_token = current_token();
 
-    while((curr_token != "") && (is_valid_go_param(curr_token))){
+    while(curr_token != ""){
         pointer++; // prepare argument, technically here curr_token is the previous token
 
         if(current_token() == ""){break;} // no argument
