@@ -14,21 +14,25 @@ extern U64 bishop_moves[64][4096];
 extern U64 rook_magics[64];
 extern U64 bishop_magics[64];
 
-U64 get_bishop_occupancies(int square);
+namespace movegen_helpers{
 
-U64 get_rook_occupancies(int square);
+    U64 get_bishop_occupancies(int square);
 
-U64 get_bishop_attacks(int square, U64 blockers);
+    U64 get_rook_occupancies(int square);
 
-U64 get_rook_attacks(int square, U64 blockers);
+    U64 get_bishop_attacks(int square, U64 blockers);
 
-U64 get_blocker_config(int index, int bits_in_attack_mask, U64 attack_mask);
+    U64 get_rook_attacks(int square, U64 blockers);
 
-/// Receive blockers bitboard and convert it into a hash key using magic number
-int transform_to_key(U64 b, U64 magic, int index_bits) ;
+    U64 get_blocker_config(int index, int bits_in_attack_mask, U64 attack_mask);
 
-/// Find magic number for each square on board
-U64 find_magic(int sq, int index_bits, bool for_bishop);
+    /// Receive blockers bitboard and convert it into a hash key using magic number
+    int transform_to_key(U64 b, U64 magic, int index_bits) ;
+
+    /// Find magic number for each square on board
+    U64 find_magic(int sq, int index_bits, bool for_bishop);
+
+};
 
 /// Given a board state, generate all valid moves in that state
 class MoveGen{

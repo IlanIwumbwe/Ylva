@@ -8,14 +8,14 @@
     7  6  5  4  3  2  1  0
 */
 int RBits[64] = {
-  12, 11, 11, 11, 11, 11, 11, 12,
-  11, 10, 10, 10, 10, 10, 10, 11,
-  11, 10, 10, 10, 10, 10, 10, 11,
-  11, 10, 10, 10, 10, 10, 10, 11,
-  11, 10, 10, 10, 10, 10, 10, 11,
-  11, 10, 10, 10, 10, 10, 10, 11,
-  11, 10, 10, 10, 10, 10, 10, 11,
-  12, 11, 11, 11, 11, 11, 11, 12
+    12, 11, 11, 11, 11, 11, 11, 12,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    12, 11, 11, 11, 11, 11, 11, 12
 };
 
 /*Use square directly as index, since table is the same even when rotated by 180 degrees
@@ -26,14 +26,14 @@ int RBits[64] = {
     7  6  5  4  3  2  1  0
 */
 int BBits[64] = {
-  6, 5, 5, 5, 5, 5, 5, 6,
-  5, 5, 5, 5, 5, 5, 5, 5,
-  5, 5, 7, 7, 7, 7, 5, 5,
-  5, 5, 7, 9, 9, 7, 5, 5,
-  5, 5, 7, 9, 9, 7, 5, 5,
-  5, 5, 7, 7, 7, 7, 5, 5,
-  5, 5, 5, 5, 5, 5, 5, 5,
-  6, 5, 5, 5, 5, 5, 5, 6
+    6, 5, 5, 5, 5, 5, 5, 6,
+    5, 5, 5, 5, 5, 5, 5, 5,
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5,
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 5, 5, 5, 5, 5, 5,
+    6, 5, 5, 5, 5, 5, 5, 6
 };
 
 U64 rook_moves[64][4096] = {0ULL};
@@ -67,7 +67,7 @@ U64 rook_magics[64] = {468375883830476800, 2756212595361976320, 2341881839325544
     6420254574959706624, 2272436422877347841, 6712052571028258946, 429304590492106882, 42103599306637321, 
     1198520589101565954, 2363545965200408577, 470736666308397068, 4984485903327297794};
 
-U64 get_bishop_occupancies(int square){
+U64 movegen_helpers::get_bishop_occupancies(int square){
     U64 attacks = 0ULL;
     int rank = square % 8;
     int file = square / 8;
@@ -81,7 +81,7 @@ U64 get_bishop_occupancies(int square){
     return attacks;
 }
 
-U64 get_rook_occupancies(int square){
+U64 movegen_helpers::get_rook_occupancies(int square){
     U64 attacks = 0ULL;
     int rank = square % 8;
     int file = square / 8;
@@ -95,7 +95,7 @@ U64 get_rook_occupancies(int square){
     return attacks;
 }
 
-U64 get_bishop_attacks(int square, U64 blockers){
+U64 movegen_helpers::get_bishop_attacks(int square, U64 blockers){
     U64 sq_bb, attacks = 0ULL;
     int rank = square % 8;
     int file = square / 8;
@@ -129,7 +129,7 @@ U64 get_bishop_attacks(int square, U64 blockers){
     return attacks;
 }
 
-U64 get_rook_attacks(int square, U64 blockers){
+U64 movegen_helpers::get_rook_attacks(int square, U64 blockers){
     U64 sq_bb, attacks = 0ULL;
     int rank = square % 8;
     int file = square / 8;
@@ -163,7 +163,7 @@ U64 get_rook_attacks(int square, U64 blockers){
     return attacks;
 }
 
-U64 get_blocker_config(int index, int bits_in_attack_mask, U64 attack_mask){
+U64 movegen_helpers::get_blocker_config(int index, int bits_in_attack_mask, U64 attack_mask){
     U64 occupancy = 0ULL;
     int square;
 
@@ -177,11 +177,11 @@ U64 get_blocker_config(int index, int bits_in_attack_mask, U64 attack_mask){
     return occupancy;
 }
 
-int transform_to_key(U64 b, U64 magic, int index_bits) {
+int movegen_helpers::transform_to_key(U64 b, U64 magic, int index_bits) {
     return (int)((b * magic) >> (64 - index_bits));
 }
 
-U64 find_magic(int sq, int index_bits, bool for_bishop){
+U64 movegen_helpers::find_magic(int sq, int index_bits, bool for_bishop){
     // these are set to 4096 because these are the highest number of blocker configurations that are possible on the board
     U64 occupancy, attack_masks[4096], blocker_masks[4096], used[4096], magic;
 
@@ -206,7 +206,7 @@ U64 find_magic(int sq, int index_bits, bool for_bishop){
 
         // attempt to fill up all attack sets without any destructive collisions 
         for(i = 0; !fail && (i < set_bit(index_bits)); ++i){
-            j = transform_to_key(blocker_masks[i], magic, index_bits);
+            j = movegen_helpers::transform_to_key(blocker_masks[i], magic, index_bits);
 
             if(used[j] == 0ULL) used[j] = attack_masks[i]; // fill in attack set
             else if (used[j] != attack_masks[i]) fail = true;  // destructive collision, fail 
@@ -575,14 +575,15 @@ void MoveGen::set_king_danger_squares(U64 attack_set, int king_colour){
 U64 MoveGen::get_attackers(uint square, const int colour){
     U64 out = 0;
 
-    if(colour){
+    if(colour == BLACK){
         out |= (knight_attack_set[square] & black_knights);
         out |= (king_attack_set[square] & black_king);
         out |= set_bit(square+7) & ~A_FILE & black_pawns;
         out |= set_bit(square+9) & ~H_FILE & black_pawns;
-        out |= get_queen_attacks(whites_minus_king | blacks, square) & black_queens;
+
         out |= get_rook_attacks(whites_minus_king | blacks, square) & black_rooks;
-        out |= get_bishop_attacks(whites_minus_king | blacks, square) & black_bishops;                
+        out |= get_bishop_attacks(whites_minus_king | blacks, square) & black_bishops;       
+        out |= get_queen_attacks(whites_minus_king | blacks, square) & black_bishops;         
     } else {
         out |= (knight_attack_set[square] & white_knights);
         out |= (king_attack_set[square] & white_king);
@@ -619,6 +620,15 @@ uint MoveGen::get_checkers(){
     return count_set_bits(checkers);
 }
 
+bool MoveGen::ep_discovered_check(U64 ep_mask, U64 enemy_rooks, U64 enemy_queens){
+    auto ally_king_sq = get_lsb(ally_king);
+    auto occupancy = occupied & ~ep_mask;
+
+    auto horizontal_mask = get_rank_attacks(occupancy, ally_king_sq);
+
+    return (((get_rook_attacks(occupancy, ally_king_sq) & enemy_rooks) | (get_queen_attacks(occupancy, ally_king_sq) & enemy_queens)) & horizontal_mask) != 0;
+}
+
 void MoveGen::P_quiet_moves(){
     white_pawns &= ~pinned_pieces;
 
@@ -632,6 +642,7 @@ void MoveGen::P_quiet_moves(){
 
     // promotion forward 1
     tos = (white_pawns << 8) & RANK(8) & ~occupied & push_mask;
+
     for(int i = 0; i < 4; ++i){
         create_pawn_moves(tos,-8,p_flags[i]);
     }  
@@ -748,15 +759,6 @@ void MoveGen::p_captures_moves(){
         }
 
     }
-}
-
-bool MoveGen::ep_discovered_check(U64 ep_mask, U64 enemy_rooks, U64 enemy_queens){
-    auto ally_king_sq = get_lsb(ally_king);
-    auto occupancy = occupied & ~ep_mask;
-
-    auto horizontal_mask = get_rank_attacks(occupancy, ally_king_sq);
-
-    return (((get_rook_attacks(occupancy, ally_king_sq) & enemy_rooks) | (get_queen_attacks(occupancy, ally_king_sq) & enemy_queens)) & horizontal_mask) != 0;
 }
 
 void MoveGen::N_quiet_moves(){
@@ -917,8 +919,8 @@ void MoveGen::R_quiet_moves(){
     while(rooks){
         from = get_lsb(rooks);
 
-        blockers = get_rook_occupancies(from) & occupied;
-        key = transform_to_key(blockers, rook_magics[from], RBits[from]);
+        blockers = movegen_helpers::get_rook_occupancies(from) & occupied;
+        key = movegen_helpers::transform_to_key(blockers, rook_magics[from], RBits[from]);
         attack_set = rook_moves[from][key];
 
         // rook quiet moves
@@ -937,8 +939,8 @@ void MoveGen::R_captures_moves(){
     while(rooks){
         from = get_lsb(rooks);
 
-        blockers = get_rook_occupancies(from) & occupied;
-        key = transform_to_key(blockers, rook_magics[from], RBits[from]);
+        blockers = movegen_helpers::get_rook_occupancies(from) & occupied;
+        key = movegen_helpers::transform_to_key(blockers, rook_magics[from], RBits[from]);
         attack_set = rook_moves[from][key];  
 
         // rook captures
@@ -958,8 +960,8 @@ void MoveGen::r_quiet_moves(){
     while(rooks){
         from = get_lsb(rooks);
 
-        blockers = get_rook_occupancies(from) & occupied;
-        key = transform_to_key(blockers, rook_magics[from], RBits[from]);
+        blockers = movegen_helpers::get_rook_occupancies(from) & occupied;
+        key = movegen_helpers::transform_to_key(blockers, rook_magics[from], RBits[from]);
         attack_set = rook_moves[from][key];  
 
         // rook quiet moves
@@ -978,8 +980,8 @@ void MoveGen::r_captures_moves(){
     while(rooks){
         from = get_lsb(rooks);
 
-        blockers = get_rook_occupancies(from) & occupied;
-        key = transform_to_key(blockers, rook_magics[from], RBits[from]);
+        blockers = movegen_helpers::get_rook_occupancies(from) & occupied;
+        key = movegen_helpers::transform_to_key(blockers, rook_magics[from], RBits[from]);
         attack_set = rook_moves[from][key];  
 
         // rook captures
@@ -998,8 +1000,8 @@ void MoveGen::B_quiet_moves(){
     while(bishops){
         from = get_lsb(bishops);
 
-        blockers = get_bishop_occupancies(from) & occupied;
-        key = transform_to_key(blockers, bishop_magics[from], BBits[from]);
+        blockers = movegen_helpers::get_bishop_occupancies(from) & occupied;
+        key = movegen_helpers::transform_to_key(blockers, bishop_magics[from], BBits[from]);
         attack_set = bishop_moves[from][key];  
 
         // bishop quiet moves
@@ -1018,8 +1020,8 @@ void MoveGen::B_captures_moves(){
     while(bishops){
         from = get_lsb(bishops);
 
-        blockers = get_bishop_occupancies(from) & occupied;
-        key = transform_to_key(blockers, bishop_magics[from], BBits[from]);
+        blockers = movegen_helpers::get_bishop_occupancies(from) & occupied;
+        key = movegen_helpers::transform_to_key(blockers, bishop_magics[from], BBits[from]);
         attack_set = bishop_moves[from][key];
 
         // bishop captures
@@ -1038,8 +1040,8 @@ void MoveGen::b_quiet_moves(){
     while(bishops){
         from = get_lsb(bishops);
 
-        blockers = get_bishop_occupancies(from) & occupied;
-        key = transform_to_key(blockers, bishop_magics[from], BBits[from]);
+        blockers = movegen_helpers::get_bishop_occupancies(from) & occupied;
+        key = movegen_helpers::transform_to_key(blockers, bishop_magics[from], BBits[from]);
         attack_set = bishop_moves[from][key];
 
         // bishop quiet moves
@@ -1058,8 +1060,8 @@ void MoveGen::b_captures_moves(){
     while(bishops){
         from = get_lsb(bishops);
 
-        blockers = get_bishop_occupancies(from) & occupied;
-        key = transform_to_key(blockers, bishop_magics[from], BBits[from]);
+        blockers = movegen_helpers::get_bishop_occupancies(from) & occupied;
+        key = movegen_helpers::transform_to_key(blockers, bishop_magics[from], BBits[from]);
         attack_set = bishop_moves[from][key];
 
         // bishop captures
@@ -1078,10 +1080,10 @@ void MoveGen::Q_quiet_moves(){
     while(queens){
         from = get_lsb(queens);
 
-        bblockers = get_bishop_occupancies(from) & occupied;
-        rblockers = get_rook_occupancies(from) & occupied;
-        bkey = transform_to_key(bblockers, bishop_magics[from], BBits[from]);
-        rkey = transform_to_key(rblockers, rook_magics[from], RBits[from]);
+        bblockers = movegen_helpers::get_bishop_occupancies(from) & occupied;
+        rblockers = movegen_helpers::get_rook_occupancies(from) & occupied;
+        bkey = movegen_helpers::transform_to_key(bblockers, bishop_magics[from], BBits[from]);
+        rkey = movegen_helpers::transform_to_key(rblockers, rook_magics[from], RBits[from]);
         attack_set = bishop_moves[from][bkey] | rook_moves[from][rkey];
 
         // queen quiet moves
@@ -1100,10 +1102,10 @@ void MoveGen::Q_captures_moves(){
     while(queens){
         from = get_lsb(queens);
 
-        bblockers = get_bishop_occupancies(from) & occupied;
-        rblockers = get_rook_occupancies(from) & occupied;
-        bkey = transform_to_key(bblockers, bishop_magics[from], BBits[from]);
-        rkey = transform_to_key(rblockers, rook_magics[from], RBits[from]);
+        bblockers = movegen_helpers::get_bishop_occupancies(from) & occupied;
+        rblockers = movegen_helpers::get_rook_occupancies(from) & occupied;
+        bkey = movegen_helpers::transform_to_key(bblockers, bishop_magics[from], BBits[from]);
+        rkey = movegen_helpers::transform_to_key(rblockers, rook_magics[from], RBits[from]);
         attack_set = bishop_moves[from][bkey] | rook_moves[from][rkey];
 
         // queen captures
@@ -1122,10 +1124,10 @@ void MoveGen::q_quiet_moves(){
     while(queens){
         from = get_lsb(queens);
 
-        bblockers = get_bishop_occupancies(from) & occupied;
-        rblockers = get_rook_occupancies(from) & occupied;
-        bkey = transform_to_key(bblockers, bishop_magics[from], BBits[from]);
-        rkey = transform_to_key(rblockers, rook_magics[from], RBits[from]);
+        bblockers = movegen_helpers::get_bishop_occupancies(from) & occupied;
+        rblockers = movegen_helpers::get_rook_occupancies(from) & occupied;
+        bkey = movegen_helpers::transform_to_key(bblockers, bishop_magics[from], BBits[from]);
+        rkey = movegen_helpers::transform_to_key(rblockers, rook_magics[from], RBits[from]);
         attack_set = bishop_moves[from][bkey] | rook_moves[from][rkey];
         
         // queen quiet moves
@@ -1144,10 +1146,10 @@ void MoveGen::q_captures_moves(){
     while(queens){
         from = get_lsb(queens);
 
-        bblockers = get_bishop_occupancies(from) & occupied;
-        rblockers = get_rook_occupancies(from) & occupied;
-        bkey = transform_to_key(bblockers, bishop_magics[from], BBits[from]);
-        rkey = transform_to_key(rblockers, rook_magics[from], RBits[from]);
+        bblockers = movegen_helpers::get_bishop_occupancies(from) & occupied;
+        rblockers = movegen_helpers::get_rook_occupancies(from) & occupied;
+        bkey = movegen_helpers::transform_to_key(bblockers, bishop_magics[from], BBits[from]);
+        rkey = movegen_helpers::transform_to_key(rblockers, rook_magics[from], RBits[from]);
         attack_set = bishop_moves[from][bkey] | rook_moves[from][rkey];
 
         // queen captures

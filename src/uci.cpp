@@ -164,34 +164,25 @@ void Uci::process_ucinewgame(){
     int key, square, i;
     
     for (square = 0; square < 64; ++square){
-        occupancy = get_bishop_occupancies(square);
+        occupancy = movegen_helpers::get_bishop_occupancies(square);
 
         for(i = 0; i < (1 << BBits[square]); i++){
-            blockers = get_blocker_config(i, BBits[square], occupancy);
-            key = transform_to_key(blockers, bishop_magics[square], BBits[square]);
-            bishop_moves[square][key] = get_bishop_attacks(square, blockers);
+            blockers = movegen_helpers::get_blocker_config(i, BBits[square], occupancy);
+            key = movegen_helpers::transform_to_key(blockers, bishop_magics[square], BBits[square]);
+            bishop_moves[square][key] = movegen_helpers::get_bishop_attacks(square, blockers);
         }
     }
 
     for (square = 0; square < 64; ++square){
-        occupancy = get_rook_occupancies(square);
+        occupancy = movegen_helpers::get_rook_occupancies(square);
         
         for(int i = 0; i < (1 << RBits[square]); i++){
-            blockers = get_blocker_config(i, RBits[square], occupancy);
-			key = transform_to_key(blockers, rook_magics[square], RBits[square]);
-            rook_moves[square][key] = get_rook_attacks(square, blockers);
-
-			//std::cout << "blockers\n";
-			//printbitboard(blockers);
-			//std::cout << "rook moves\n";
-			//printbitboard(rook_moves[square][key]);
-			
-			//getchar();
+            blockers = movegen_helpers::get_blocker_config(i, RBits[square], occupancy);
+			key = movegen_helpers::transform_to_key(blockers, rook_magics[square], RBits[square]);
+            rook_moves[square][key] = movegen_helpers::get_rook_attacks(square, blockers);
         }
     }
 
-	// printbitboard(rook_moves[h1][816]);
-    
     newgameset = true;
 }
 

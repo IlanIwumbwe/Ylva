@@ -12,7 +12,7 @@ A subset of the UCI commands have been implemented, enough to be able to connect
 
 Run `make` to compile into a `ylva` executable, which you can then run in your terminal. Alternatively, add the engine to a UCI GUI.
 
-Current move generation speed is `~500k` nodes/second.
+Current move generation speed is `~1.5million` nodes/second.
 
 ## Notable techniques
 
@@ -22,7 +22,7 @@ Ylva uses bitboards as the data structure that stores information about a board 
 
 Bitboards are great because when used right, they speed up move generation significantly, because most operations required during move generation are reduced to bitwise operations. 12 bitboards are used for each of the 6 chess pieces, for each colour. The bitboards are also used to quickly get information such as whether certain squares are occupied (`set_bit(sq) & all_pieces`) , whether king is in check (`checkers != 0`).
 
-Slider piece move generation is really costly, and various techniques such as [magic bitboards](https://www.chessprogramming.org/Magic_Bitboards) exist to speed up slider piece move generation. This implementation uses the [classical approach](https://www.chessprogramming.org/Classical_Approach) as it was the easiest to implement as a starting point.
+Slider piece move generation is done using the magic bitboards technique.
 
 ### Evaluation
 
@@ -49,6 +49,8 @@ Huge thanks to the resources I have used so far while developing this engine!
 - Sebastian Lague's [video](https://www.youtube.com/watch?v=U4ogK0MIzqk), which was also the original inspiration for Ylva.
 - Oliver Brausch's [Olithink](https://github.com/olithink), specifically his method for peeking std input to check for "stop" command interrupting engine search
 - [Roelof Berkepeis](https://github.com/tissatussa), providing many useful pieces of information and advice. 
+- [Analog Hors'](https://analog-hors.github.io/site/magic-bitboards/) explanation of magic bitboards
+- [Tord Romstard's](https://www.chessprogramming.org/Looking_for_Magics) source code for finding magic numbers
 
 ## License
 MIT
