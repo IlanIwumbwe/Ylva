@@ -103,7 +103,7 @@ const int KING[32] = {
     20, 30, 10,  0
 };
 
-/// To index these tables, make sure to subtract one from the piece index
+/// To index these tables, make sure to subtract one from the piece index because PSQT array starts at 0 while piece names starts at 1
 const int* PSQT[6] = {PAWN, KING, QUEEN, ROOK, KNIGHT, BISHOP};
 
 /// Swap the move at this start index with the move that has the highest score

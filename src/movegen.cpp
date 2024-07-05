@@ -1,5 +1,228 @@
 #include "movegen.h"
 
+/*Use square directly as index, since table is the same even when rotated by 180 degrees
+    Need to consider this since table indexing for me is set out like so:
+    63 62 61 60 59 58 57 56
+    55 54 53 52 51 50 49 48
+    ......
+    7  6  5  4  3  2  1  0
+*/
+int RBits[64] = {
+  12, 11, 11, 11, 11, 11, 11, 12,
+  11, 10, 10, 10, 10, 10, 10, 11,
+  11, 10, 10, 10, 10, 10, 10, 11,
+  11, 10, 10, 10, 10, 10, 10, 11,
+  11, 10, 10, 10, 10, 10, 10, 11,
+  11, 10, 10, 10, 10, 10, 10, 11,
+  11, 10, 10, 10, 10, 10, 10, 11,
+  12, 11, 11, 11, 11, 11, 11, 12
+};
+
+/*Use square directly as index, since table is the same even when rotated by 180 degrees
+    Need to consider this since table indexing for me is set out like so:
+    63 62 61 60 59 58 57 56
+    55 54 53 52 51 50 49 48
+    ......
+    7  6  5  4  3  2  1  0
+*/
+int BBits[64] = {
+  6, 5, 5, 5, 5, 5, 5, 6,
+  5, 5, 5, 5, 5, 5, 5, 5,
+  5, 5, 7, 7, 7, 7, 5, 5,
+  5, 5, 7, 9, 9, 7, 5, 5,
+  5, 5, 7, 9, 9, 7, 5, 5,
+  5, 5, 7, 7, 7, 7, 5, 5,
+  5, 5, 5, 5, 5, 5, 5, 5,
+  6, 5, 5, 5, 5, 5, 5, 6
+};
+
+U64 rook_moves[64][4096] = {0ULL};
+U64 bishop_moves[64][4096] = {0ULL}; 
+
+U64 bishop_magics[64] = {4728788573581738048, 5733416633603686400, 5229823810539634944, 6059630168275289221, 3202358682279544867, 
+    5666936944433561728, 11761487987115557892, 2348949397041258504, 11614290900869776640, 8571211975631315008, 
+    4979054955174428676, 5959959978772529282, 123437781283504128, 7141400599083354112, 1812159642724556800, 
+    1006995981577769472, 4990313312423772416, 5822270525863494145, 6960315217568088080, 6072617855688507520, 
+    4974790954606198792, 3577828800497139714, 15597091608452401154, 4370327149765726464, 2312167826680449025, 
+    13912819988931627040, 5785267501407437312, 2507387889824956480, 103301609735340040, 459651936544620672, 
+    163402856292552704, 2531974106828570884, 6570886340620652545, 4217636689277753348, 891150919884081152, 
+    1489569992014299664, 5799512345640960256, 1478634511329002242, 7191154685453813766, 9306723057480959236, 
+    1806234169480265732, 4380878496618251521, 17461018851316533248, 11233509228138203136, 8715133996981354624, 
+    4854348990617157888, 1389696007914541570, 4688417391593588994, 14068137530891502080, 10688468016994062336, 
+    409071523086737408, 1032812357711302824, 2566052056927110661, 999837651843022880, 5703923311846885892, 
+    639519947995165696, 7211387954460572164, 3024187967505178628, 5955734126153237536, 4474412103514064898, 
+    984941316833551873, 245868809644737026, 5062156173791265792, 9114183617453556480};
+
+U64 rook_magics[64] = {468375883830476800, 2756212595361976320, 2341881839325544832, 360314996002979872, 5044066853698162696, 
+    2449970515533103616, 4755804255931664388, 11493191915369660800, 477803773512794114, 1451848205322485888, 
+    455426654357980673, 12646670780923381792, 6921469910688333840, 7274720876336251136, 8081991255401988352, 
+    1764848122531578628, 1214126369148321796, 1445939154931286080, 5453578773561663488, 36382840181620768, 
+    6739638491769996289, 1062006186783671296, 3514852801113034882, 908928879668830340, 1661548995138453568, 
+    13632502771927220864, 4065133086207188993, 6127711282374689312, 1349795714465005824, 11007079561272230912, 
+    2759678992069953538, 4675873866579644500, 6827494143636275328, 3283511719271350272, 4682409905213153280, 
+    5769392771097956352, 3198018631187306496, 14003380641689764864, 7408529283515158568, 2270881580656365713, 
+    514888105988554752, 1529042579944259588, 5809679536962797584, 8288287571251953680, 8577951857522049040, 
+    2885963365714165784, 5288360418451128336, 5631201592249286657, 8541196265373827456, 639883336168317440, 
+    8516609536478545408, 5655116211135971584, 15302106484435878016, 10633896196665509889, 6686447200015221760, 
+    6420254574959706624, 2272436422877347841, 6712052571028258946, 429304590492106882, 42103599306637321, 
+    1198520589101565954, 2363545965200408577, 470736666308397068, 4984485903327297794};
+
+U64 get_bishop_occupancies(int square){
+    U64 attacks = 0ULL;
+    int rank = square % 8;
+    int file = square / 8;
+    int r, f;
+
+    for(r = rank-1, f = file-1; (r >= 1) && (f >= 1); r--, f--) attacks |= set_bit(8*f+r);
+    for(r = rank+1, f = file+1; (r <= 6) && (f <= 6); r++, f++) attacks |= set_bit(8*f+r);
+    for(r = rank+1, f = file-1; (r <= 6) && (f >= 1); r++, f--) attacks |= set_bit(8*f+r);
+    for(r = rank-1, f = file+1; (r >= 1) && (f <= 6); r--, f++) attacks |= set_bit(8*f+r);
+
+    return attacks;
+}
+
+U64 get_rook_occupancies(int square){
+    U64 attacks = 0ULL;
+    int rank = square % 8;
+    int file = square / 8;
+    int r, f;
+
+    for(r = rank-1; r >= 1; r--) attacks |= set_bit(8*file+r);
+    for(r = rank+1; r <= 6; r++) attacks |= set_bit(8*file+r);
+    for(f = file-1; f >= 1; f--) attacks |= set_bit(8*f+rank);
+    for(f = file+1; f <= 6; f++) attacks |= set_bit(8*f+rank);
+
+    return attacks;
+}
+
+U64 get_bishop_attacks(int square, U64 blockers){
+    U64 sq_bb, attacks = 0ULL;
+    int rank = square % 8;
+    int file = square / 8;
+    int r, f;
+
+    for(r = rank-1, f = file-1; (r >= 0) && (f >= 0); r--, f--) {
+        sq_bb = set_bit(8*f+r);
+        attacks |= sq_bb;
+
+        if(sq_bb & blockers) break;
+    }
+    for(r = rank+1, f = file+1; (r <= 7) && (f <= 7); r++, f++) {
+        sq_bb = set_bit(8*f+r);
+        attacks |= sq_bb;
+
+        if(sq_bb & blockers) break;
+    }
+    for(r = rank+1, f = file-1; (r <= 7) && (f >= 0); r++, f--) {
+        sq_bb = set_bit(8*f+r);
+        attacks |= sq_bb;
+
+        if(sq_bb & blockers) break;
+    }
+    for(r = rank-1, f = file+1; (r >= 0) && (f <= 7); r--, f++) {
+        sq_bb = set_bit(8*f+r);
+        attacks |= sq_bb;
+
+        if(sq_bb & blockers) break;
+    }
+
+    return attacks;
+}
+
+U64 get_rook_attacks(int square, U64 blockers){
+    U64 sq_bb, attacks = 0ULL;
+    int rank = square % 8;
+    int file = square / 8;
+    int r, f;
+
+    for(r = rank-1; r >= 0; r--) {
+        sq_bb = set_bit(8*file+r);
+        attacks |= sq_bb;
+
+        if(sq_bb & blockers) break;
+    }
+    for(r = rank+1; r <= 7; r++) {
+        sq_bb = set_bit(8*file+r);
+        attacks |= sq_bb;
+
+        if(sq_bb & blockers) break;
+    }
+    for(f = file-1; f >= 0; f--) {
+        sq_bb = set_bit(8*f+rank);
+        attacks |= sq_bb;
+
+        if(sq_bb & blockers) break;
+    }
+    for(f = file+1; f <= 7; f++) {
+        sq_bb = set_bit(8*f+rank);
+        attacks |= sq_bb;
+
+        if(sq_bb & blockers) break;
+    }
+
+    return attacks;
+}
+
+U64 get_blocker_config(int index, int bits_in_attack_mask, U64 attack_mask){
+    U64 occupancy = 0ULL;
+    int square;
+
+    for(int i = 0; i<bits_in_attack_mask;++i){
+        square = get_lsb(attack_mask);
+        attack_mask &= (attack_mask-1);
+
+        if(index & (1 << i)){occupancy |= set_bit(square);}
+    }
+
+    return occupancy;
+}
+
+int transform_to_key(U64 b, U64 magic, int index_bits) {
+    return (int)((b * magic) >> (64 - index_bits));
+}
+
+U64 find_magic(int sq, int index_bits, bool for_bishop){
+    // these are set to 4096 because these are the highest number of blocker configurations that are possible on the board
+    U64 occupancy, attack_masks[4096], blocker_masks[4096], used[4096], magic;
+
+    unsigned int i = 0, k = 0, j = 0;
+    bool fail = false;
+
+    occupancy = for_bishop ? get_bishop_occupancies(sq) : get_rook_occupancies(sq);
+
+    for(; i < set_bit(index_bits); ++i){
+        blocker_masks[i] = get_blocker_config(i, index_bits, occupancy);
+        attack_masks[i] = for_bishop ? get_bishop_attacks(sq, blocker_masks[i]) : get_rook_attacks(sq, blocker_masks[i]);
+    }
+
+    for(; k < 100000000; ++k){
+        magic = RAND64 & RAND64 & RAND64;  // this is done to reduce the number of bits in the random number generated
+        // I think this is here because the lowest number of bits in the occupancy set is 5, and if this condition is passed, 
+        // then the amount of useful bits in the key will not be enough to represent that blocker
+        if(count_set_bits((occupancy * magic) & 0xFF00000000000000ULL) < 6) continue;
+        for(i = 0; i < 4096; ++i) used[i] = 0ULL;
+        
+        fail = false;
+
+        // attempt to fill up all attack sets without any destructive collisions 
+        for(i = 0; !fail && (i < set_bit(index_bits)); ++i){
+            j = transform_to_key(blocker_masks[i], magic, index_bits);
+
+            if(used[j] == 0ULL) used[j] = attack_masks[i]; // fill in attack set
+            else if (used[j] != attack_masks[i]) fail = true;  // destructive collision, fail 
+        }
+
+        if(!fail){
+            if(debug) std::cout << "found magic for " << sq << std::endl;
+            return magic;  // this magic number worked!
+        }
+    }
+
+    if(debug) std::cout << "no magic found for " << sq << std::endl;
+    return 0ULL; // couldn't find magic number that works
+
+}
+
 /// Given a board state, generate all valid moves in that state
 MoveGen::MoveGen() : prev_move(0,0,0) {
 }
@@ -388,27 +611,6 @@ U64 MoveGen::get_pawn_attackers(uint square, const int colour){
     return pawn_attackers;
 }
 
-/// Return a bitboard of all pieces of this colour attacking this square. The pieces should be of the smallest possible piece value
-U64 MoveGen::get_smallest_attackers(uint square, const int colour){
-    U64 attackers = get_attackers(square, colour), smallest_attackers = 0;
-    std::vector<U64> order;
-
-    int i = 0;
-
-    if(colour){
-        order = {black_pawns, black_knights, black_bishops, black_rooks, black_queens};
-    } else {
-        order = {white_pawns, white_knights, white_bishops, white_rooks, white_queens};
-    }
-
-
-    for(; (i < 5) && !smallest_attackers; ++i){
-        smallest_attackers |= attackers & order[i];
-    }
-
-    return smallest_attackers;
-}
-
 /// Produce bitboard of all pieces giving ally king check, and return the number of checkers
 uint MoveGen::get_checkers(){
     uint ally_king_sq = get_lsb(ally_king);
@@ -636,14 +838,14 @@ void MoveGen::K_quiet_moves(){
 
     if(checkers_count == 0){
         if(board->has_castling_rights(K_castle)){
-            if(!get_bit(occupied,2) && !get_bit(occupied,1) && !get_attackers(2,BLACK) && !get_attackers(1,BLACK)){
-                create_other_moves(set_bit(1), 3, 2);
+            if(!get_bit(occupied,f1) && !get_bit(occupied,g1) && !get_attackers(f1,BLACK) && !get_attackers(g1,BLACK)){
+                create_other_moves(set_bit(g1), e1, 2);
             }
         }
 
         if(board->has_castling_rights(Q_castle)){
-            if(!get_bit(occupied,4) && !get_bit(occupied,5) && !get_bit(occupied,6) && !get_attackers(4,BLACK) && !get_attackers(5,BLACK)){
-                create_other_moves(set_bit(5), 3, 3);
+            if(!get_bit(occupied,d1) && !get_bit(occupied,c1) && !get_bit(occupied,b1) && !get_attackers(d1,BLACK) && !get_attackers(c1,BLACK)){
+                create_other_moves(set_bit(c1), e1, 3);
             }
         }
     }
@@ -677,14 +879,14 @@ void MoveGen::k_quiet_moves(){
 
     if(checkers_count == 0){
         if(board->has_castling_rights(k_castle)){  
-            if(!get_bit(occupied,58) && !get_bit(occupied,57) && !get_attackers(58,WHITE) && !get_attackers(57,WHITE)){
-                create_other_moves(set_bit(57), 59, 2);
+            if(!get_bit(occupied,f8) && !get_bit(occupied,g8) && !get_attackers(f8,WHITE) && !get_attackers(g8,WHITE)){
+                create_other_moves(set_bit(g8), e8, 2);
             }
         }
 
         if(board->has_castling_rights(q_castle)){
-            if(!get_bit(occupied,60) && !get_bit(occupied,61) && !get_bit(occupied,62) && !get_attackers(60,WHITE) && !get_attackers(61,WHITE)){
-                create_other_moves(set_bit(61), 59, 3);
+            if(!get_bit(occupied,d8) && !get_bit(occupied,c8) && !get_bit(occupied,b8) && !get_attackers(d8,WHITE) && !get_attackers(c8,WHITE)){
+                create_other_moves(set_bit(c8), e8, 3);
             }
         }
     }
@@ -727,13 +929,15 @@ void MoveGen::R_quiet_moves(){
 
 void MoveGen::R_captures_moves(){
     auto rooks = white_rooks & ~pinned_pieces;
-    uint from;
-    U64 attack_set;
+    uint from, key;
+    U64 attack_set, blockers;
 
     while(rooks){
         from = get_lsb(rooks);
 
-        attack_set = get_rook_attacks(occupied, from) & ~whites;
+        blockers = get_rook_occupancies(from) & occupied;
+        key = transform_to_key(blockers, rook_magics[from], RBits[from]);
+        attack_set = rook_moves[from][key];  //get_rook_attacks(occupied, from) & ~whites;
 
         // rook captures
         tos = attack_set & blacks_minus_king & capture_mask;

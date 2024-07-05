@@ -58,9 +58,10 @@ class Uci{
         int token_i_arg;
         Move _move;
 
-        std::string engine_name = "YLVA v1";
+        std::string engine_name = "Ylva v0";
 
         bool run = true;
+        bool newgameset = false;
         colour engine_side;
 };
 

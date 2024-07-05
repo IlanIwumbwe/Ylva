@@ -146,7 +146,7 @@ void Uci::uci_communication(){
 
             pointer = 0;
             input = "";
-        } else if (engine->quit){
+        } else if (newgameset && engine->quit){
             // quit from engine think interrupt
             run = false;
         }
@@ -156,8 +156,43 @@ void Uci::uci_communication(){
 void Uci::process_ucinewgame(){
     board->clear_bitboards();
     // init pv table, pass size in bytes for the table
-    init_pv_table(&(board->pv_table), 0x400000);
-    engine = std::make_shared<Enginev2>(board, movegen);  
+    init_pv_table(&(board->pv_table), 0x4000000);
+    engine = std::make_shared<Enginev2>(board, movegen);
+
+    // use the magic numbers that were pregenerated to precalculate move attack sets
+    U64 occupancy, blockers;
+    int key, square, i;
+    
+    for (square = 0; square < 64; ++square){
+        occupancy = get_bishop_occupancies(square);
+
+        for(i = 0; i < (1 << BBits[square]); i++){
+            blockers = get_blocker_config(i, BBits[square], occupancy);
+            key = transform_to_key(blockers, bishop_magics[square], BBits[square]);
+            bishop_moves[square][key] = get_bishop_attacks(square, blockers);
+        }
+    }
+
+    for (square = 0; square < 64; ++square){
+        occupancy = get_rook_occupancies(square);
+        
+        for(int i = 0; i < (1 << RBits[square]); i++){
+            blockers = get_blocker_config(i, RBits[square], occupancy);
+			key = transform_to_key(blockers, rook_magics[square], RBits[square]);
+            rook_moves[square][key] = get_rook_attacks(square, blockers);
+
+			//std::cout << "blockers\n";
+			//printbitboard(blockers);
+			//std::cout << "rook moves\n";
+			//printbitboard(rook_moves[square][key]);
+			
+			//getchar();
+        }
+    }
+
+	// printbitboard(rook_moves[h1][816]);
+    
+    newgameset = true;
 }
 
 void Uci::process_isready(){
@@ -183,6 +218,7 @@ void Uci::process_uci(){
 
     // send_options
     std::cout << "uciok\n";
+
 }
 
 void Uci::process_position(){
@@ -226,11 +262,6 @@ void Uci::process_position(){
                     break;
                 }
             }
-
-            //std::cout << current_token() << std::endl;
-            //for(auto t : tokens){
-            //    std::cout << t << std::endl;
-            //}
 
             moves_to_search = movegen->get_legal_moves();
         }

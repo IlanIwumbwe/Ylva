@@ -449,8 +449,8 @@ int Board::get_fullmoves(){
 }
 
 piece_names Board::get_piece_on_square(uint square) const {
-    for(auto p: bitboards){
-        if((p.second & set_bit(square)) != 0){return p.first;}
+    for(int i = 0; i < 15; i++){
+        if(bitboards[i] & set_bit(square)){return (piece_names)i;}
     }
     
     return None;
@@ -511,10 +511,10 @@ inline colour Board::get_piece_colour(const piece_names& piece_name){
 }
 
 U64 Board::get_entire_bitboard() const {
-    U64 full_board = 0;
+    U64 full_board = 0ULL;
 
-    for(auto p : bitboards){
-        full_board |= p.second;
+    for(auto bb : bitboards){
+        full_board |= bb;
     }
     
     return full_board;
@@ -539,13 +539,13 @@ void Board::apply_psqt(){
     int colour_index;
     int square;
 
-    for(auto pair : bitboards){
-        piece_bitboard = pair.second;
-        colour_index = (pair.first > 7); 
+    for(int i = 0; i < 15; ++i){
+        piece_bitboard = bitboards[i];
+        colour_index = (i > 7); 
 
         while(piece_bitboard){
             square = convert_square_to_index(get_lsb(piece_bitboard), colour_index);
-            psqt_scores[colour_index] += PSQT[(pair.first % 8)-1][square];
+            psqt_scores[colour_index] += PSQT[(i % 8)-1][square];
 
             piece_bitboard &= (piece_bitboard - 1);
         }

@@ -5,6 +5,31 @@
 #include "move.h"
 #include <climits>
 
+extern int RBits[64];
+extern int BBits[64];
+
+extern U64 rook_moves[64][4096];
+extern U64 bishop_moves[64][4096];
+
+extern U64 rook_magics[64];
+extern U64 bishop_magics[64];
+
+U64 get_bishop_occupancies(int square);
+
+U64 get_rook_occupancies(int square);
+
+U64 get_bishop_attacks(int square, U64 blockers);
+
+U64 get_rook_attacks(int square, U64 blockers);
+
+U64 get_blocker_config(int index, int bits_in_attack_mask, U64 attack_mask);
+
+/// Receive blockers bitboard and convert it into a hash key using magic number
+int transform_to_key(U64 b, U64 magic, int index_bits) ;
+
+/// Find magic number for each square on board
+U64 find_magic(int sq, int index_bits, bool for_bishop);
+
 /// Given a board state, generate all valid moves in that state
 class MoveGen{
     public:
@@ -49,8 +74,6 @@ class MoveGen{
         void set_king_danger_squares(U64 attack_set, int king_colour);
 
         U64 get_attackers(uint square, const int colour);
-
-        U64 get_smallest_attackers(uint square, const int colour);
 
         U64 get_pawn_attackers(uint square, const int colour);
 

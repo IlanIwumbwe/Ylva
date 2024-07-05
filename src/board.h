@@ -67,8 +67,8 @@ class Board{
         void init_from_fen(const std::string fen);
 
         void clear_bitboards(){
-            for(auto& it : bitboards){
-                it.second = 0ULL;
+            for(int i = 0; i < 15; i++){
+                bitboards[i] = 0ULL;
             }
 
             if(debug){std::cout << "info string cleared all bitboards" << std::endl;}
@@ -143,7 +143,7 @@ class Board{
         int ep_square;
 
         // piece bitboards
-        std::unordered_map<piece_names, U64> bitboards{};
+        U64 bitboards[15];
         
         // maintain state
         std::shared_ptr<State> current_state = NULL;

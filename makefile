@@ -1,28 +1,23 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -g -O3
-SRC_DIR = src
-SRCS = $(SRC_DIR)/main.cpp $(SRC_DIR)/board.cpp $(SRC_DIR)/engine.cpp $(SRC_DIR)/evaluation.cpp $(SRC_DIR)/movegen.cpp $(SRC_DIR)/defs.cpp $(SRC_DIR)/zobrist.cpp $(SRC_DIR)/uci.cpp
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -O3 -flto -MMD -MP -static -static-libgcc -march=native -mtune=native -mpopcnt -finline-functions -msse4.1 -msse4.2
+LDFLAGS = -flto -static -static-libgcc
+SRCS = $(wildcard src/*.cpp) 
 OBJS = $(SRCS:.cpp=.o)
-HDRS = $(SRCS:.cpp=.h)
+DEPENDENCIES = $(OBJS:.o=.d)
 TARGET = ylva
-
-%.o: %.cpp 
+	
+%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-all: $(TARGET)
- 
-board.o: $(SRC_DIR)/defs.h $(SRC_DIR)/move.h $(SRC_DIR)/state.h
-movegen.o : $(SRC_DIR)/board.h $(SRC_DIR)/move.h
-engine.o : $(SRC_DIR)/move.h $(SRC_DIR)/board.h $(SRC_DIR)/movegen.h
-zobrist.o : $(SRC_DIR)/defs.h
-uci.o : $(SRC_DIR)/defs.h $(SRC_DIR)/engine.h
-evaluation.o : $(SRC_DIR)/board.h
+#-include $(DEPENDENCIES)
 
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
+
+all: $(TARGET)
 
 .PHONY: clean
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(TARGET) $(DEPENDENCIES)
 

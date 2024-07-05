@@ -214,14 +214,32 @@ std::string int_to_alg(const uint& square){
     return out;
 }
 
-uint count_set_bits(U64 bitboard){
-    uint count = 0;
-    
-    for(; bitboard; ++count){
-        bitboard &= bitboard-1;
+bool is_popcnt_supported() {
+    static bool checked = false;
+    static bool supported = false;
+    if (!checked) {
+        unsigned int eax, ebx, ecx, edx;
+        // Call CPUID with eax = 1 to get feature information in ecx
+        if (__get_cpuid(1, &eax, &ebx, &ecx, &edx)) {
+            supported = ecx & (1 << 23); // Check bit 23 of ecx
+        }
+        checked = true;
     }
+    return supported;
+}
 
-    return count;
+
+uint count_set_bits(U64 bitboard){
+    if(is_popcnt_supported()){
+        return _mm_popcnt_u64(bitboard);
+    } else  {
+        uint count = 0;
+        for(; bitboard; ++count){
+            bitboard &= bitboard-1;
+        }
+
+        return count;
+    }
 }
 
 /// @brief Given a piece as integer, map it to an index to a 7 element array
@@ -238,9 +256,9 @@ int convert_piece_to_zobrist_index(int piece){
 /// @brief Given a square, return an index that can access the value from piece square tables. 
 /// @param square, colour_index 
 /// @return piece square tables index (uint)
-uint convert_square_to_index(uint square, int colour_index){
+uint convert_square_to_index(int square, int colour_index){
     colour_index = 1-colour_index;
-    square = abs(63*colour_index - square);
+    square = std::abs(63*colour_index - square);
 
     int x = file(square);
     int y = rank(square);

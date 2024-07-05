@@ -10,6 +10,8 @@
 #include <regex>
 #include <cmath>
 #include <assert.h>
+#include <immintrin.h>
+#include <cpuid.h>
 
 typedef uint64_t U64;
 typedef unsigned int uint;
@@ -44,11 +46,10 @@ typedef unsigned int uint;
 
 // macro to generate a random 64 bit number since std::rand gives 16 bit number
 
-#define RAND64 ((U64)std::rand() + \
-                ((U64)std::rand() << 15) + \
-                ((U64)std::rand() << 30) + \
-                ((U64)std::rand() << 45) + \
-                (((U64)std::rand() & 0xf) << 60)) 
+#define RAND64 ((U64)std::rand() | \
+                ((U64)std::rand() << 16) | \
+                ((U64)std::rand() << 32) | \
+                ((U64)std::rand() << 48))
 
 extern bool debug;
 
@@ -99,6 +100,17 @@ typedef enum{
 typedef enum{north, east, west, south, noEa, soEa, noWe, soWe} dirs;
 
 typedef enum {diag, nondiag} ray_type;
+
+typedef enum {
+    h1, g1, f1, e1, d1, c1, b1, a1, 
+    h2, g2, f2, e2, d2, c2, b2, a2, 
+    h3, g3, f3, e3, d3, c3, b3, a3, 
+    h4, g4, f4, e4, d4, c4, b4, a4, 
+    h5, g5, f5, e5, d5, c5, b5, a5, 
+    h6, g6, f6, e6, d6, c6, b6, a6, 
+    h7, g7, f7, e7, d7, c7, b7, a7, 
+    h8, g8, f8, e8, d8, c8, b8, a8, 
+} squares; 
 
 struct dirInfo {
     dirs dir;
@@ -156,13 +168,15 @@ int file(const uint& square);
 
 std::string int_to_alg(const uint& square);
 
+bool is_popcnt_supported();
+
 uint count_set_bits(U64 bitboard);
 
 int convert_piece_to_index(int piece);
 
 int convert_piece_to_zobrist_index(int piece);
 
-uint convert_square_to_index(uint square, int colour_index);
+uint convert_square_to_index(int square, int colour_index);
 
 std::vector<std::string> get_tokens(std::string& input, std::regex pattern);
 
