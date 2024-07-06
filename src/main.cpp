@@ -9,12 +9,11 @@ int main(){
     populate_attack_sets();
     populate_rays();
     init_hash_keys();
-
+    
+    /*
     U64 magic;
 
     std::cout << "{";
-
-    /*
     // generate magics for bishop
     for(int square = 0; square < 64; square++){
         magic = find_magic(square, BBits[square], true);

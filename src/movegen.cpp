@@ -583,7 +583,7 @@ U64 MoveGen::get_attackers(uint square, const int colour){
 
         out |= get_rook_attacks(whites_minus_king | blacks, square) & black_rooks;
         out |= get_bishop_attacks(whites_minus_king | blacks, square) & black_bishops;       
-        out |= get_queen_attacks(whites_minus_king | blacks, square) & black_bishops;         
+        out |= get_queen_attacks(whites_minus_king | blacks, square) & black_queens         
     } else {
         out |= (knight_attack_set[square] & white_knights);
         out |= (king_attack_set[square] & white_king);

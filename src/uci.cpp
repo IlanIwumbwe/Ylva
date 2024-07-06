@@ -140,6 +140,12 @@ void Uci::uci_communication(){
                 process_debug();
             } else if(first == "print"){
                 board->view_board();
+                /*
+                for(auto move : movegen->get_legal_moves()){
+                    std::cout << move << std::endl;
+                }
+                */
+
             } else if(first == "go"){
                 process_go();
             } 
