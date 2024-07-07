@@ -365,6 +365,9 @@ void Board::init_from_fen(const std::string fen){
         init_halfmove_clock(parts[4]);
         init_fullmoves(parts[5]);
 
+        psqt_scores[0] = 0;
+        psqt_scores[1] = 0;
+
         // init psqt score
         apply_psqt();
 
@@ -477,6 +480,9 @@ void Board::view_board(){
     if(ep_square != 0){
         std::cout << "En-passant square: " << int_to_alg(ep_square) << std::endl;
     }
+
+    std::cout << "white psqt " << std::dec << psqt_scores[0] << std::endl;
+    std::cout << "black pqst " << std::dec << psqt_scores[1] << std::endl;
     
     std::cout << "  =======================" << std::endl;
                                             

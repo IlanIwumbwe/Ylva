@@ -77,7 +77,7 @@ class MoveGen{
 
         void set_king_danger_squares(U64 attack_set, int king_colour);
 
-        U64 get_attackers(uint square, const int colour);
+        U64 get_attackers(squares square, const int colour);
 
         U64 get_pawn_attackers(uint square, const int colour);
 

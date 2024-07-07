@@ -513,6 +513,7 @@ void MoveGen::pinned_moves(uint& pinner_sq, U64& possible_pin, const U64& pinned
 void MoveGen::set_push_mask(){
     uint ally_king_sq = get_lsb(ally_king);
     uint checker_sq = get_lsb(checkers);
+
     piece_names checker = board->get_piece_on_square(checker_sq);
 
     if(is_bishop(checker)){               
@@ -558,10 +559,10 @@ bool MoveGen::is_queen(const piece_names& piece){
 /// Given a king attack set, look through it and return a bitboard of those squares in the attack set that are attacked by enemy piece
 void MoveGen::set_king_danger_squares(U64 attack_set, int king_colour){
     king_danger_squares = 0;
-    uint lsb;
+    squares lsb;
 
     while(attack_set){
-        lsb = get_lsb(attack_set);
+        lsb = (squares)get_lsb(attack_set);
 
         if(get_attackers(lsb, ~king_colour)){
             king_danger_squares |= set_bit(lsb);
@@ -572,27 +573,47 @@ void MoveGen::set_king_danger_squares(U64 attack_set, int king_colour){
 }
 
 /// Given a square, and a piece colour, return a bitboard of all pieces of that colour attacking that square
-U64 MoveGen::get_attackers(uint square, const int colour){
-    U64 out = 0;
+U64 MoveGen::get_attackers(squares square, const int colour){
+    U64 out = 0ULL, bblockers, rblockers, rookmoves, bishopmoves, blocker_mask, king, knights, rooks, bishops, queens;
+    int rkey, bkey;
 
     if(colour == BLACK){
-        out |= (knight_attack_set[square] & black_knights);
-        out |= (king_attack_set[square] & black_king);
-        out |= set_bit(square+7) & ~A_FILE & black_pawns;
-        out |= set_bit(square+9) & ~H_FILE & black_pawns;
+        blocker_mask = whites_minus_king | blacks;
+        king = black_king;
+        knights = black_knights;
+        rooks = black_rooks;
+        bishops = black_bishops;
+        queens = black_queens;
 
-        out |= get_rook_attacks(whites_minus_king | blacks, square) & black_rooks;
-        out |= get_bishop_attacks(whites_minus_king | blacks, square) & black_bishops;       
-        out |= get_queen_attacks(whites_minus_king | blacks, square) & black_queens;     
+        out |= set_bit(square + 7) & ~A_FILE & black_pawns;
+        out |= set_bit(square + 9) & ~H_FILE & black_pawns;
+
     } else {
-        out |= (knight_attack_set[square] & white_knights);
-        out |= (king_attack_set[square] & white_king);
-        out |= set_bit(square-9) & ~A_FILE & white_pawns;
-        out |= set_bit(square-7) & ~H_FILE & white_pawns;
-        out |= get_queen_attacks(blacks_minus_king | whites, square) & white_queens;
-        out |= get_rook_attacks(blacks_minus_king | whites, square) & white_rooks;
-        out |= get_bishop_attacks(blacks_minus_king | whites, square) & white_bishops;    
+        blocker_mask = blacks_minus_king | whites;
+        king = white_king;
+        knights = white_knights;
+        rooks = white_rooks;
+        bishops = white_bishops;
+        queens = white_queens;
+
+        out |= set_bit(square - 9) & ~A_FILE & white_pawns;
+        out |= set_bit(square - 7) & ~H_FILE & white_pawns;
     }
+
+    rblockers = movegen_helpers::get_rook_occupancies(square) & blocker_mask;
+    bblockers = movegen_helpers::get_bishop_occupancies(square) & blocker_mask;
+
+    rkey = movegen_helpers::transform_to_key(rblockers, rook_magics[square], RBits[square]);
+    bkey = movegen_helpers::transform_to_key(bblockers, bishop_magics[square], BBits[square]);
+
+    rookmoves = rook_moves[square][rkey];
+    bishopmoves = bishop_moves[square][bkey];
+
+    out |= rookmoves & rooks;
+    out |= bishopmoves & bishops;
+    out |= (rookmoves | bishopmoves) & queens;
+    out |= (knight_attack_set[square] & knights);
+    out |= (king_attack_set[square] & king);
 
     return (out);
 }
@@ -614,19 +635,17 @@ U64 MoveGen::get_pawn_attackers(uint square, const int colour){
 
 /// Produce bitboard of all pieces giving ally king check, and return the number of checkers
 uint MoveGen::get_checkers(){
-    uint ally_king_sq = get_lsb(ally_king);
+    squares ally_king_sq = (squares)get_lsb(ally_king);
     checkers = get_attackers(ally_king_sq, ~turn);
 
     return count_set_bits(checkers);
 }
 
 bool MoveGen::ep_discovered_check(U64 ep_mask, U64 enemy_rooks, U64 enemy_queens){
-    auto ally_king_sq = get_lsb(ally_king);
-    auto occupancy = occupied & ~ep_mask;
-
-    auto horizontal_mask = get_rank_attacks(occupancy, ally_king_sq);
-
-    return (((get_rook_attacks(occupancy, ally_king_sq) & enemy_rooks) | (get_queen_attacks(occupancy, ally_king_sq) & enemy_queens)) & horizontal_mask) != 0;
+    int ally_king_sq = get_lsb(ally_king), key;
+    U64 occupied_minus_ep = occupied & ~ep_mask;
+    U64 horizontal_mask = get_rank_attacks(occupied_minus_ep, ally_king_sq);
+    return (((get_rook_attacks(occupied_minus_ep, ally_king_sq) & enemy_rooks) | (get_queen_attacks(occupied_minus_ep, ally_king_sq) & enemy_queens)) & horizontal_mask) != 0;
 }
 
 void MoveGen::P_quiet_moves(){

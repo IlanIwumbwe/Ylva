@@ -322,14 +322,14 @@ int Enginev2::ab_search(int depth, int alpha, int beta){
 
     int curr_eval = 0;
 
-    set_move_heuristics(moves);
+    //set_move_heuristics(moves);
 
     if(pv_pointer < pv_length){
         make_first(board->pv_array[pv_pointer++], moves);
     }
 
     for(size_t i = 0; i < moves.size(); ++i){
-        pick_move(moves, i);
+        //pick_move(moves, i);
         make_move(moves[i]);
 
         curr_eval = -ab_search(depth-1, -beta, -alpha);
@@ -433,14 +433,14 @@ int Enginev2::quiescence(int alpha, int beta){
 void Enginev2::search_position(std::vector<Move>& moves, int depth){
     int best_eval = -infinity, curr_eval;
     
-    set_move_heuristics(moves);
+    //set_move_heuristics(moves);
 
     if(pv_pointer < pv_length){
         make_first(board->pv_array[pv_pointer++], moves);
     }
 
     for(size_t i = 0; i < moves.size(); ++i){
-        pick_move(moves, i);   
+        //pick_move(moves, i);   
         make_move(moves[i]);
 
         curr_eval = -ab_search(depth-1,-infinity, infinity);
