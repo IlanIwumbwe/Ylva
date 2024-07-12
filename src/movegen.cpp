@@ -229,20 +229,20 @@ MoveGen::MoveGen() : prev_move(0,0,0) {
 
 std::vector<Move> MoveGen::generate_moves(bool _captures_only){
     // initialisations
-    white_pawns = board->get_piece_bitboard(P);
-    black_pawns = board->get_piece_bitboard(p);
-    white_king = board->get_piece_bitboard(K);
-    black_king = board->get_piece_bitboard(k);
-    white_knights = board->get_piece_bitboard(N);
-    black_knights = board->get_piece_bitboard(n);
+    white_pawns = board->bitboards[P];
+    black_pawns = board->bitboards[p];
+    white_king = board->bitboards[K];
+    black_king = board->bitboards[k];
+    white_knights = board->bitboards[N];
+    black_knights = board->bitboards[n];
 
-    white_bishops = board->get_piece_bitboard(B);
-    white_queens = board->get_piece_bitboard(Q);
-    white_rooks = board->get_piece_bitboard(R);
+    white_bishops = board->bitboards[B];
+    white_queens = board->bitboards[Q];
+    white_rooks = board->bitboards[R];
 
-    black_bishops = board->get_piece_bitboard(b);
-    black_queens = board->get_piece_bitboard(q);
-    black_rooks = board->get_piece_bitboard(r);
+    black_bishops = board->bitboards[b];
+    black_queens = board->bitboards[q];
+    black_rooks = board->bitboards[r];
 
     whites = white_pawns | white_king | white_knights | white_bishops | white_queens | white_rooks;
     blacks = black_pawns | black_king | black_knights | black_bishops | black_queens | black_rooks;
@@ -263,7 +263,7 @@ std::vector<Move> MoveGen::generate_moves(bool _captures_only){
     } else {
         generate_legal_moves();
     }
-    
+
     return legal_moves;
 }
 
@@ -287,7 +287,7 @@ bool MoveGen::no_legal_moves(){
 /// called during quiescence search
 void MoveGen::generate_legal_captures(){
 
-    if(turn == WHITE){
+    if(turn){
         ally_king = white_king;
         enemy_king = black_king;
         ally_pieces = whites_minus_king;
@@ -321,7 +321,7 @@ void MoveGen::generate_legal_captures(){
             push_mask = ULLONG_MAX;
         }
 
-        if(turn == WHITE){
+        if(turn){
             N_captures_moves();
             R_captures_moves();
             B_captures_moves();
@@ -342,7 +342,7 @@ void MoveGen::generate_legal_captures(){
 
 void MoveGen::generate_legal_moves(){
 
-    if(turn == WHITE){
+    if(turn){
         ally_king = white_king;
         enemy_king = black_king;
         ally_pieces = whites_minus_king;
@@ -378,7 +378,7 @@ void MoveGen::generate_legal_moves(){
             push_mask = ULLONG_MAX;
         }
 
-        if(turn == WHITE){
+        if(turn){
             N_captures_moves();
             R_captures_moves();
             B_captures_moves();
@@ -557,14 +557,14 @@ bool MoveGen::is_queen(const piece_names& piece){
 }
 
 /// Given a king attack set, look through it and return a bitboard of those squares in the attack set that are attacked by enemy piece
-void MoveGen::set_king_danger_squares(U64 attack_set, int king_colour){
+void MoveGen::set_king_danger_squares(U64 attack_set, colour king_colour){
     king_danger_squares = 0;
     squares lsb;
 
     while(attack_set){
         lsb = (squares)get_lsb(attack_set);
 
-        if(get_attackers(lsb, ~king_colour)){
+        if(get_attackers(lsb, (colour)(1 - king_colour))){
             king_danger_squares |= set_bit(lsb);
         }
 
@@ -573,11 +573,11 @@ void MoveGen::set_king_danger_squares(U64 attack_set, int king_colour){
 }
 
 /// Given a square, and a piece colour, return a bitboard of all pieces of that colour attacking that square
-U64 MoveGen::get_attackers(squares square, const int colour){
+U64 MoveGen::get_attackers(squares square, colour colour){
     U64 out = 0ULL, bblockers, rblockers, rookmoves, bishopmoves, blocker_mask, king, knights, rooks, bishops, queens;
     int rkey, bkey;
 
-    if(colour == BLACK){
+    if(colour == black){
         blocker_mask = whites_minus_king | blacks;
         king = black_king;
         knights = black_knights;
@@ -619,10 +619,10 @@ U64 MoveGen::get_attackers(squares square, const int colour){
 }
 
 /// Given a square, and a piece colour, return a bitboard of all pawns of that colour attacking that square
-U64 MoveGen::get_pawn_attackers(uint square, const int colour){
+U64 MoveGen::get_pawn_attackers(uint square, colour colour){
     U64 pawn_attackers = 0;
 
-    if(colour){
+    if(colour == black){
         pawn_attackers |= set_bit(square+7) & ~A_FILE & black_pawns;
         pawn_attackers |= set_bit(square+9) & ~H_FILE & black_pawns;             
     } else {
@@ -636,7 +636,7 @@ U64 MoveGen::get_pawn_attackers(uint square, const int colour){
 /// Produce bitboard of all pieces giving ally king check, and return the number of checkers
 uint MoveGen::get_checkers(){
     squares ally_king_sq = (squares)get_lsb(ally_king);
-    checkers = get_attackers(ally_king_sq, ~turn);
+    checkers = get_attackers(ally_king_sq, (colour)(1 - turn));
 
     return count_set_bits(checkers);
 }
@@ -859,13 +859,13 @@ void MoveGen::K_quiet_moves(){
 
     if(checkers_count == 0){
         if(board->has_castling_rights(K_castle)){
-            if(!get_bit(occupied,f1) && !get_bit(occupied,g1) && !get_attackers(f1,BLACK) && !get_attackers(g1,BLACK)){
+            if(!get_bit(occupied,f1) && !get_bit(occupied,g1) && !get_attackers(f1,black) && !get_attackers(g1,black)){
                 create_other_moves(set_bit(g1), e1, 2);
             }
         }
 
         if(board->has_castling_rights(Q_castle)){
-            if(!get_bit(occupied,d1) && !get_bit(occupied,c1) && !get_bit(occupied,b1) && !get_attackers(d1,BLACK) && !get_attackers(c1,BLACK)){
+            if(!get_bit(occupied,d1) && !get_bit(occupied,c1) && !get_bit(occupied,b1) && !get_attackers(d1,black) && !get_attackers(c1,black)){
                 create_other_moves(set_bit(c1), e1, 3);
             }
         }
@@ -900,13 +900,13 @@ void MoveGen::k_quiet_moves(){
 
     if(checkers_count == 0){
         if(board->has_castling_rights(k_castle)){  
-            if(!get_bit(occupied,f8) && !get_bit(occupied,g8) && !get_attackers(f8,WHITE) && !get_attackers(g8,WHITE)){
+            if(!get_bit(occupied,f8) && !get_bit(occupied,g8) && !get_attackers(f8,white) && !get_attackers(g8,white)){
                 create_other_moves(set_bit(g8), e8, 2);
             }
         }
 
         if(board->has_castling_rights(q_castle)){
-            if(!get_bit(occupied,d8) && !get_bit(occupied,c8) && !get_bit(occupied,b8) && !get_attackers(d8,WHITE) && !get_attackers(c8,WHITE)){
+            if(!get_bit(occupied,d8) && !get_bit(occupied,c8) && !get_bit(occupied,b8) && !get_attackers(d8,white) && !get_attackers(c8,white)){
                 create_other_moves(set_bit(c8), e8, 3);
             }
         }

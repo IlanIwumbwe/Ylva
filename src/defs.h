@@ -53,9 +53,10 @@ typedef unsigned int uint;
 
 extern bool debug;
 
-/// @brief A single PV entry stores the best move in a position identified by its hash key
+/// @brief A single PV entry stores the best move and eval in a position identified by its hash key
 struct PV_entry {
     uint16_t move;
+    int eval;
     U64 hash_key;
 };
 
@@ -93,8 +94,8 @@ typedef enum {
 } piece_names;
 
 typedef enum{
-    WHITE = 0,
-    BLACK = -1,
+    black = 0,
+    white = 1,
 } colour;
 
 typedef enum{north, east, west, south, noEa, soEa, noWe, soWe} dirs;
@@ -161,10 +162,6 @@ auto numtobin(const U64& number);
 void printbitboard(const U64& number);
 
 uint alg_to_int(const std::string& square);
-
-int rank(const uint& square);
-
-int file(const uint& square);
 
 std::string int_to_alg(const uint& square);
 

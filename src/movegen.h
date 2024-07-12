@@ -75,11 +75,11 @@ class MoveGen{
 
         bool is_queen(const piece_names& piece);
 
-        void set_king_danger_squares(U64 attack_set, int king_colour);
+        void set_king_danger_squares(U64 attack_set, colour king_colour);
 
-        U64 get_attackers(squares square, const int colour);
+        U64 get_attackers(squares square, colour colour);
 
-        U64 get_pawn_attackers(uint square, const int colour);
+        U64 get_pawn_attackers(uint square, const colour colour);
 
         uint get_checkers();
 

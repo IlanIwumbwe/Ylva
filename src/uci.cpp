@@ -74,21 +74,21 @@ std::tuple<std::string, std::string, std::string> parse_player_move(std::string&
 }
 
 int Uci::movegen_test(int depth){
-    std::vector<Move> moves = movegen->generate_moves();
-    
+
     if(depth == 0){
         return 1;
+    } else {
+        std::vector<Move> moves = movegen->generate_moves();
+        int num_nodes = 0;    
+
+        for(auto move : moves){
+            board->make_move(move);
+            num_nodes += movegen_test(depth-1);                               
+            board->undo_move();
+        }
+
+        return num_nodes;
     }
-
-    int num_nodes = 0;    
-
-    for(auto move : moves){
-        board->make_move(move);
-        num_nodes += movegen_test(depth-1);                               
-        board->undo_move();
-    }
-
-    return num_nodes;
 }
 
 void Uci::perft_driver(int& depth){
@@ -284,13 +284,13 @@ void Uci::process_go(){
 
         if(current_token() == ""){break;} // no argument
 
-        if(curr_token == "wtime" && engine_side == WHITE){
+        if(curr_token == "wtime" && engine_side == white){
             time = std::stoi(current_token());
-        } else if (curr_token == "btime" && engine_side == BLACK){
+        } else if (curr_token == "btime" && engine_side == black){
             time = std::stoi(current_token());
-        } else if(curr_token == "binc" && engine_side == BLACK){
+        } else if(curr_token == "binc" && engine_side == black){
             inc = std::stoi(current_token());
-        } else if (curr_token == "winc" && engine_side == WHITE){  
+        } else if (curr_token == "winc" && engine_side == white){  
             inc = std::stoi(current_token());
         } else if(curr_token == "depth"){
             max_search_depth = std::stoi(current_token());

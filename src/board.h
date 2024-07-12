@@ -4,6 +4,7 @@
 #include "defs.h"
 #include "move.h"
 #include "zobrist.h"
+#include <optional>
 #include <assert.h>
 
 struct State{
@@ -11,22 +12,19 @@ struct State{
     int hm_clock;
     piece_names recent_capture;
     Move prev_move; 
-    int white_pqst, black_pqst;
-    std::shared_ptr<State> prev_state = NULL;
     int ep_square;
+    U64 hash_key;
 
-    static int state_id;
+    std::shared_ptr<State> prev_state = NULL;
 
-    State(uint8_t cr, int hmc, piece_names rcap, Move prev, int w_pqst, int b_pqst, int ep_sq){
+    State(uint8_t cr, int hmc, piece_names rcap, Move prev, int ep_sq, U64 _hash_key, std::shared_ptr<State> _prev_state){
         castling_rights = cr;
         hm_clock = hmc;
         recent_capture = rcap;
         prev_move = prev;
-        white_pqst = w_pqst;
-        black_pqst = b_pqst;
         ep_square = ep_sq;
-
-        state_id++;
+        hash_key = _hash_key;
+        prev_state = _prev_state;
     }
 };
 
@@ -86,13 +84,11 @@ class Board{
 
         void init_fullmoves(const std::string& str_fullmoves);
 
-        int get_fullmoves();
-
         inline colour get_turn() const {return turn;}
 
         inline int get_hm_clock(){return hm_clock;}
 
-        inline void change_turn(){turn = (colour)~turn;}
+        inline void change_turn(){turn = (colour)(1 - turn);}
 
         inline int get_ep_square()const{return ep_square;}
 
@@ -102,15 +98,6 @@ class Board{
 
         void view_board();
 
-        void set_piece_bitboard(const piece_names& piece_name, const U64& bitboard);
-
-        colour get_piece_colour(const piece_names& piece_name);
-
-        inline U64 get_piece_bitboard(const piece_names& piece_name) {
-            assert(piece_name != None);
-            return bitboards[piece_name];
-        }
-
         U64 get_entire_bitboard() const;
 
         void add_state(Move prev_move, piece_names recent_capture);
@@ -119,12 +106,15 @@ class Board{
 
         void apply_psqt();
 
-        void consider_psqt(piece_names piece, int square);
+        void count_material();
 
-        void remove_psqt(piece_names piece, int square);
+        void add_to_eval(piece_names piece, int square);
 
-        // index 0 is white, index 1 is black
-        int psqt_scores[2] = {0};
+        void sub_from_eval(piece_names piece, int square);
+
+        // index 0 is black, index 1 is white
+        int psqt_scores[2];
+        int material[2];
 
         U64 hash_key = 0;
 
@@ -134,6 +124,9 @@ class Board{
 
         int ply;
 
+        // piece bitboards
+        U64 bitboards[15];
+
     private:        
         // informaton from fen string
         colour turn;
@@ -141,9 +134,6 @@ class Board{
         int hm_clock;
         int fullmoves;
         int ep_square;
-
-        // piece bitboards
-        U64 bitboards[15];
         
         // maintain state
         std::shared_ptr<State> current_state = NULL;
@@ -151,9 +141,11 @@ class Board{
 
 void generate_position_key(Board* position);
 
-void store_pv_move(Board* position, uint16_t move);
+void store_pv_move(Board* position, uint16_t move, int eval);
 
-uint16_t probe_pv_table(Board* position);
+uint16_t probe_pv_move(Board* position);
+
+std::optional<int> probe_pv_score(Board* position);
 
 
 #endif

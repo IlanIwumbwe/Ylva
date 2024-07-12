@@ -197,13 +197,6 @@ uint alg_to_int(const std::string& square){
     return 8*((square[1]-'0')-1) + (104-square[0]);
 }
 
-int file(const uint& square){
-    return square % 8;
-}
-
-int rank(const uint& square){
-    return square / 8;
-}
 
 std::string int_to_alg(const uint& square){
     char fileind = 104 - (square % 8);
@@ -257,13 +250,13 @@ int convert_piece_to_zobrist_index(int piece){
 /// @param square, colour_index 
 /// @return piece square tables index (uint)
 uint convert_square_to_index(int square, int colour_index){
-    colour_index = 1-colour_index;
+    //colour_index = 1-colour_index;
     square = std::abs(63*colour_index - square);
 
-    int x = file(square);
-    int y = rank(square);
+    int file = square % 8;
+    int rank = square / 8;
 
-    return 4*y + std::min(7-x, x);
+    return 4*rank + std::min(7-file, file);
 }
 
 /// @brief Dynamically allocate number of entries for the PV table based on the size in bytes required
