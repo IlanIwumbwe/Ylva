@@ -12,7 +12,7 @@ A subset of the UCI commands have been implemented, enough to be able to connect
 
 Run `make` to compile into a `ylva` executable, which you can then run in your terminal. Alternatively, add the engine to a UCI GUI.
 
-Current move generation speed is `~1.5million` nodes/second.
+Current move generation speed is `~2.5million` nodes/second.
 
 ## Notable techniques
 

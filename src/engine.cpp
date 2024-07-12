@@ -191,8 +191,8 @@ int Enginev2::ab_search(int depth, int alpha, int beta){
     }
 
     if(depth == 0){
-        return evaluation(); 
-        //return quiescence(alpha, beta);
+        //return evaluation(); 
+        return quiescence(alpha, beta);
     }
 
     std::vector<Move> moves = movegen->generate_moves(); 
