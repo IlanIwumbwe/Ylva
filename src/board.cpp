@@ -81,7 +81,6 @@ void Board::make_move(const Move& move){
         
         promo_piece_name = get_promo_piece(flags, from_piece_colour); // piece that we want to promote to
         bitboards[promo_piece_name] |= set_bit(to);
-
         add_to_eval(promo_piece_name, to);
     }
 
@@ -297,6 +296,8 @@ void Board::capture_piece(int square, const piece_names& to_piece_name){
 /// Revert normal capture
 void Board::uncapture_piece(const U64& square_bitboard, piece_names& recent_capture){
     bitboards[recent_capture] |= square_bitboard;
+
+    add_to_eval(recent_capture, get_lsb(square_bitboard));
 
     hm_clock = current_state->hm_clock;  
 }

@@ -273,7 +273,7 @@ void Uci::process_go(){
     std::string curr_token;
 
     U64 time = 0, inc = 0;
-    int max_search_depth = MAX_DEPTH, movestogo = 30, movetime = -1;  
+    int max_search_depth = MAX_DEPTH, movestogo = 10, movetime = -1;  
 
     pointer++; // move over "go"
 
