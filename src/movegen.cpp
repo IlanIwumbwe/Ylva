@@ -1,4 +1,4 @@
-#include "movegen.h"
+#include "../headers/movegen.h"
 
 /*Use square directly as index, since table is the same even when rotated by 180 degrees
     Need to consider this since table indexing for me is set out like so:
@@ -221,6 +221,38 @@ U64 movegen_helpers::find_magic(int sq, int index_bits, bool for_bishop){
     if(debug) std::cout << "no magic found for " << sq << std::endl;
     return 0ULL; // couldn't find magic number that works
 
+}
+
+void movegen_helpers::find_magics(){
+    U64 magic;
+
+    std::cout << "{";
+    // generate magics for bishop
+    for(int square = 0; square < 64; square++){
+        magic = find_magic(square, BBits[square], true);
+
+        while(magic == 0ULL){
+            magic = find_magic(square, BBits[square], true);
+        }
+
+        std::cout << magic << ", ";
+    }
+    std::cout << "}\n";
+
+    std::cout << "{";
+    
+
+    // generate magics for rook
+    for(int square = 0; square < 64; square++){
+        magic = find_magic(square, RBits[square], false);
+
+        while(magic == 0ULL){
+            magic = find_magic(square, RBits[square], false);
+        }
+
+        std::cout << magic << ", ";
+    }
+    std::cout << "}";
 }
 
 /// Given a board state, generate all valid moves in that state

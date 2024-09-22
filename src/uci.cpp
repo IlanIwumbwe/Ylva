@@ -1,4 +1,4 @@
-#include "uci.h"
+#include "../headers/uci.h"
 
 /// @brief Convert tuple of strings into move object, and check move validity
 /// @param str_move 

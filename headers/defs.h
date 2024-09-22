@@ -182,5 +182,4 @@ bool is_valid_num(const std::string& numString);
 U64 time_in_ms();
 
 int input_waiting();
-
 #endif

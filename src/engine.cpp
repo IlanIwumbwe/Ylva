@@ -1,4 +1,4 @@
-#include "engine.h"
+#include "../headers/engine.h"
 
 // most valuable victim, least valuable attacker heuristic
 
@@ -191,8 +191,8 @@ int Enginev2::ab_search(int depth, int alpha, int beta){
     }
 
     if(depth == 0){
-        //return evaluation(); 
-        return quiescence(alpha, beta);
+        return evaluation(); 
+        //return quiescence(alpha, beta);
     }
 
     std::vector<Move> moves = movegen->generate_moves(); 
@@ -206,7 +206,6 @@ int Enginev2::ab_search(int depth, int alpha, int beta){
     }   
 
     int curr_eval = 0;
-    std::optional<int> probe_eval;
     
     if(pv_pointer < pv_length)
         set_move_heuristics(moves, board->pv_array[pv_pointer++]);
@@ -218,12 +217,7 @@ int Enginev2::ab_search(int depth, int alpha, int beta){
 
         make_move(moves[i]);
 
-        probe_eval = probe_pv_score(board);
-
-        if(probe_eval)
-            curr_eval = *probe_eval;
-        else
-            curr_eval = -ab_search(depth-1, -beta, -alpha);
+        curr_eval = -ab_search(depth-1, -beta, -alpha);
 
         board->undo_move();
 
@@ -237,7 +231,7 @@ int Enginev2::ab_search(int depth, int alpha, int beta){
         }
 
         if(curr_eval >= beta){
-            return beta;
+            return beta;  // beta cuttoff
         }
     }
 
@@ -247,28 +241,18 @@ int Enginev2::ab_search(int depth, int alpha, int beta){
 /// Given a set of moves, use hueristics to guess its quality. Used for move ordering
 void Enginev2::set_move_heuristics(std::vector<Move>& moves, uint16_t pv_move){
     piece_names from_piece, to_piece;
-    uint move_flag;
 
     for(Move& move : moves){
         from_piece = board->get_piece_on_square(move.get_from());
         to_piece = board->get_piece_on_square(move.get_to());
-        move_flag = move.get_flags();
 
         int from_piece_as_index = convert_piece_to_index(from_piece);
         int to_piece_as_index = convert_piece_to_index(to_piece);
 
-        if(move.get_move() == pv_move) move.value = 10000;
+        // if(move.get_move() == pv_move) move.value = 10000;
 
         // use mvv_lva to sort capture moves by how much material they will gain 
         move.value += MVV_LVA[to_piece_as_index][from_piece_as_index];
-
-        // promotion is good
-        //move.value += PROMOTION_POWER * (int)move.is_promo() * ((move_flag & 0x7) + 1);
-
-        // moving into square attacked by enemy pawn is bad   
-        U64 pawn_attackers = movegen->get_pawn_attackers(move.get_to(), (colour)(1 - board->get_turn()));
-
-        move.value -= (PAWN_ATTACK_POWER * count_set_bits(pawn_attackers));
     }
 }
  
@@ -303,7 +287,6 @@ int Enginev2::quiescence(int alpha, int beta){
     std::vector<Move> capture_moves = movegen->generate_moves(true); 
 
     int curr_eval = 0;
-    std::optional<int> probe_eval;
 
     set_move_heuristics(capture_moves, 0);
 
@@ -312,12 +295,7 @@ int Enginev2::quiescence(int alpha, int beta){
 
         make_move(capture_moves[i]);
 
-        probe_eval = probe_pv_score(board);
-
-        if(probe_eval)
-            curr_eval = *probe_eval;
-        else 
-            curr_eval = -quiescence(-beta, -alpha);
+        curr_eval = -quiescence(-beta, -alpha);
             
         board->undo_move();
 
@@ -330,8 +308,6 @@ int Enginev2::quiescence(int alpha, int beta){
             store_pv_move(board, 0, alpha);
         }
 
-        // alpha = std::max(curr_eval, alpha);
-
         if(curr_eval >= beta){
             return beta;
         }
@@ -342,7 +318,6 @@ int Enginev2::quiescence(int alpha, int beta){
 
 void Enginev2::search_position(std::vector<Move>& moves, int depth, uint16_t pv_move){
     int best_eval = -infinity, curr_eval;
-    std::optional<int> probe_eval;
     
     set_move_heuristics(moves, pv_move);
 
@@ -351,12 +326,7 @@ void Enginev2::search_position(std::vector<Move>& moves, int depth, uint16_t pv_
 
         make_move(moves[i]);
 
-        probe_eval = probe_pv_score(board);
-
-        if(probe_eval)
-            curr_eval = *probe_eval;
-        else
-            curr_eval = -ab_search(depth-1,-infinity, infinity);
+        curr_eval = -ab_search(depth-1,-infinity, infinity);
 
         board->undo_move();
 
@@ -376,47 +346,41 @@ void Enginev2::get_engine_move(std::vector<Move>& legal_moves){
 
     nodes_searched = 0;
 
-    for(int d = 1; d <= depth; d++){
-        start = time_in_ms();
-        search_position(legal_moves, d, best_move.get_move());
-        end = time_in_ms();
+    //for(int d = 1; d <= depth; d++){
+    start = time_in_ms();
+    search_position(legal_moves, depth, best_move.get_move());
+    end = time_in_ms();
 
-        // if forced to stop, use pv line and best move from previous iteration
-        if(stopped){
-            break;
+    pv_length = get_pv_line(depth);
+    time_taken_ms += (end-start);
+
+    clear_pv_table(&board->pv_table);
+
+    if(pv_length == 0){
+        if(debug){
+            std::cout << "info string hash collided " << std::endl;
         }
-
-        pv_length = get_pv_line(d);
-        time_taken_ms += (end-start);
-
-        clear_pv_table(&board->pv_table);
-
-        if(pv_length == 0){
-            if(debug){
-                std::cout << "info string hash collided " << std::endl;
-            }
-            // Choose previous PV move
-            best_move = legal_moves[0];
-        } else {
-            // best move is top of pv array
-            best_move = Move(board->pv_array[0]);
-        }
-
-        std::cout << "info depth " << d << " nodes " << nodes_searched << " time " << time_taken_ms; 
-        nodes_searched = 0;
-
-        // print pv
-        if(pv_length != 0){
-            std::cout << " pv";
-      
-            for(int i = 0; i < pv_length; ++i){
-                pv_move = Move(board->pv_array[i]);
-                std::cout << " " << pv_move;
-            }
-        }
-
-        std::cout << "\n";
+        // Choose previous PV move
+        best_move = legal_moves[0];
+    } else {
+        // best move is top of pv array
+        best_move = Move(board->pv_array[0]);
     }
+
+    std::cout << "info depth " << depth << " nodes " << nodes_searched << " time " << time_taken_ms; 
+    nodes_searched = 0;
+
+    // print pv
+    if(pv_length != 0){
+        std::cout << " pv";
+    
+        for(int i = 0; i < pv_length; ++i){
+            pv_move = Move(board->pv_array[i]);
+            std::cout << " " << pv_move;
+        }
+    }
+
+    std::cout << "\n";
 }
 
 void Engine::engine_driver(std::vector<Move>& legal_moves){

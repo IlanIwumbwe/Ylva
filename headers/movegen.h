@@ -32,6 +32,8 @@ namespace movegen_helpers{
     /// Find magic number for each square on board
     U64 find_magic(int sq, int index_bits, bool for_bishop);
 
+    void find_magics();
+
 };
 
 /// Given a board state, generate all valid moves in that state

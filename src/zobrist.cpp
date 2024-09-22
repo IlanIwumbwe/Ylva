@@ -1,4 +1,4 @@
-#include "zobrist.h"
+#include "../headers/zobrist.h"
 
 U64 Piece_keys[13][64];
 U64 Turn_key;

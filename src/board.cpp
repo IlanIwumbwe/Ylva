@@ -1,5 +1,5 @@
 #include <assert.h>
-#include "board.h"
+#include "../headers/board.h"
 
 Board::Board (){}
 

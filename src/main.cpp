@@ -2,8 +2,8 @@
 #include <unistd.h>
 #include <cstring>
 #include <fstream>
-#include "zobrist.h"
-#include "uci.h"
+#include "../headers/zobrist.h"
+#include "../headers/uci.h"
 
 int main(){
     populate_attack_sets();

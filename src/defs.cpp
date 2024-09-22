@@ -1,4 +1,4 @@
-#include "defs.h"
+#include "../headers/defs.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -343,4 +343,5 @@ int input_waiting(){
 
 	return (FD_ISSET(fileno(stdin), &readfds));
 }
+
 #endif
