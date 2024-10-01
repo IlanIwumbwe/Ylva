@@ -63,17 +63,23 @@ class Engine{
 /// @brief v2 has alpha beta minimax, move ordering, and best move from previous pv line are searched first
 class Enginev2 : public Engine{
     public:
-        Enginev2(Board* _board, MoveGen* _movegen) : Engine(_board, _movegen) {}
+        Enginev2(Board* _board, MoveGen* _movegen) : Engine(_board, _movegen) , killer_moves(max_killer_moves, std::vector<uint16_t>(MAX_DEPTH)){ }
 
         void get_engine_move(std::vector<Move>& legal_moves) override;
 
         int ab_search(int depth, int alpha, int beta);
 
-        void set_move_heuristics(std::vector<Move>& moves, uint16_t pv_move);
+        void set_move_heuristics(std::vector<Move>& moves);
+
+        void store_killer_move(uint16_t current_move);
 
         int quiescence(int alpha, int beta);
 
-        void search_position(std::vector<Move>& moves, int search_depth, uint16_t pv_move);
+        void search_position(std::vector<Move>& moves, int search_depth);
+
+    private:
+        int max_killer_moves = 2;
+        std::vector<std::vector<uint16_t>> killer_moves;
 };
 
 void pick_move(std::vector<Move>& moves, int start_index);

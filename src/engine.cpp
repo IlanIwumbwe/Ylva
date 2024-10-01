@@ -207,10 +207,7 @@ int Enginev2::ab_search(int depth, int alpha, int beta){
 
     int curr_eval = 0;
     
-    if(pv_pointer < pv_length)
-        set_move_heuristics(moves, board->pv_array[pv_pointer++]);
-    else
-        set_move_heuristics(moves, 0);
+    set_move_heuristics(moves);
 
     for(size_t i = 0; i < moves.size(); ++i){
         pick_move(moves, i);
@@ -239,7 +236,7 @@ int Enginev2::ab_search(int depth, int alpha, int beta){
 }
 
 /// Given a set of moves, use hueristics to guess its quality. Used for move ordering
-void Enginev2::set_move_heuristics(std::vector<Move>& moves, uint16_t pv_move){
+void Enginev2::set_move_heuristics(std::vector<Move>& moves){
     piece_names from_piece, to_piece;
 
     for(Move& move : moves){
@@ -248,8 +245,6 @@ void Enginev2::set_move_heuristics(std::vector<Move>& moves, uint16_t pv_move){
 
         int from_piece_as_index = convert_piece_to_index(from_piece);
         int to_piece_as_index = convert_piece_to_index(to_piece);
-
-        // if(move.get_move() == pv_move) move.value = 10000;
 
         // use mvv_lva to sort capture moves by how much material they will gain 
         move.value += MVV_LVA[to_piece_as_index][from_piece_as_index];
@@ -288,7 +283,7 @@ int Enginev2::quiescence(int alpha, int beta){
 
     int curr_eval = 0;
 
-    set_move_heuristics(capture_moves, 0);
+    set_move_heuristics(capture_moves);
 
     for(size_t i = 0; i < capture_moves.size(); ++i){
         pick_move(capture_moves, i);
@@ -316,10 +311,10 @@ int Enginev2::quiescence(int alpha, int beta){
     return alpha;
 }
 
-void Enginev2::search_position(std::vector<Move>& moves, int depth, uint16_t pv_move){
+void Enginev2::search_position(std::vector<Move>& moves, int depth){
     int best_eval = -infinity, curr_eval;
     
-    set_move_heuristics(moves, pv_move);
+    set_move_heuristics(moves);
 
     for(size_t i = 0; i < moves.size(); ++i){
         pick_move(moves, i);   
@@ -339,6 +334,20 @@ void Enginev2::search_position(std::vector<Move>& moves, int depth, uint16_t pv_
     pv_pointer = 0;
 }
 
+void Enginev2::store_killer_move(uint16_t current_move){
+    int ply = board->ply; // get current search ply
+
+    if(current_move != killer_moves[0][ply]){
+        // shift killer moves up an index
+
+        for(int i = max_killer_moves-1; i >= 1; --i){
+            killer_moves[i][ply] = killer_moves[i-1][ply];
+        }
+
+        killer_moves[0][ply] = current_move;
+    } 
+}
+
 void Enginev2::get_engine_move(std::vector<Move>& legal_moves){
     U64 start, end;
     Move pv_move;
@@ -346,9 +355,8 @@ void Enginev2::get_engine_move(std::vector<Move>& legal_moves){
 
     nodes_searched = 0;
 
-    //for(int d = 1; d <= depth; d++){
     start = time_in_ms();
-    search_position(legal_moves, depth, best_move.get_move());
+    search_position(legal_moves, depth);
     end = time_in_ms();
 
     pv_length = get_pv_line(depth);

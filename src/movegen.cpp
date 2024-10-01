@@ -818,7 +818,7 @@ void MoveGen::N_quiet_moves(){
     uint from;
 
     while(knights){
-        from =  get_lsb(knights);
+        from = get_lsb(knights);
         attack_set = knight_attack_set[from];
 
         // tos for quiet knight move

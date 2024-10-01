@@ -124,6 +124,8 @@ extern dirInfo dir_info[8];
 
 extern std::unordered_map<char, piece_names> char_to_name;
 
+extern std::string name_to_char[15];
+
 extern std::unordered_map<std::string, uint> promo_flags;
 
 extern std::unordered_map<uint, std::string> print_promo_flag;

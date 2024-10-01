@@ -95,24 +95,7 @@ void populate_attack_sets(){
 }
 
 std::string name_to_char(const piece_names& name){ 
-    switch(name){
-        case P : return "P";
-        case p : return "p";
-        case Q : return "Q";
-        case q : return "q";
-        case N : return "N";
-        case n : return "n";
-        case R : return "R";
-        case r : return "r";
-        case B : return "B";
-        case b : return "b";
-        case K : return "K";
-        case k : return "k";
-        case None : return ".";
-        default :
-            std::cout << "What? The piece name (piece_name) " << name << " does not exist" << std::endl;
-            exit(0);
-    }
+    
 }
 
 /// Produce bitboard of all attacked squares by a knight at given square

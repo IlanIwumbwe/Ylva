@@ -1,4 +1,4 @@
-# YLVA
+# Ylva
 
 <p align="center" width="100%">
     <img width="33%" src="ylva.jpg">
@@ -6,9 +6,7 @@
 
 Welcome to *Ylva*
 
-Ylva will see improvements over time.
-
-A subset of the UCI commands have been implemented, enough to be able to connect to a UCI GUI and test.
+A subset of the UCI commands have been implemented.
 
 Run `make` to compile into a `ylva` executable, which you can then run in your terminal. Alternatively, add the engine to a UCI GUI.
 
@@ -39,6 +37,8 @@ The engine favours positions where the side to move has a material gain after th
 ## Todos
 
 [Future plans for Ylva](https://github.com/IlanIwumbwe/Ylva/issues/2)
+
+**A major rewrite is currently underway. This is number 1 priority**
 
 ## Acknowledgements
 Huge thanks to the resources I have used so far while developing this engine!
