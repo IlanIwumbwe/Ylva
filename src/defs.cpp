@@ -61,6 +61,8 @@ std::unordered_map<uint, std::string> print_promo_flag = {
 
 int get_piece_value[7] = {0, 100, 0, 900, 500, 300, 300};
 
+std::string name_to_char[17] = {".","P","K","Q","R","N","B","","","p","k","q","r","n","b"};
+
 uint p_flags[4] = {8,9,10,11};
 uint pc_flags[4] = {12,13,14,15};
 U64 knight_attack_set[64] = {};
@@ -92,10 +94,6 @@ void populate_attack_sets(){
         knight_attacks(set_bit(i), knight_attack_set[i]);
         king_attacks(set_bit(i), king_attack_set[i]);
     }
-}
-
-std::string name_to_char(const piece_names& name){ 
-    
 }
 
 /// Produce bitboard of all attacked squares by a knight at given square

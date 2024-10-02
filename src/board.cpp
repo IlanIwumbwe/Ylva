@@ -459,7 +459,7 @@ void Board::view_board(){
     for(int i = 0; i < 64; ++i){                
         name = get_piece_on_square(abs(square_offset-i));
 
-        letter = name_to_char(name);
+        letter = name_to_char[name];
 
         if((i+1) % 8 == 0){
             std::cout << " " << letter << "|" << std::endl;

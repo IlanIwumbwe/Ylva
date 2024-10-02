@@ -124,7 +124,7 @@ extern dirInfo dir_info[8];
 
 extern std::unordered_map<char, piece_names> char_to_name;
 
-extern std::string name_to_char[15];
+extern std::string name_to_char[17];
 
 extern std::unordered_map<std::string, uint> promo_flags;
 
@@ -146,8 +146,6 @@ extern const int* PSQT[6];
 void populate_attack_sets();
 
 void populate_rays();
-
-std::string name_to_char(const piece_names& name);
 
 void knight_attacks(U64 bitboard, U64& output);
 
