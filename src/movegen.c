@@ -359,14 +359,16 @@ static U64 get_attackers(square sq, U64 mask){
     U64 result;
     int key;
     U64 bishops, rooks;
+    U64 occupied = bitboards[P] | bitboards[K] | bitboards[N] | bitboards[B] | bitboards[R] | bitboards[Q] | 
+                bitboards[p] | bitboards[k] | bitboards[n] | bitboards[b] | bitboards[r] | bitboards[q];
 
     result = KNIGHT_ATTACKS[sq] & (bitboards[N] | bitboards[n]);
     result |= KING_ATTACKS[sq] & (bitboards[K] | bitboards[k]);
 
-    key = blocker_to_key(board_info->occupied, bishop_magics[sq]);
+    key = blocker_to_key(occupied, bishop_magics[sq]);
     bishops = BISHOP_MOVES[sq][key];
 
-    key = blocker_to_key(board_info->occupied, rook_magics[sq]);
+    key = blocker_to_key(occupied, rook_magics[sq]);
     rooks = ROOK_MOVES[sq][key];
 
     result |= bishops & (bitboards[B] | bitboards[b]); 
@@ -652,11 +654,11 @@ static void p_captures_moves(dynamic_array* moves_array){
             // white pawn made the double pawn push, maybe we can capture it via enpassant
            
             // capture by black pawn to the right
-            tos = (black_pawns & ((doubly_pushed_pawn & ~H_FILE) >> 1)) << 7;
+            tos = (black_pawns & ((doubly_pushed_pawn & ~H_FILE) >> 1)) >> 7;
             create_pawn_moves(moves_array,tos,7,5);
 
             // capture by white pawn to the left
-            tos = (black_pawns & ((doubly_pushed_pawn & ~A_FILE) << 1)) << 9;
+            tos = (black_pawns & ((doubly_pushed_pawn & ~A_FILE) << 1)) >> 9;
             create_pawn_moves(moves_array,tos,9,5);
         }
     } 
@@ -898,9 +900,7 @@ void generate_moves(dynamic_array* moves_array, int captures_only){
     whites_minus_king = whites & ~bitboards[K];
     blacks_minus_king = blacks & ~bitboards[k];
 
-    occupied = board_info->occupied;
-
-    assert((whites | blacks) == occupied);
+    occupied = whites | blacks;
 
     dynamic_array pseudo_legal_moves;
     init_da(&pseudo_legal_moves, 2 * 218);  // 2 bytes used to store the move, and 218 max possible legal moves in given chess position

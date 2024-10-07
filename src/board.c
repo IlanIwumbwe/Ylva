@@ -3,7 +3,7 @@
 U64 bitboards[12] = {0ULL};
 info board_infos[MAX_SEARCH_DEPTH];
 info* board_info = board_infos;  // start by pointing to first element in board infos
-piece board[64] = {[0 ... 63] = p_none};
+piece board[64];
 
 /// @brief Populate bitboards from fen
 /// @param board_string 
@@ -11,6 +11,10 @@ void setup_bitboards(const char* fen){
     int pointer = 0, current_square = 63;
     char c;
     piece piece = p_none;
+    
+    memset(bitboards, 0, sizeof(bitboards));
+
+    for(int i = 0; i < 64; ++i){board[i] = p_none;}
 
     while(current_square >= 0){
         c = fen[pointer];
@@ -20,7 +24,6 @@ void setup_bitboards(const char* fen){
         
             if(piece != p_none){
                 bitboards[piece] |= set_bit(current_square);
-                board_info->occupied |= set_bit(current_square);   
                 board[current_square] = piece; 
             }
 
@@ -60,9 +63,19 @@ void setup_state_from_fen(char* fen_string){
     }
 
     board_info->ep_square = char_to_square(strtok(NULL, " "));
+    board_info->move = 0;
+
+    if(board_info->ep_square != s_none){
+        // make previous move a double pawn push that would've led to this en-passant square
+        
+        castling_and_enpassant_info cep = cep_info[board_info->turn];
+
+        board_info->move = (1 << 12) | ((board_info->ep_square - cep.ep_sq_offset) << 6) | (board_info->ep_square + cep.ep_sq_offset);
+    }
+
+
     board_info->ply = strtol(strtok(NULL, " "), &end, 10);
     board_info->moves = strtol(strtok(NULL, " "), &end, 10);
-    board_info->move = 0;
     board_info->captured_piece = p_none;
 }
 
@@ -78,11 +91,14 @@ void print_board(void){
     printf("castling rights flag: %d\n", board_info->castling_rights);
     printf("ply: %d\n", board_info->ply);
     printf("moves: %d\n", board_info->moves);
-    printf("previous move: %x\n", board_info->move);
+    printf("previous move: ");
+    print_move(board_info->move);
+    //printf("%x ", board_info->move);
+    printf("move type: %x\n", move_type(board_info->move));
     printf("turn: %s\n", (board_info->turn) ? "b" : "w");
 
     printf("----------------\n");
-    for(int i = 63; i >= 0; --i){
+    for(int i = 63; i >= 0; i--){
         p = piece_on_square(i);
         
         c = (p == p_none) ? '.' : char_pieces[p];

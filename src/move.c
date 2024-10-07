@@ -8,7 +8,6 @@ void make_move(const U16 move){
 
     info_n->captured_piece = p_none;
     info_n->castling_rights = board_info->castling_rights;
-    info_n->occupied = board_info->occupied;
 
     square s_from = move_from_square(move);
     square s_to = move_to_square(move);
@@ -22,18 +21,10 @@ void make_move(const U16 move){
         bitboards[p_to] &= ~set_bit(s_to);
         info_n->captured_piece = p_to;        
     }
-
-    if(p_from == p_none){
-        print_move(move);
-        printf("\n");
-        print_board();
-    }
-
-
+    
     assert(p_from != p_none);
 
     bitboards[p_from] &= ~set_bit(s_from);
-    info_n->occupied &= ~set_bit(s_from);
     board[s_from] = p_none;
 
     // promotion move or not
@@ -55,9 +46,6 @@ void make_move(const U16 move){
             bitboards[cep.rook_to_move] &= ~set_bit(s_to - 1);
             bitboards[cep.rook_to_move] |= set_bit(s_from - 1);
 
-            info_n->occupied &= ~set_bit(s_to - 1);
-            info_n->occupied |= ~set_bit(s_from - 1);
-
             board[s_to - 1] = p_none;
             board[s_from - 1] = cep.rook_to_move;
             
@@ -68,9 +56,6 @@ void make_move(const U16 move){
             bitboards[cep.rook_to_move] &= ~set_bit(s_to + 1);
             bitboards[cep.rook_to_move] |= set_bit(s_from + 2);
 
-            info_n->occupied &= ~set_bit(s_to + 1);
-            info_n->occupied |= set_bit(s_from + 2);
-
             board[s_to + 1] = p_none;
             board[s_from + 2] = cep.rook_to_move;
 
@@ -78,8 +63,6 @@ void make_move(const U16 move){
             // ep capture
             bitboards[cep.ep_pawn] &= ~set_bit(s_to + cep.ep_sq_offset);
             info_n->captured_piece = cep.ep_pawn;
-
-            info_n->occupied &= ~set_bit(s_to + cep.ep_sq_offset);
 
             board[s_to + cep.ep_sq_offset] = p_none;
         } 
@@ -90,7 +73,6 @@ void make_move(const U16 move){
     }
 
     bitboards[p_from] |= set_bit(s_to);
-    info_n->occupied |= set_bit(s_to);
     board[s_to] = p_from;
 
     info_n->turn = 1 - board_info->turn;
@@ -99,6 +81,7 @@ void make_move(const U16 move){
     info_n->move = move;
 
     board_info = info_n; // move board info pointer to point to next available memory location
+
 }
 
 /// @brief Undoes most recently made move
@@ -112,22 +95,24 @@ void undo_move(){
     square s_to = move_to_square(move);
     int m_type = move_type(move);
 
-    piece p_from = piece_on_square(s_to), p_captured = board_info->captured_piece;
+    piece p_from = piece_on_square(s_to);
 
-    if(p_captured != p_none){
-        bitboards[p_captured] |= set_bit(s_to);
-        board[s_to] = p_captured;
+    if(board_info->captured_piece != p_none){
+        if(m_type == 5){
+            castling_and_enpassant_info cep = cep_info[board_info->turn];
+
+            bitboards[board_info->captured_piece] |= set_bit(s_to - cep.ep_sq_offset); // what if the captured piece was an en-passant piece?
+            board[s_to - cep.ep_sq_offset] = board_info->captured_piece;
+        } else {
+            bitboards[board_info->captured_piece] |= set_bit(s_to); // what if the captured piece was an en-passant piece?
+            board[s_to] = board_info->captured_piece;
+        }
+
     } else {
         board[s_to] = p_none;
     }
 
     bitboards[p_from] &= ~set_bit(s_to);
-
-    if(p_from == p_none){
-        printf("%x ", move);
-        printf("\n");
-        print_board();
-    }
 
     assert(p_from != p_none);
 

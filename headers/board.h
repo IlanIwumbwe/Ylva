@@ -11,7 +11,7 @@ typedef struct sinfo{
     int ply, moves;   
     U16 move; /// previous move that led to this state
     piece captured_piece; /// most recently captured piece
-    U64 occupied; /// bitboard of all occupied squares
+    // U64 occupied; /// bitboard of all occupied squares
 
 } info;
 

@@ -27,16 +27,16 @@ square sq(char* sq){
 
 #define rank(c) (c - '0' - 1)
 
-/// @brief Indexing matches colours (1 for black, 0 for white)
+/// @brief Indexing matches colours (0 for white, 1 for black)
 castling_and_enpassant_info cep_info[2] = {
     {
     .kcr = K_castle,
     .qcr = Q_castle,
     .rook_to_move = R,
-    .ep_sq_offset = - 8,
-    .ep_pawn = P,
-    .rook_kingside_sq = h8,
-    .rook_queenside_sq = a8,
+    .ep_sq_offset = -8,
+    .ep_pawn = p,
+    .rook_kingside_sq = h1,
+    .rook_queenside_sq = a1,
     },
 
     {
@@ -44,9 +44,9 @@ castling_and_enpassant_info cep_info[2] = {
     .qcr = q_castle,
     .rook_to_move = r,
     .ep_sq_offset = 8,
-    .ep_pawn = p,
-    .rook_kingside_sq = h1,
-    .rook_queenside_sq = a1,
+    .ep_pawn = P,
+    .rook_kingside_sq = h8,
+    .rook_queenside_sq = a8,
     },
 };
 
@@ -156,7 +156,7 @@ U16 move_from_str(char* move){
     piece p_from = piece_on_square(from);
     piece p_to = piece_on_square(to);
 
-    set_promotion_type(move+2, &m_type);
+    set_promotion_type(move+4, &m_type);
 
     int square_dist = from - to;
     

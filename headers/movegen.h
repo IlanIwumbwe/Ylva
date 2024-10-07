@@ -12,6 +12,8 @@ typedef struct magic_entry{
     int n_bits_in_span;
 } magic_entry;
 
+extern U64 occupied;
+
 void populate_attack_sets();
 
 void generate_moves(dynamic_array* moves_array, int captures_only);

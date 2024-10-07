@@ -42,9 +42,12 @@ void run_perft(int depth){
         for(size_t i = 0; i < moves_array.used; ++i){
             move = moves_array.array[i];
 
+            make_move(move);
             print_move(move);
 
-            make_move(move);
+            //print_board();
+            //getchar();
+
             num_nodes = movegen_test(depth - 1);
             total_nodes += num_nodes;
 
@@ -56,6 +59,8 @@ void run_perft(int depth){
         printf("total: %d\n", total_nodes);
 
         free_da(&moves_array);
+
+        print_bitboard(occupied);
     }
 }
 #endif
