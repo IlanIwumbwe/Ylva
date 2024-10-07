@@ -7,7 +7,7 @@
 typedef struct sinfo{
     square ep_square;
     char castling_rights; /// only least significant 4 bits are used for castling rights
-    int turn;  // 0 means white, 1 means black 
+    side s;  // 0 means white, 1 means black 
     int ply, moves;   
     U16 move; /// previous move that led to this state
     piece captured_piece; /// most recently captured piece

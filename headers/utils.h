@@ -51,6 +51,8 @@ typedef enum {
     s_none,
 } square;
 
+typedef enum {WHITE, BLACK} side;
+
 typedef struct castling_and_enpassant_info{
     int kcr, qcr; // kingside and queenside castling rights (choose correct flags based on whose turn it is)
     int ep_sq_offset;

@@ -10,10 +10,12 @@ typedef struct dynamic_array{
     size_t used; 
 } dynamic_array;
 
-int init_da(dynamic_array* da, size_t capacity);
+void init_da(dynamic_array* da, size_t capacity);
 
 int da_append(dynamic_array* da, int element);
 
 void free_da(dynamic_array* da);
+
+void reset_da(dynamic_array* da);
 
 #endif

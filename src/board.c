@@ -48,7 +48,7 @@ void setup_state_from_fen(char* fen_string){
 
     setup_bitboards(t);
 
-    board_info->turn = (*strtok(NULL, " ") == 'w') ? 0 : 1;
+    board_info->s = (*strtok(NULL, " ") == 'w') ? WHITE : BLACK;
 
     char* castling_rights = strtok(NULL, " ");
     char c;
@@ -68,7 +68,7 @@ void setup_state_from_fen(char* fen_string){
     if(board_info->ep_square != s_none){
         // make previous move a double pawn push that would've led to this en-passant square
         
-        castling_and_enpassant_info cep = cep_info[board_info->turn];
+        castling_and_enpassant_info cep = cep_info[board_info->s];
 
         board_info->move = (1 << 12) | ((board_info->ep_square - cep.ep_sq_offset) << 6) | (board_info->ep_square + cep.ep_sq_offset);
     }
@@ -95,7 +95,7 @@ void print_board(void){
     print_move(board_info->move);
     //printf("%x ", board_info->move);
     printf("move type: %x\n", move_type(board_info->move));
-    printf("turn: %s\n", (board_info->turn) ? "b" : "w");
+    printf("turn: %s\n", (board_info->s) ? "b" : "w");
 
     printf("----------------\n");
     for(int i = 63; i >= 0; i--){

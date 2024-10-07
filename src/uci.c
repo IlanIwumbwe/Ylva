@@ -9,7 +9,7 @@ int movegen_test(int depth){
     U16 move;
 
     dynamic_array moves_array;
-    init_da(&moves_array, 2*128);
+    init_da(&moves_array, 2 * 218);
 
     generate_moves(&moves_array, 0);
 
@@ -23,9 +23,10 @@ int movegen_test(int depth){
         undo_move();
     }
 
+    free_da(&moves_array);
+
     return num_nodes;
 
-    free_da(&moves_array);
 }
 
 void run_perft(int depth){
@@ -34,9 +35,10 @@ void run_perft(int depth){
         U16 move;
 
         dynamic_array moves_array;
-        init_da(&moves_array, 2*128);
+        init_da(&moves_array, 2 * 218);
 
         generate_moves(&moves_array, 0);
+
         int num_nodes = 0, total_nodes = 0;
 
         for(size_t i = 0; i < moves_array.used; ++i){
@@ -54,13 +56,15 @@ void run_perft(int depth){
             printf(": %d\n", num_nodes);
 
             undo_move();
+
+            //print_board();
+            //getchar();
         }
 
         printf("total: %d\n", total_nodes);
 
         free_da(&moves_array);
 
-        print_bitboard(occupied);
     }
 }
 #endif
@@ -145,5 +149,4 @@ void uci_communication(){
         
         }
     }
-
 }

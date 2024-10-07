@@ -29,7 +29,7 @@ void make_move(const U16 move){
 
     // promotion move or not
     if(m_type <= 5){
-        castling_and_enpassant_info cep = cep_info[board_info->turn];
+        castling_and_enpassant_info cep = cep_info[board_info->s];
 
         if(m_type == 0){
              
@@ -68,16 +68,16 @@ void make_move(const U16 move){
         } 
 
     } else {
-        int offset = (board_info->turn) ? 8 : 2;
+        int offset = (board_info->s == BLACK) ? 8 : 2;
         p_from = (m_type & 0x3) + offset;
     }
 
     bitboards[p_from] |= set_bit(s_to);
     board[s_to] = p_from;
 
-    info_n->turn = 1 - board_info->turn;
+    info_n->s = 1 - board_info->s;
     info_n->ply = board_info->ply + 1;
-    info_n->moves = board_info->moves + (info_n->turn == 1);
+    info_n->moves = board_info->moves + (info_n->s == BLACK);
     info_n->move = move;
 
     board_info = info_n; // move board info pointer to point to next available memory location
@@ -97,20 +97,7 @@ void undo_move(){
 
     piece p_from = piece_on_square(s_to);
 
-    if(board_info->captured_piece != p_none){
-        if(m_type == 5){
-            castling_and_enpassant_info cep = cep_info[board_info->turn];
-
-            bitboards[board_info->captured_piece] |= set_bit(s_to - cep.ep_sq_offset); // what if the captured piece was an en-passant piece?
-            board[s_to - cep.ep_sq_offset] = board_info->captured_piece;
-        } else {
-            bitboards[board_info->captured_piece] |= set_bit(s_to); // what if the captured piece was an en-passant piece?
-            board[s_to] = board_info->captured_piece;
-        }
-
-    } else {
-        board[s_to] = p_none;
-    }
+    board[s_to] = p_none;
 
     bitboards[p_from] &= ~set_bit(s_to);
 
@@ -118,9 +105,19 @@ void undo_move(){
 
     // promotion move or not
     if(m_type <= 5){
-        castling_and_enpassant_info cep = cep_info[1 - board_info->turn];
+        castling_and_enpassant_info cep = cep_info[1 - board_info->s];
 
-        if(m_type == 2){
+        if(m_type == 5){
+            castling_and_enpassant_info cep = cep_info[board_info->s];
+
+            bitboards[board_info->captured_piece] |= set_bit(s_to - cep.ep_sq_offset); 
+            board[s_to - cep.ep_sq_offset] = board_info->captured_piece;
+
+        } else if (m_type & 0x4){
+            bitboards[board_info->captured_piece] |= set_bit(s_to);
+            board[s_to] = board_info->captured_piece;
+
+        } else if(m_type == 2){
             // kingside castle
             bitboards[cep.rook_to_move] |= set_bit(s_to - 1);
             bitboards[cep.rook_to_move] &= ~set_bit(s_from - 1);
