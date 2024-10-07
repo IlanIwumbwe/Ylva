@@ -11,7 +11,7 @@ typedef struct sinfo{
     int ply, moves;   
     U16 move; /// previous move that led to this state
     piece captured_piece; /// most recently captured piece
-    // U64 occupied; /// bitboard of all occupied squares
+    U64 hash;
 
 } info;
 
@@ -19,11 +19,16 @@ extern info* board_info;
 extern info board_infos[MAX_SEARCH_DEPTH];
 extern U64 bitboards[12];
 extern piece board[64]; /// which piece is on each square
+extern U64 piece_zobrist_keys[13][64];
+extern U64 turn_key;
+extern U64 castling_key[16];
 
 void setup_state_from_fen(char* fen_string);
 
 void setup_bitboards(const char* fen);
 
 void print_board(void);
+
+void init_hash_keys(void);
 
 #endif

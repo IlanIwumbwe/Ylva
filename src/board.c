@@ -5,6 +5,54 @@ info board_infos[MAX_SEARCH_DEPTH];
 info* board_info = board_infos;  // start by pointing to first element in board infos
 piece board[64];
 
+// zobrist keys
+U64 piece_zobrist_keys[13][64];
+U64 turn_key;
+U64 castling_key[16];
+
+void init_hash_keys(void){
+    int i, j;
+
+    for(i = 0; i < 13; ++i){
+        for(j = 0; j < 64; ++j){
+            piece_zobrist_keys[i][j] = RAND64;
+        }
+    }
+
+    turn_key = RAND64;
+
+    for(i = 0; i < 16; ++i){
+        castling_key[i] = RAND64;
+    }
+
+}
+
+void generate_hash(){
+
+    U64 occupied = bitboards[P] | bitboards[K] | bitboards[N] | bitboards[B] | bitboards[R] | bitboards[Q] | 
+            bitboards[p] | bitboards[k] | bitboards[n] | bitboards[b] | bitboards[r] | bitboards[q];
+    square sq;
+
+    board_info->hash = 0ULL;
+
+    while(occupied){
+        sq = get_lsb(occupied);
+        occupied &= (occupied - 1);
+
+        board_info->hash ^= piece_zobrist_keys[piece_on_square(sq)][sq];
+    }
+
+    if(board_info->ep_square != s_none){
+        board_info->hash ^= piece_zobrist_keys[p_none][board_info->ep_square];
+    }
+
+    if(board_info->s == BLACK){
+        board_info->hash ^= turn_key;
+    }
+
+    board_info->hash ^= castling_key[board_info->castling_rights & 0xf];
+}
+
 /// @brief Populate bitboards from fen
 /// @param board_string 
 void setup_bitboards(const char* fen){
@@ -77,6 +125,8 @@ void setup_state_from_fen(char* fen_string){
     board_info->ply = strtol(strtok(NULL, " "), &end, 10);
     board_info->moves = strtol(strtok(NULL, " "), &end, 10);
     board_info->captured_piece = p_none;
+
+    generate_hash();
 }
 
 piece piece_on_square(square sq){
@@ -93,7 +143,6 @@ void print_board(void){
     printf("moves: %d\n", board_info->moves);
     printf("previous move: ");
     print_move(board_info->move);
-    //printf("%x ", board_info->move);
     printf("move type: %x\n", move_type(board_info->move));
     printf("turn: %s\n", (board_info->s) ? "b" : "w");
 
@@ -110,6 +159,8 @@ void print_board(void){
         }
     }
     printf("----------------\n");
-    printf("a b c d e f g h\n");
+    printf("a b c d e f g h\n\n");
+
+    printf("Key: %lx \n", board_info->hash);
 }
 

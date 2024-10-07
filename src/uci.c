@@ -122,6 +122,7 @@ void uci_communication(){
     // position startpos
 
     populate_attack_sets();
+    init_hash_keys();
 
     char uci_command[INPUT_SIZE];
     int depth;
@@ -133,6 +134,7 @@ void uci_communication(){
         printf("%d\n", h);
 
         switch(h){
+
             case POSITION: process_position(uci_command); break;
 
 
