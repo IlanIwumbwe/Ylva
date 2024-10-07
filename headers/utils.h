@@ -78,4 +78,8 @@ void print_move(U16 move);
 
 U16 move_from_str(char* move);
 
+U64 time_in_ms();
+
+int input_waiting();
+
 #endif

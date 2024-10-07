@@ -1,5 +1,12 @@
 #include "../headers/utils.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/time.h>
+struct timeval tv;
+#endif
+
 char char_pieces[12] = {'P','K','N','B','R','Q','p','k','n','b','r','q'};
 
 char* char_squares[64] = {
@@ -183,3 +190,42 @@ U16 move_from_str(char* move){
     end:
     return (m_type << 12) | (from << 6) | to;
 }
+
+#ifdef _WIN32
+
+U64 time_in_ms(){
+    return GetTickCount();
+}
+
+int input_waiting(){
+    static int init = 0, pipe;
+    static HANDLE inh;
+    DWORD dw;
+
+    if (!init) {
+        init = 1;
+        inh = GetStdHandle(STD_INPUT_HANDLE);
+        pipe = !GetConsoleMode(inh, &dw);
+    }
+    if (pipe) {
+        if (!PeekNamedPipe(inh, NULL, 0, NULL, &dw, NULL)) return 1;
+        return dw;
+    } else return _kbhit();
+}
+#else
+U64 time_in_ms() {
+	gettimeofday (&tv, NULL);
+	return(tv.tv_sec * 1000LL + (tv.tv_usec / 1000));
+}
+
+int input_waiting(){
+    fd_set readfds;
+
+	FD_ZERO (&readfds);
+	FD_SET (fileno(stdin), &readfds);
+	tv.tv_sec=0; tv.tv_usec=0;
+	select(16, &readfds, 0, 0, &tv);
+
+	return (FD_ISSET(fileno(stdin), &readfds));
+}
+#endif

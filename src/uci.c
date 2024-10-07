@@ -1,7 +1,7 @@
 #include "../headers/uci.h"
 
 #ifdef DEV
-int movegen_test(int depth){
+U64 movegen_test(int depth){
     if(depth == 0){
         return 1;
     }
@@ -13,7 +13,7 @@ int movegen_test(int depth){
 
     generate_moves(&moves_array, 0);
 
-    int num_nodes = 0;
+    U64 num_nodes = 0;
 
     for(size_t i = 0; i < moves_array.used; ++i){
         move = moves_array.array[i];
@@ -34,12 +34,14 @@ void run_perft(int depth){
     if(depth){
         U16 move;
 
+        U64 start_time = time_in_ms();
+
         dynamic_array moves_array;
         init_da(&moves_array, 218);
 
         generate_moves(&moves_array, 0);
 
-        int num_nodes = 0, total_nodes = 0;
+        U64 num_nodes = 0ULL, total_nodes = 0ULL;
 
         for(size_t i = 0; i < moves_array.used; ++i){
             move = moves_array.array[i];
@@ -47,24 +49,22 @@ void run_perft(int depth){
             make_move(move);
             print_move(move);
 
-            //print_board();
-            //getchar();
-
             num_nodes = movegen_test(depth - 1);
             total_nodes += num_nodes;
 
-            printf(": %d\n", num_nodes);
+            printf(": %ld\n", num_nodes);
 
             undo_move();
-
-            //print_board();
-            //getchar();
         }
 
-        printf("total: %d\n", total_nodes);
+        U64 end_time = time_in_ms();
+        U64 time = end_time - start_time;
+
+        printf("total: %ld\n", total_nodes);
+
+        if(time / 1000) printf("nps: %ld\n", (total_nodes * 1000) / time);
 
         free_da(&moves_array);
-
     }
 }
 #endif
