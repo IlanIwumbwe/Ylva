@@ -922,7 +922,7 @@ void generate_moves(dynamic_array* moves_array, int captures_only){
     occupied = whites | blacks;
   
     dynamic_array pseudo_legal_moves;
-    init_da(&pseudo_legal_moves, 2 * 218);
+    init_da(&pseudo_legal_moves, 218);
 
     if(board_info->s == BLACK){
         checkers = get_attackers(get_lsb(bitboards[k]), blacks);

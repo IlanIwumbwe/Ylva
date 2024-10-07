@@ -12,7 +12,7 @@ typedef struct dynamic_array{
 
 void init_da(dynamic_array* da, size_t capacity);
 
-int da_append(dynamic_array* da, int element);
+void da_append(dynamic_array* da, int element);
 
 void free_da(dynamic_array* da);
 

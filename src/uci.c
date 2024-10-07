@@ -9,7 +9,7 @@ int movegen_test(int depth){
     U16 move;
 
     dynamic_array moves_array;
-    init_da(&moves_array, 2 * 218);
+    init_da(&moves_array, 218);
 
     generate_moves(&moves_array, 0);
 
@@ -35,7 +35,7 @@ void run_perft(int depth){
         U16 move;
 
         dynamic_array moves_array;
-        init_da(&moves_array, 2 * 218);
+        init_da(&moves_array, 218);
 
         generate_moves(&moves_array, 0);
 
