@@ -99,7 +99,7 @@ void setup_bitboards(const char* fen){
 /// @brief receives a fen string and a pointer to bitboards array. init state
 /// @param fen_string 
 /// @param bitboards 
-void setup_state_from_fen(char* fen_string){ 
+void setup_state_from_fen(const char* fen_string){ 
     char* end;
     char* copy = strdup(fen_string);
 
@@ -138,6 +138,7 @@ void setup_state_from_fen(char* fen_string){
     board_info->captured_piece = p_none;
 
     generate_hash();
+    count_material();
 }
 
 piece piece_on_square(square sq){
@@ -156,6 +157,7 @@ void print_board(void){
     print_move(board_info->move);
     printf("move type: %x\n", move_type(board_info->move));
     printf("turn: %s\n", (board_info->s) ? "b" : "w");
+    printf("White mat: %d Black mat: %d \n", board_info->material[WHITE], board_info->material[BLACK]);
 
     printf("----------------\n");
     for(int i = 63; i >= 0; i--){
@@ -175,3 +177,18 @@ void print_board(void){
     printf("Key: %lx \n", board_info->hash);
 }
 
+void count_material(){
+    piece pi;
+
+    board_info->material[0] = 0;
+    board_info->material[1] = 0;
+
+    for(pi = P; pi <= Q; ++pi){
+        board_info->material[WHITE] += count_set_bits(bitboards[pi]) * piece_values[pi];
+    }
+
+    for(pi = p; pi <= q; ++pi){
+        board_info->material[BLACK] += count_set_bits(bitboards[pi]) * piece_values[pi];
+    }
+
+}

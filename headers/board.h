@@ -13,6 +13,7 @@ typedef struct sinfo{
     piece captured_piece; /// most recently captured piece
     U64 hash;
     U64 occupied;
+    int material[2];
 
 } info;
 
@@ -24,7 +25,7 @@ extern U64 piece_zobrist_keys[13][64];
 extern U64 turn_key;
 extern U64 castling_key[16];
 
-void setup_state_from_fen(char* fen_string);
+void setup_state_from_fen(const char* fen_string);
 
 void setup_bitboards(const char* fen);
 
@@ -37,5 +38,7 @@ void modify_hash_by_occupancy(info* info_n, piece p, square sq);
 void modify_hash_by_castling_rights(info* info_n, U16 old_castling_rights);
 
 void generate_hash();
+
+void count_material();
 
 #endif

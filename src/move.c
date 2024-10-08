@@ -10,21 +10,27 @@ void make_move(const U16 move){
     info_n->ep_square = s_none;
     info_n->hash = board_info->hash ^ turn_key;
     info_n->occupied = board_info->occupied;
+    
+    memcpy(info_n->material, board_info->material, sizeof(board_info->material));
 
-    U64 val = -(board_info->ep_square != s_none);
-    info_n->hash ^= (val & piece_zobrist_keys[p_none][board_info->ep_square]);
+    side s = board_info->s;
 
     square s_from = move_from_square(move);
     square s_to = move_to_square(move);
+    square ep = board_info->ep_square;
     int m_type = move_type(move);
 
     piece p_from = piece_on_square(s_from);
     piece p_to = piece_on_square(s_to);
 
+    U64 val = -(ep != s_none);
+    info_n->hash ^= (val & piece_zobrist_keys[p_none][ep]);
+
     // take care of possible captures, ep capture done separately
     bitboards[p_to] &= ~set_bit(s_to);
     info_n->captured_piece = p_to;
-
+    info_n->material[s] -= piece_values[p_to];
+    
     assert(p_from != p_none);
 
     bitboards[p_from] &= ~set_bit(s_from);
@@ -35,7 +41,7 @@ void make_move(const U16 move){
 
     // promotion move or not
     if(m_type <= 5){
-        castling_and_enpassant_info cep = cep_info[board_info->s];
+        castling_and_enpassant_info cep = cep_info[s];
 
         if(m_type == 0){
              
@@ -96,11 +102,19 @@ void make_move(const U16 move){
             board[s_to + cep.ep_sq_offset] = p_none;
 
             info_n->hash ^= piece_zobrist_keys[cep.ep_pawn][s_to + cep.ep_sq_offset];
+
+            info_n->material[s] -= piece_values[cep.ep_pawn];
         } 
 
     } else {
-        int offset = (board_info->s == BLACK) ? 8 : 2;
+        int offset = (s == BLACK) ? 8 : 2;
+
+        info_n->material[s] -= piece_values[p_from];
+
         p_from = (m_type & 0x3) + offset;
+
+        info_n->material[s] += piece_values[p_from];
+
     }
 
     bitboards[p_from] |= set_bit(s_to);
@@ -109,9 +123,9 @@ void make_move(const U16 move){
 
     info_n->hash ^= piece_zobrist_keys[p_from][s_to];
 
-    info_n->s = 1 - board_info->s;
+    info_n->s = 1 - s;
     info_n->ply = board_info->ply + 1;
-    info_n->moves = board_info->moves + (info_n->s == BLACK);
+    info_n->moves = board_info->moves + (s == BLACK);
     info_n->move = move;
 
     board_info = info_n; // move board info pointer to point to next available memory location

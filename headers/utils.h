@@ -53,6 +53,17 @@ typedef enum {
 
 typedef enum {WHITE, BLACK} side;
 
+typedef enum {
+    P_VAL = 100,
+    K_VAL = 20000,
+    N_VAL = 320,
+    B_VAL = 330,
+    R_VAL = 500,
+    Q_VAL = 900
+} vals;
+
+extern vals piece_values[13]; 
+
 typedef struct castling_and_enpassant_info{
     int kcr, qcr; // kingside and queenside castling rights (choose correct flags based on whose turn it is)
     int ep_sq_offset;
@@ -81,5 +92,7 @@ U16 move_from_str(char* move);
 U64 time_in_ms();
 
 int input_waiting();
+
+int maxi(int a, int b);
 
 #endif

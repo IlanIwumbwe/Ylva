@@ -9,6 +9,8 @@ struct timeval tv;
 
 char char_pieces[12] = {'P','K','N','B','R','Q','p','k','n','b','r','q'};
 
+vals piece_values[13] = {P_VAL, K_VAL, N_VAL, B_VAL, R_VAL, Q_VAL, P_VAL, K_VAL, N_VAL, B_VAL, R_VAL, Q_VAL, 0};
+
 char* char_squares[64] = {
     "h1", "g1", "f1", "e1", "d1", "c1", "b1", "a1", 
     "h2", "g2", "f2", "e2", "d2", "c2", "b2", "a2", 
@@ -189,6 +191,10 @@ U16 move_from_str(char* move){
 
     end:
     return (m_type << 12) | (from << 6) | to;
+}
+
+int maxi(int a, int b){
+    return (a > b) ? a : b;
 }
 
 #ifdef _WIN32

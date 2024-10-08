@@ -93,7 +93,7 @@ static int get_input(char* buffer){
     return 0;
 }
 
-static void process_position(char* uci_command){
+static void process_position(const char* uci_command){
     char* fen_end = strstr(uci_command, "moves");
 
     int isfen = !strncmp(uci_command, "position fen", 12);
@@ -113,6 +113,22 @@ static void process_position(char* uci_command){
     }
 }
 
+void process_go(const char* uci_command){
+    
+    char* copy = strdup(uci_command);
+    char* cmd;
+    char* arg;
+    char* end;
+    int depth = 0;
+
+    cmd = strtok(copy, " ");
+
+    while((cmd = strtok(NULL, " ")) && (arg = strtok(NULL, " "))){
+        depth = strtol(arg, &end, 10);
+        think(depth);
+    }
+
+}
 
 void uci_communication(){
     // perft 5
@@ -135,6 +151,7 @@ void uci_communication(){
 
         switch(h){
             case POSITION: process_position(uci_command); break;
+            case GO: process_go(uci_command); break;
         
         #ifdef DEV
             case PERFT:
