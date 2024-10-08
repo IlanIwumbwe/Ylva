@@ -53,6 +53,15 @@ void generate_hash(){
     board_info->hash ^= castling_key[board_info->castling_rights & 0xf];
 }
 
+void modify_hash_by_occupancy(info* info_n, piece p, square sq){
+    info_n->hash ^= piece_zobrist_keys[p][sq];
+}
+
+void modify_hash_by_castling_rights(info* info_n, U16 old_castling_rights){
+    info_n->hash ^= old_castling_rights;
+    info_n->hash ^= info_n->castling_rights;
+}   
+
 /// @brief Populate bitboards from fen
 /// @param board_string 
 void setup_bitboards(const char* fen){

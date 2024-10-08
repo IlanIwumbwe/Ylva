@@ -31,4 +31,10 @@ void print_board(void);
 
 void init_hash_keys(void);
 
+void modify_hash_by_occupancy(info* info_n, piece p, square sq);
+
+void modify_hash_by_castling_rights(info* info_n, U16 old_castling_rights);
+
+void generate_hash();
+
 #endif
