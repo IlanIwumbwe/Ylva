@@ -134,10 +134,8 @@ void uci_communication(){
         printf("%d\n", h);
 
         switch(h){
-
             case POSITION: process_position(uci_command); break;
-
-
+        
         #ifdef DEV
             case PERFT:
                 depth = strtol(uci_command+6, &end, 10);
@@ -146,9 +144,11 @@ void uci_communication(){
 
             case PRINT:
                 print_board(); break;
+
+            case UNDO: undo_move(); break;
+
         #endif
 
-        
         }
     }
 }

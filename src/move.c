@@ -6,14 +6,13 @@
 void make_move(const U16 move){
     info* info_n = board_info + 1; // point to next available memory location in array
 
-    info_n->captured_piece = p_none;
     info_n->castling_rights = board_info->castling_rights;
     info_n->ep_square = s_none;
     info_n->hash = board_info->hash ^ turn_key;
+    info_n->occupied = board_info->occupied;
 
-    if(board_info->ep_square != s_none){
-        info_n->hash ^= piece_zobrist_keys[p_none][board_info->ep_square];
-    }
+    U64 val = -(board_info->ep_square != s_none);
+    info_n->hash ^= (val & piece_zobrist_keys[p_none][board_info->ep_square]);
 
     square s_from = move_from_square(move);
     square s_to = move_to_square(move);
@@ -22,19 +21,17 @@ void make_move(const U16 move){
     piece p_from = piece_on_square(s_from);
     piece p_to = piece_on_square(s_to);
 
-    // the current move must be a capture move (ep capture not caught by this, taken care of later)
-    if(p_to != p_none){
-        bitboards[p_to] &= ~set_bit(s_to);
-        info_n->captured_piece = p_to;        
-    }
-    
+    // take care of possible captures, ep capture done separately
+    bitboards[p_to] &= ~set_bit(s_to);
+    info_n->captured_piece = p_to;
+
     assert(p_from != p_none);
 
     bitboards[p_from] &= ~set_bit(s_from);
     board[s_from] = p_none;
-    //board_info->hash ^= piece_zobrist_keys[p_from][s_from]; // remove hash contribution by from piece
+    info_n->occupied &= ~set_bit(s_from);
 
-    modify_hash_by_occupancy(info_n, p_from, s_from);
+    info_n->hash ^= piece_zobrist_keys[p_from][s_from];
 
     // promotion move or not
     if(m_type <= 5){
@@ -63,10 +60,13 @@ void make_move(const U16 move){
 
             board[s_to - 1] = p_none;
             board[s_from - 1] = cep.rook_to_move;
- 
-            modify_hash_by_occupancy(info_n, cep.rook_to_move, s_to - 1);
-            modify_hash_by_occupancy(info_n, cep.rook_to_move, s_from - 1);
 
+            info_n->occupied &= ~set_bit(s_to - 1);
+            info_n->occupied |= set_bit(s_from - 1);
+
+            info_n->hash ^= piece_zobrist_keys[cep.rook_to_move][s_to - 1];
+            info_n->hash ^= piece_zobrist_keys[cep.rook_to_move][s_from - 1];
+ 
             modify_hash_by_castling_rights(info_n, board_info->castling_rights);
             
         } else if (m_type == 3){
@@ -76,22 +76,26 @@ void make_move(const U16 move){
             bitboards[cep.rook_to_move] &= ~set_bit(s_to + 1);
             bitboards[cep.rook_to_move] |= set_bit(s_from + 2);
 
+            info_n->occupied &= ~set_bit(s_to + 1);
+            info_n->occupied |= set_bit(s_from + 2);
+
             board[s_to + 1] = p_none;
             board[s_from + 2] = cep.rook_to_move;
 
-            modify_hash_by_occupancy(info_n, cep.rook_to_move, s_to + 1);
-            modify_hash_by_occupancy(info_n, cep.rook_to_move, s_from + 2);
+            info_n->hash ^= piece_zobrist_keys[cep.rook_to_move][s_to + 1];
+            info_n->hash ^= piece_zobrist_keys[cep.rook_to_move][s_from + 2];
 
             modify_hash_by_castling_rights(info_n, board_info->castling_rights);
 
         } else if (m_type == 5){
             // ep capture
             bitboards[cep.ep_pawn] &= ~set_bit(s_to + cep.ep_sq_offset);
-            info_n->captured_piece = cep.ep_pawn;
+            info_n->occupied &= ~set_bit(s_to + cep.ep_sq_offset);
 
+            info_n->captured_piece = cep.ep_pawn;
             board[s_to + cep.ep_sq_offset] = p_none;
 
-            modify_hash_by_occupancy(info_n, cep.ep_pawn, s_to + cep.ep_sq_offset);
+            info_n->hash ^= piece_zobrist_keys[cep.ep_pawn][s_to + cep.ep_sq_offset];
         } 
 
     } else {
@@ -101,8 +105,9 @@ void make_move(const U16 move){
 
     bitboards[p_from] |= set_bit(s_to);
     board[s_to] = p_from;
+    info_n->occupied |= set_bit(s_to);
 
-    modify_hash_by_occupancy(info_n, p_from, s_to);
+    info_n->hash ^= piece_zobrist_keys[p_from][s_to];
 
     info_n->s = 1 - board_info->s;
     info_n->ply = board_info->ply + 1;

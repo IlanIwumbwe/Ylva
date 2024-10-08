@@ -1,6 +1,6 @@
 #include "../headers/board.h"
 
-U64 bitboards[12] = {0ULL};
+U64 bitboards[13] = {0ULL};
 info board_infos[MAX_SEARCH_DEPTH];
 info* board_info = board_infos;  // start by pointing to first element in board infos
 piece board[64];
@@ -72,6 +72,7 @@ void setup_bitboards(const char* fen){
     memset(bitboards, 0, sizeof(bitboards));
 
     for(int i = 0; i < 64; ++i){board[i] = p_none;}
+    board_info->occupied = 0ULL;
 
     while(current_square >= 0){
         c = fen[pointer];
@@ -81,7 +82,8 @@ void setup_bitboards(const char* fen){
         
             if(piece != p_none){
                 bitboards[piece] |= set_bit(current_square);
-                board[current_square] = piece; 
+                board[current_square] = piece;
+                board_info->occupied |= set_bit(current_square);
             }
 
             current_square--;

@@ -18,6 +18,7 @@ enum {
 #ifdef DEV
     PERFT = 116,
     PRINT = 112,
+    UNDO = 20,
 #endif
 
 };

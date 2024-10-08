@@ -12,12 +12,13 @@ typedef struct sinfo{
     U16 move; /// previous move that led to this state
     piece captured_piece; /// most recently captured piece
     U64 hash;
+    U64 occupied;
 
 } info;
 
 extern info* board_info;
 extern info board_infos[MAX_SEARCH_DEPTH];
-extern U64 bitboards[12];
+extern U64 bitboards[13]; // last bitboard is a garbage bitboard
 extern piece board[64]; /// which piece is on each square
 extern U64 piece_zobrist_keys[13][64];
 extern U64 turn_key;

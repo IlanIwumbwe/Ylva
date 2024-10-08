@@ -382,16 +382,14 @@ static U64 get_attackers(square sq, U64 mask){
     U64 result;
     int key;
     U64 bishops, rooks;
-    U64 occupied = bitboards[P] | bitboards[K] | bitboards[N] | bitboards[B] | bitboards[R] | bitboards[Q] | 
-                bitboards[p] | bitboards[k] | bitboards[n] | bitboards[b] | bitboards[r] | bitboards[q];
 
     result = KNIGHT_ATTACKS[sq] & (bitboards[N] | bitboards[n]);
     result |= KING_ATTACKS[sq] & (bitboards[K] | bitboards[k]);
 
-    key = blocker_to_key(occupied, bishop_magics[sq]);
+    key = blocker_to_key(board_info->occupied , bishop_magics[sq]);
     bishops = BISHOP_MOVES[sq][key];
 
-    key = blocker_to_key(occupied, rook_magics[sq]);
+    key = blocker_to_key(board_info->occupied, rook_magics[sq]);    
     rooks = ROOK_MOVES[sq][key];
 
     result |= bishops & (bitboards[B] | bitboards[b]); 
@@ -919,8 +917,10 @@ void generate_moves(dynamic_array* moves_array, int captures_only){
     whites_minus_king = whites & ~bitboards[K];
     blacks_minus_king = blacks & ~bitboards[k];
 
-    occupied = whites | blacks;
-  
+    occupied = board_info->occupied;
+
+    assert((whites | blacks) == occupied);
+
     dynamic_array pseudo_legal_moves;
     init_da(&pseudo_legal_moves, 218);
 
