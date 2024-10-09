@@ -112,6 +112,8 @@ void setup_state_from_fen(const char* fen_string){
     char* castling_rights = strtok(NULL, " ");
     char c;
 
+    board_info->castling_rights = 0;
+
     while((c = *castling_rights++)){
         switch(c){
             case 'K': board_info->castling_rights |= K_castle; break;
