@@ -100,4 +100,6 @@ int input_waiting();
 
 int maxi(int a, int b);
 
+int mini(int a, int b);
+
 #endif

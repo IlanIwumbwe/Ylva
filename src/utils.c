@@ -197,6 +197,10 @@ int maxi(int a, int b){
     return (a > b) ? a : b;
 }
 
+int mini(int a, int b){
+    return (a < b) ? a : b;
+}
+
 #ifdef _WIN32
 
 U64 time_in_ms(){

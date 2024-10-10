@@ -124,7 +124,7 @@ void process_go(const char* uci_command){
     cmd = strtok(copy, " ");
 
     while((cmd = strtok(NULL, " ")) && (arg = strtok(NULL, " "))){
-        depth = strtol(arg, &end, 10);
+        depth = mini(MAX_SEARCH_DEPTH, strtol(arg, &end, 10));
         think(depth);
     }
 
