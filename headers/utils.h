@@ -51,12 +51,30 @@ typedef enum {
     s_none,
 } square;
 
-typedef struct castling_and_enpassant_info{
+typedef enum {WHITE, BLACK} side;
+
+typedef enum {
+    P_VAL = 100,
+    K_VAL = 20000,
+    N_VAL = 320,
+    B_VAL = 330,
+    R_VAL = 500,
+    Q_VAL = 900
+} vals;
+
+extern vals piece_values[13]; 
+
+typedef struct scpe{
     int kcr, qcr; // kingside and queenside castling rights (choose correct flags based on whose turn it is)
     int ep_sq_offset;
     piece rook_to_move, ep_pawn;
     square rook_kingside_sq, rook_queenside_sq;
 }castling_and_enpassant_info;
+
+typedef struct smove {
+    U16 move;
+    int score;
+} Move;
 
 extern castling_and_enpassant_info cep_info[2];
 
@@ -75,5 +93,11 @@ int tokenise(char* string, char* output[]);
 void print_move(U16 move);
 
 U16 move_from_str(char* move);
+
+U64 time_in_ms();
+
+int input_waiting();
+
+int maxi(int a, int b);
 
 #endif

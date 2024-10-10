@@ -1,7 +1,7 @@
 #include "../headers/uci.h"
 
 #ifdef DEV
-int movegen_test(int depth){
+U64 movegen_test(int depth){
     if(depth == 0){
         return 1;
     }
@@ -9,23 +9,24 @@ int movegen_test(int depth){
     U16 move;
 
     dynamic_array moves_array;
-    init_da(&moves_array, 2*128);
+    init_da(&moves_array, 218);
 
     generate_moves(&moves_array, 0);
 
-    int num_nodes = 0;
+    U64 num_nodes = 0;
 
     for(size_t i = 0; i < moves_array.used; ++i){
-        move = moves_array.array[i];
+        move = moves_array.array[i].move;
 
         make_move(move);
         num_nodes += movegen_test(depth - 1);
         undo_move();
     }
 
+    free_da(&moves_array);
+
     return num_nodes;
 
-    free_da(&moves_array);
 }
 
 void run_perft(int depth){
@@ -33,27 +34,35 @@ void run_perft(int depth){
     if(depth){
         U16 move;
 
+        U64 start_time = time_in_ms();
+
         dynamic_array moves_array;
-        init_da(&moves_array, 2*128);
+        init_da(&moves_array, 218);
 
         generate_moves(&moves_array, 0);
-        int num_nodes = 0, total_nodes = 0;
+
+        U64 num_nodes = 0ULL, total_nodes = 0ULL;
 
         for(size_t i = 0; i < moves_array.used; ++i){
-            move = moves_array.array[i];
-
-            print_move(move);
+            move = moves_array.array[i].move;
 
             make_move(move);
+            print_move(move);
+
             num_nodes = movegen_test(depth - 1);
             total_nodes += num_nodes;
 
-            printf(": %d\n", num_nodes);
+            printf(": %ld\n", num_nodes);
 
             undo_move();
         }
 
-        printf("total: %d\n", total_nodes);
+        U64 end_time = time_in_ms();
+        U64 time = end_time - start_time;
+
+        printf("total: %ld\n", total_nodes);
+
+        if(time / 1000) printf("nps: %ld\n", (total_nodes * 1000) / time);
 
         free_da(&moves_array);
     }
@@ -84,7 +93,7 @@ static int get_input(char* buffer){
     return 0;
 }
 
-static void process_position(char* uci_command){
+static void process_position(const char* uci_command){
     char* fen_end = strstr(uci_command, "moves");
 
     int isfen = !strncmp(uci_command, "position fen", 12);
@@ -104,6 +113,22 @@ static void process_position(char* uci_command){
     }
 }
 
+void process_go(const char* uci_command){
+    
+    char* copy = strdup(uci_command);
+    char* cmd;
+    char* arg;
+    char* end;
+    int depth = 0;
+
+    cmd = strtok(copy, " ");
+
+    while((cmd = strtok(NULL, " ")) && (arg = strtok(NULL, " "))){
+        depth = strtol(arg, &end, 10);
+        think(depth);
+    }
+
+}
 
 void uci_communication(){
     // perft 5
@@ -113,6 +138,7 @@ void uci_communication(){
     // position startpos
 
     populate_attack_sets();
+    init_hash_keys();
 
     char uci_command[INPUT_SIZE];
     int depth;
@@ -125,8 +151,8 @@ void uci_communication(){
 
         switch(h){
             case POSITION: process_position(uci_command); break;
-
-
+            case GO: process_go(uci_command); break;
+        
         #ifdef DEV
             case PERFT:
                 depth = strtol(uci_command+6, &end, 10);
@@ -135,10 +161,11 @@ void uci_communication(){
 
             case PRINT:
                 print_board(); break;
+
+            case UNDO: undo_move(); break;
+
         #endif
 
-        
         }
     }
-
 }

@@ -1,12 +1,12 @@
 #include "../headers/array.h"
 
 /// @brief Allocate memory for the dynamic array
-/// @param da 
-/// @param capacity 
-int init_da(dynamic_array* da, size_t capacity){
+/// @param da Pointer to dynamic array
+/// @param capacity Number of int slots that should be allocated
+void init_da(dynamic_array* da, size_t capacity){
     if(capacity == 0){
         printf("Cannot initialise array with capacity of 0 bytes!");
-        return -1;
+        exit(-1);
     } else {
         da->array = malloc(sizeof(int) * capacity); 
 
@@ -15,32 +15,36 @@ int init_da(dynamic_array* da, size_t capacity){
             da->capacity = capacity;
         } else {
             printf("Allocation of memory for dynamic array failed!");
-            return -1;
+            exit(-1);
         }
 
     } 
-
-    return 0;
 }
 
-int da_append(dynamic_array* da, int element){
+/// @brief Append a move to the moves array
+/// @param da 
+/// @param move 
+void da_append(dynamic_array* da, Move move){
     if(da->used == da->capacity){
         da->capacity = 2 * da->capacity;
-        da->array = realloc(da->array, sizeof(int) * da->capacity);
+        Move* new_block = realloc(da->array, sizeof(Move) * da->capacity);
 
-        if(da->array == NULL){
+        if(new_block == NULL){
             printf("Reallocation of memory for dynamic array failed!");
-            return -1;
+            exit(-1);
+            free_da(da);
+        } else {
+            da->array = new_block;
         }
     }
 
-    da->array[da->used++] = element;
-
-    return 0;
+    da->array[da->used++] = move;
 }
 
+/// @brief Free memory used by the moves array
+/// @param da 
 void free_da(dynamic_array* da){
-    da->array = NULL;
-    da->capacity = da->used = 0;
     free(da->array);
+    da->capacity = da->used = 0;
+    da->array = NULL;
 }

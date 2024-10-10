@@ -3,6 +3,7 @@
 
 #include "../headers/movegen.h"
 #include "../headers/board.h"
+#include "../headers/think.h"
 
 #define INPUT_SIZE 8192
 #define UCI_TOKENS_SIZE 500
@@ -18,6 +19,7 @@ enum {
 #ifdef DEV
     PERFT = 116,
     PRINT = 112,
+    UNDO = 20,
 #endif
 
 };

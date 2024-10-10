@@ -1,6 +1,15 @@
 #include "../headers/utils.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/time.h>
+struct timeval tv;
+#endif
+
 char char_pieces[12] = {'P','K','N','B','R','Q','p','k','n','b','r','q'};
+
+vals piece_values[13] = {P_VAL, K_VAL, N_VAL, B_VAL, R_VAL, Q_VAL, P_VAL, K_VAL, N_VAL, B_VAL, R_VAL, Q_VAL, 0};
 
 char* char_squares[64] = {
     "h1", "g1", "f1", "e1", "d1", "c1", "b1", "a1", 
@@ -27,16 +36,16 @@ square sq(char* sq){
 
 #define rank(c) (c - '0' - 1)
 
-/// @brief Indexing matches colours (1 for black, 0 for white)
+/// @brief Indexing matches colours (0 for white, 1 for black)
 castling_and_enpassant_info cep_info[2] = {
     {
     .kcr = K_castle,
     .qcr = Q_castle,
     .rook_to_move = R,
-    .ep_sq_offset = - 8,
-    .ep_pawn = P,
-    .rook_kingside_sq = h8,
-    .rook_queenside_sq = a8,
+    .ep_sq_offset = -8,
+    .ep_pawn = p,
+    .rook_kingside_sq = h1,
+    .rook_queenside_sq = a1,
     },
 
     {
@@ -44,9 +53,9 @@ castling_and_enpassant_info cep_info[2] = {
     .qcr = q_castle,
     .rook_to_move = r,
     .ep_sq_offset = 8,
-    .ep_pawn = p,
-    .rook_kingside_sq = h1,
-    .rook_queenside_sq = a1,
+    .ep_pawn = P,
+    .rook_kingside_sq = h8,
+    .rook_queenside_sq = a8,
     },
 };
 
@@ -156,7 +165,7 @@ U16 move_from_str(char* move){
     piece p_from = piece_on_square(from);
     piece p_to = piece_on_square(to);
 
-    set_promotion_type(move+2, &m_type);
+    set_promotion_type(move+4, &m_type);
 
     int square_dist = from - to;
     
@@ -183,3 +192,46 @@ U16 move_from_str(char* move){
     end:
     return (m_type << 12) | (from << 6) | to;
 }
+
+int maxi(int a, int b){
+    return (a > b) ? a : b;
+}
+
+#ifdef _WIN32
+
+U64 time_in_ms(){
+    return GetTickCount();
+}
+
+int input_waiting(){
+    static int init = 0, pipe;
+    static HANDLE inh;
+    DWORD dw;
+
+    if (!init) {
+        init = 1;
+        inh = GetStdHandle(STD_INPUT_HANDLE);
+        pipe = !GetConsoleMode(inh, &dw);
+    }
+    if (pipe) {
+        if (!PeekNamedPipe(inh, NULL, 0, NULL, &dw, NULL)) return 1;
+        return dw;
+    } else return _kbhit();
+}
+#else
+U64 time_in_ms() {
+	gettimeofday (&tv, NULL);
+	return(tv.tv_sec * 1000LL + (tv.tv_usec / 1000));
+}
+
+int input_waiting(){
+    fd_set readfds;
+
+	FD_ZERO (&readfds);
+	FD_SET (fileno(stdin), &readfds);
+	tv.tv_sec=0; tv.tv_usec=0;
+	select(16, &readfds, 0, 0, &tv);
+
+	return (FD_ISSET(fileno(stdin), &readfds));
+}
+#endif

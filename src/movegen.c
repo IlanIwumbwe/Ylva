@@ -6,6 +6,7 @@ U64 whites, blacks, occupied, whites_minus_king, blacks_minus_king, checkers, pi
 
 U64 KNIGHT_ATTACKS[64];
 U64 KING_ATTACKS[64];
+U64 PAWN_ATTACKS[64][2]; // for each square, bitboard of attacks from white / black's perspective
 
 //  pregenerated moves for each square, for each configuration of blockers
 U64 ROOK_MOVES[64][4096] = {};
@@ -179,7 +180,7 @@ static int blocker_to_key(U64 blocker, magic_entry mge){
 
 /// @brief find magic number for this square that can produce distinct indices for all blocker configurations
 /// @return magic number
-U64 find_magic(square sq, int for_bishop){
+static U64 find_magic(square sq, int for_bishop){
 
     U64 magic, attack_masks[4096], blocker_masks[4096], table[4096];
     magic_entry mge;
@@ -248,7 +249,7 @@ void find_all_magics(){
 }
 
 /// Produce bitboard of all attacked squares by a knight at given square
-void knight_attacks(square sq){
+static void knight_attacks(square sq){
     U64 bitboard = set_bit(sq);
     
     KNIGHT_ATTACKS[sq] |= (bitboard & ~(G_FILE | H_FILE | RANK(8))) << 6;
@@ -262,7 +263,7 @@ void knight_attacks(square sq){
 }
 
 /// Produce bitboard of all attacked squares by a king at given square
-void king_attacks(square sq){
+static void king_attacks(square sq){
     U64 bitboard = set_bit(sq);
     
     KING_ATTACKS[sq] |= (bitboard & ~RANK(8)) << 8;
@@ -275,7 +276,27 @@ void king_attacks(square sq){
     KING_ATTACKS[sq] |= (bitboard & ~(RANK(1) | A_FILE)) >> 7;
 }
 
-void pregenerate_slider_moves(){
+static void white_pawn_attacks(square sq){
+    U64 bitboard = set_bit(sq);
+
+    // right captures
+    PAWN_ATTACKS[sq][WHITE] |= (bitboard & ~(RANK(8) | H_FILE)) << 7;
+
+    // left captures
+    PAWN_ATTACKS[sq][WHITE] |= (bitboard & ~(RANK(8) | A_FILE)) << 9; 
+}
+
+static void black_pawn_attacks(square sq){
+    U64 bitboard = set_bit(sq);
+
+    // right captures
+    PAWN_ATTACKS[sq][BLACK] |= (bitboard & ~(RANK(1) | H_FILE)) >> 9;
+
+    // left captures
+    PAWN_ATTACKS[sq][BLACK] |= (bitboard & ~(RANK(1) | A_FILE)) >> 7; 
+}
+
+static void pregenerate_slider_moves(){
     U64 blocker_config;
     magic_entry mge;
     int key, i, j, n_bits_in_span;
@@ -321,6 +342,8 @@ void populate_attack_sets(){
     for(int i = 0; i < 64; ++i){
         knight_attacks(i);
         king_attacks(i);
+        white_pawn_attacks(i);
+        black_pawn_attacks(i);
     }
 
     // use stored magic numbers to generate attack sets for the slider pieces
@@ -329,11 +352,14 @@ void populate_attack_sets(){
 
 static void create_pawn_moves(dynamic_array* moves_array, U64 tos, int offset, int flag){
     square to;
+    Move m;
 
     while(tos){
         to = get_lsb(tos);
 
-        da_append(moves_array, (flag << 12) | ((to+offset) << 6) | to);
+        m.move = (flag << 12) | ((to+offset) << 6) | to;
+
+        da_append(moves_array, m);
 
         tos &= tos-1;
     }
@@ -341,11 +367,14 @@ static void create_pawn_moves(dynamic_array* moves_array, U64 tos, int offset, i
 
 static void create_other_moves(dynamic_array* moves_array, U64 tos, square from, int flag){
     square to;
+    Move m;
 
     while(tos){
         to = get_lsb(tos);
 
-        da_append(moves_array, (flag << 12) | (from << 6) | to);
+        m.move = (flag << 12) | (from << 6) | to;
+
+        da_append(moves_array, m);
 
         tos &= tos-1;   
     }
@@ -363,15 +392,17 @@ static U64 get_attackers(square sq, U64 mask){
     result = KNIGHT_ATTACKS[sq] & (bitboards[N] | bitboards[n]);
     result |= KING_ATTACKS[sq] & (bitboards[K] | bitboards[k]);
 
-    key = blocker_to_key(board_info->occupied, bishop_magics[sq]);
+    key = blocker_to_key(board_info->occupied , bishop_magics[sq]);
     bishops = BISHOP_MOVES[sq][key];
 
-    key = blocker_to_key(board_info->occupied, rook_magics[sq]);
+    key = blocker_to_key(board_info->occupied, rook_magics[sq]);    
     rooks = ROOK_MOVES[sq][key];
 
     result |= bishops & (bitboards[B] | bitboards[b]); 
     result |= rooks & (bitboards[R] | bitboards[r]);
     result |= (bishops | rooks) & (bitboards[Q] | bitboards[q]);
+
+    result |= (PAWN_ATTACKS[sq][WHITE] & bitboards[p]) | (PAWN_ATTACKS[sq][BLACK] & bitboards[P]);
     
     return result & ~mask;
 }
@@ -381,20 +412,16 @@ static U64 get_attackers(square sq, U64 mask){
 /// @param moves_array 
 /// @param ally_king
 /// @param ally_pieces
-static void filter_pseudo_legal_moves(dynamic_array* psuedo_legal_moves, dynamic_array* moves_array, piece ally_pawn, piece ally_king, piece ally_knight, piece ally_bishop, piece ally_rook, piece ally_queen){
+static void filter_pseudo_legal_moves(dynamic_array* pseudo_legal_moves, dynamic_array* moves_array, piece ally_pawn, piece ally_king, piece ally_knight, piece ally_bishop, piece ally_rook, piece ally_queen){
     size_t i;
-    int move;
+    Move move;
     square sq;
     U64 attackers;
 
-    for(i = 0; i < psuedo_legal_moves->used; ++i){
-        move = psuedo_legal_moves->array[i];
+    for(i = 0; i < pseudo_legal_moves->used; ++i){
+        move = pseudo_legal_moves->array[i];
 
-        //printf("filtering ");
-        //print_move(move);
-        //printf("\n");
-
-        make_move(move);
+        make_move(move.move);
 
         sq = get_lsb(bitboards[ally_king]);
 
@@ -404,8 +431,6 @@ static void filter_pseudo_legal_moves(dynamic_array* psuedo_legal_moves, dynamic
 
         undo_move();
     }
-
-    free_da(psuedo_legal_moves);
 }
 
 static void K_quiet_moves(dynamic_array* moves_array){
@@ -652,11 +677,11 @@ static void p_captures_moves(dynamic_array* moves_array){
             // white pawn made the double pawn push, maybe we can capture it via enpassant
            
             // capture by black pawn to the right
-            tos = (black_pawns & ((doubly_pushed_pawn & ~H_FILE) >> 1)) << 7;
+            tos = (black_pawns & ((doubly_pushed_pawn & ~H_FILE) >> 1)) >> 7;
             create_pawn_moves(moves_array,tos,7,5);
 
             // capture by white pawn to the left
-            tos = (black_pawns & ((doubly_pushed_pawn & ~A_FILE) << 1)) << 9;
+            tos = (black_pawns & ((doubly_pushed_pawn & ~A_FILE) << 1)) >> 9;
             create_pawn_moves(moves_array,tos,9,5);
         }
     } 
@@ -903,9 +928,9 @@ void generate_moves(dynamic_array* moves_array, int captures_only){
     assert((whites | blacks) == occupied);
 
     dynamic_array pseudo_legal_moves;
-    init_da(&pseudo_legal_moves, 2 * 218);  // 2 bytes used to store the move, and 218 max possible legal moves in given chess position
+    init_da(&pseudo_legal_moves, 218);
 
-    if(board_info->turn){
+    if(board_info->s == BLACK){
         checkers = get_attackers(get_lsb(bitboards[k]), blacks);
         n_checkers = count_set_bits(checkers);
 
@@ -963,4 +988,6 @@ void generate_moves(dynamic_array* moves_array, int captures_only){
 
         filter_pseudo_legal_moves(&pseudo_legal_moves, moves_array, P, K, N, B, R, Q);
     }
+
+    free_da(&pseudo_legal_moves);
 }

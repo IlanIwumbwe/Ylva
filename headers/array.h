@@ -3,16 +3,16 @@
 
 #include "../headers/utils.h"
 
-/// @brief Dynamic array that holds 16 bit values
-typedef struct dynamic_array{
-    int* array;
+/// @brief Dynamic array that holds moves
+typedef struct sda{
+    Move* array;
     size_t capacity;
     size_t used; 
 } dynamic_array;
 
-int init_da(dynamic_array* da, size_t capacity);
+void init_da(dynamic_array* da, size_t capacity);
 
-int da_append(dynamic_array* da, int element);
+void da_append(dynamic_array* da, Move move);
 
 void free_da(dynamic_array* da);
 
