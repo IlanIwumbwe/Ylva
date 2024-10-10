@@ -9,8 +9,8 @@ A simple chess engine in C for educational purposes.
 This is a rewrite of an older version that was in C++. A few features are missing and some stuff needs to be fixed as shown in Todos. These will be worked on subject to time constraints.
 
 ## Supported UCI commands
-- 'go depth n'
-- 'position'
+- `go depth n`
+- `position`
 
 ## Other commands
 - 'perft n' will count nodes to depth n. Nodes per second has gone up to `~20 million nps` from `~2 million nps`. 
