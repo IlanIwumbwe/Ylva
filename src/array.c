@@ -21,10 +21,13 @@ void init_da(dynamic_array* da, size_t capacity){
     } 
 }
 
-void da_append(dynamic_array* da, int element){
+/// @brief Append a move to the moves array
+/// @param da 
+/// @param move 
+void da_append(dynamic_array* da, Move move){
     if(da->used == da->capacity){
         da->capacity = 2 * da->capacity;
-        int* new_block = realloc(da->array, sizeof(int) * da->capacity);
+        Move* new_block = realloc(da->array, sizeof(Move) * da->capacity);
 
         if(new_block == NULL){
             printf("Reallocation of memory for dynamic array failed!");
@@ -35,15 +38,13 @@ void da_append(dynamic_array* da, int element){
         }
     }
 
-    da->array[da->used++] = element;
+    da->array[da->used++] = move;
 }
 
+/// @brief Free memory used by the moves array
+/// @param da 
 void free_da(dynamic_array* da){
     free(da->array);
     da->capacity = da->used = 0;
     da->array = NULL;
-}
-
-void reset_da(dynamic_array* da){
-    da->used = 0;
 }

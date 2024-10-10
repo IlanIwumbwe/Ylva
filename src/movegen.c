@@ -352,11 +352,14 @@ void populate_attack_sets(){
 
 static void create_pawn_moves(dynamic_array* moves_array, U64 tos, int offset, int flag){
     square to;
+    Move m;
 
     while(tos){
         to = get_lsb(tos);
 
-        da_append(moves_array, (flag << 12) | ((to+offset) << 6) | to);
+        m.move = (flag << 12) | ((to+offset) << 6) | to;
+
+        da_append(moves_array, m);
 
         tos &= tos-1;
     }
@@ -364,11 +367,14 @@ static void create_pawn_moves(dynamic_array* moves_array, U64 tos, int offset, i
 
 static void create_other_moves(dynamic_array* moves_array, U64 tos, square from, int flag){
     square to;
+    Move m;
 
     while(tos){
         to = get_lsb(tos);
 
-        da_append(moves_array, (flag << 12) | (from << 6) | to);
+        m.move = (flag << 12) | (from << 6) | to;
+
+        da_append(moves_array, m);
 
         tos &= tos-1;   
     }
@@ -408,14 +414,14 @@ static U64 get_attackers(square sq, U64 mask){
 /// @param ally_pieces
 static void filter_pseudo_legal_moves(dynamic_array* pseudo_legal_moves, dynamic_array* moves_array, piece ally_pawn, piece ally_king, piece ally_knight, piece ally_bishop, piece ally_rook, piece ally_queen){
     size_t i;
-    int move;
+    Move move;
     square sq;
     U64 attackers;
 
     for(i = 0; i < pseudo_legal_moves->used; ++i){
         move = pseudo_legal_moves->array[i];
 
-        make_move(move);
+        make_move(move.move);
 
         sq = get_lsb(bitboards[ally_king]);
 

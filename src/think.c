@@ -5,13 +5,33 @@ int eval(){
     return perspective * (board_info->material[WHITE] - board_info->material[BLACK]);   
 }
 
+/// @brief Find the move with the highest score and put it at the current iteration index
+/// @param moves_array 
+/// @param current_move_index 
+void pick_move(dynamic_array* moves_array, int current_move_index){
+    Move tmp;
+    Move curr_move;
+
+    for(size_t i = current_move_index+1; i < moves_array->used; ++i){
+        curr_move = moves_array->array[i];
+        
+        if(moves_array->array[current_move_index].score < curr_move.score){
+            // swap
+            tmp = moves_array->array[current_move_index];
+            moves_array->array[current_move_index] = curr_move;
+            moves_array->array[i] = tmp;
+        }
+    }
+
+}
+
 int search(int depth, int alpha, int beta){
 
     if(depth == 0){
         return eval(); 
     }
 
-    U16 move;
+    Move move;
     int eval;
 
     dynamic_array moves_array;
@@ -29,9 +49,10 @@ int search(int depth, int alpha, int beta){
     }
 
     for(size_t i = 0; i < moves_array.used; ++i){
+        pick_move(&moves_array, i);
         move = moves_array.array[i];
 
-        make_move(move);
+        make_move(move.move);
 
         eval = -search(depth - 1, -beta, -alpha);
 
@@ -60,22 +81,23 @@ void think(int depth){
 
     generate_moves(&moves_array, 0);
 
-    U16 curr_move;
+    Move curr_move;
     U16 best_move = 0;
     int best_eval = -INT_MAX;
     int eval = 0;
 
     for(size_t i = 0; i < moves_array.used; ++i){
+        pick_move(&moves_array, i);
         curr_move = moves_array.array[i];
 
-        make_move(curr_move);
+        make_move(curr_move.move);
 
         eval = -search(depth-1, -INT_MAX, INT_MAX);
 
         undo_move();
 
         if(eval > best_eval){
-            best_move = curr_move;
+            best_move = curr_move.move;
             best_eval = eval;
         }
     

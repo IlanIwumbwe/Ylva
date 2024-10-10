@@ -16,7 +16,7 @@ U64 movegen_test(int depth){
     U64 num_nodes = 0;
 
     for(size_t i = 0; i < moves_array.used; ++i){
-        move = moves_array.array[i];
+        move = moves_array.array[i].move;
 
         make_move(move);
         num_nodes += movegen_test(depth - 1);
@@ -44,7 +44,7 @@ void run_perft(int depth){
         U64 num_nodes = 0ULL, total_nodes = 0ULL;
 
         for(size_t i = 0; i < moves_array.used; ++i){
-            move = moves_array.array[i];
+            move = moves_array.array[i].move;
 
             make_move(move);
             print_move(move);

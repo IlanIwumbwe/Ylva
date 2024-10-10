@@ -69,7 +69,6 @@ void make_move(const U16 move){
 
             info_n->occupied &= ~set_bit(s_to - 1);
             info_n->occupied |= set_bit(s_from - 1);
-
             info_n->hash ^= piece_zobrist_keys[cep.rook_to_move][s_to - 1];
             info_n->hash ^= piece_zobrist_keys[cep.rook_to_move][s_from - 1];
  
@@ -120,7 +119,6 @@ void make_move(const U16 move){
     bitboards[p_from] |= set_bit(s_to);
     board[s_to] = p_from;
     info_n->occupied |= set_bit(s_to);
-
     info_n->hash ^= piece_zobrist_keys[p_from][s_to];
 
     info_n->s = 1 - s;

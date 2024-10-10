@@ -64,12 +64,17 @@ typedef enum {
 
 extern vals piece_values[13]; 
 
-typedef struct castling_and_enpassant_info{
+typedef struct scpe{
     int kcr, qcr; // kingside and queenside castling rights (choose correct flags based on whose turn it is)
     int ep_sq_offset;
     piece rook_to_move, ep_pawn;
     square rook_kingside_sq, rook_queenside_sq;
 }castling_and_enpassant_info;
+
+typedef struct smove {
+    U16 move;
+    int score;
+} Move;
 
 extern castling_and_enpassant_info cep_info[2];
 
