@@ -8,7 +8,7 @@ void init_da(dynamic_array* da, size_t capacity){
         printf("Cannot initialise array with capacity of 0 bytes!");
         exit(-1);
     } else {
-        da->array = malloc(sizeof(int) * capacity); 
+        da->array = malloc(sizeof(Move) * capacity); 
 
         if(da->array != NULL){
             da->used = 0;
