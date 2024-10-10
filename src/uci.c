@@ -155,7 +155,7 @@ void uci_communication(){
         
         #ifdef DEV
             case PERFT:
-                depth = strtol(uci_command+6, &end, 10);
+                depth = mini(MAX_SEARCH_DEPTH, strtol(uci_command+6, &end, 10));
                 run_perft(depth);
                 break;
 
