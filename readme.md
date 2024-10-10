@@ -26,11 +26,12 @@ This is a rewrite of an older version that was in C++. A few features are missin
 
 - Richard Allbert's, [Vice series](https://bit.ly/3XpdiKU) on his Bluefever Software channel
 - Marcel Vanthoor's [Rustic chess engine](https://rustic-chess.org)
+- The [Weiss](https://github.com/TerjeKir/weiss) engine
 - [Chess Programming Wiki](https://www.chessprogramming.org)
-- Sebastian Lague's [video](https://www.youtube.com/watch?v=U4ogK0MIzqk), which was also the original inspiration for Ylva.
 - Oliver Brausch's [Olithink](https://github.com/olithink), specifically his method for peeking std input to check for "stop" command interrupting engine search
 - [Analog Hors'](https://analog-hors.github.io/site/magic-bitboards/) explanation of magic bitboards
 - [Tord Romstard's](https://www.chessprogramming.org/Looking_for_Magics) source code for finding magic numbers
+- Sebastian Lague's [video](https://www.youtube.com/watch?v=U4ogK0MIzqk), which was also the original inspiration for Ylva.
 
 ## License
 MIT
