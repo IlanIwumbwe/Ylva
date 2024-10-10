@@ -1,19 +1,29 @@
-# Ylva
+# ylva.c
 
 <p align="center" width="100%">
     <img width="33%" src="ylva.jpg">
 </p>
 
+A simple chess engine in C for educational purposes.
+
+This is a rewrite of an older version that was in C++. A few features are missing and some stuff needs to be fixed as shown in Todos. These will be worked on subject to time constraints.
+
+## Supported UCI commands
+- 'go depth n'
+- 'position'
+
+## Other commands
+- 'perft n' will count nodes to depth n. Nodes per second has gone up to `~20 million nps` from `~2 million nps`. 
 
 ## Todos
 
-[Todos](https://github.com/IlanIwumbwe/Ylva/issues/2)
-
-**A major rewrite is currently underway. This is number 1 priority**
+- [ ] Fix move generation bug
+- [ ] Complete writing move ordering, killer move heuristic and PSQT evaluation
+- [ ] Add more UCI commands
 
 ## Acknowledgements
 
-- Richard Allbert's, [Vice series](https://bit.ly/3XpdiKU) on his Bluefever Software channel. I followed the same approach as in this series for my PV table, checking for stop conditions during search, and stopping the search when the "stop" command is received from UCI GUI.
+- Richard Allbert's, [Vice series](https://bit.ly/3XpdiKU) on his Bluefever Software channel
 - Marcel Vanthoor's [Rustic chess engine](https://rustic-chess.org)
 - [Chess Programming Wiki](https://www.chessprogramming.org)
 - Sebastian Lague's [video](https://www.youtube.com/watch?v=U4ogK0MIzqk), which was also the original inspiration for Ylva.
