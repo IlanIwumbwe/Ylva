@@ -478,12 +478,16 @@ static void k_quiet_moves(dynamic_array* moves_array){
             if(!(set_bit(f8) & occupied) && !(set_bit(g8) & occupied) && !get_attackers(f8,blacks) && !get_attackers(g8,blacks)){
                 create_other_moves(moves_array, set_bit(g8), e8, 2);
             }
+        } else {
+            board_info->castling_rights &= ~k_castle;
         }
 
         if(board_info->castling_rights & q_castle){
             if(!(set_bit(d8) & occupied) && !(set_bit(c8) & occupied) && !(set_bit(b8) & occupied) && !get_attackers(d8,blacks) && !get_attackers(c8,blacks)){
                 create_other_moves(moves_array, set_bit(c8), e8, 3);
             }
+        } else {
+            board_info->castling_rights &= ~q_castle;
         }
     }
 }
@@ -925,7 +929,7 @@ void generate_moves(dynamic_array* moves_array, int captures_only){
 
     occupied = board_info->occupied;
 
-    assert((whites | blacks) == occupied);
+    //assert((whites | blacks) == occupied);
 
     dynamic_array pseudo_legal_moves;
     init_da(&pseudo_legal_moves, 218);

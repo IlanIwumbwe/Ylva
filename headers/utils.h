@@ -67,7 +67,7 @@ extern vals piece_values[13];
 typedef struct scpe{
     int kcr, qcr; // kingside and queenside castling rights (choose correct flags based on whose turn it is)
     int ep_sq_offset;
-    piece rook_to_move, ep_pawn;
+    piece rook_to_move, ep_pawn, ally_king;
     square rook_kingside_sq, rook_queenside_sq;
 }castling_and_enpassant_info;
 

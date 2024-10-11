@@ -19,8 +19,15 @@ U64 movegen_test(int depth){
         move = moves_array.array[i].move;
 
         make_move(move);
+
+        //print_board();
+        //getchar();
+
         num_nodes += movegen_test(depth - 1);
         undo_move();
+
+        //print_board();
+        //getchar();
     }
 
     free_da(&moves_array);
@@ -46,8 +53,13 @@ void run_perft(int depth){
         for(size_t i = 0; i < moves_array.used; ++i){
             move = moves_array.array[i].move;
 
-            make_move(move);
             print_move(move);
+            make_move(move);
+
+            //print_bitboard(bitboards[b]);
+            //print_bitboard(board_info->occupied);
+            //print_board();
+            //getchar();
 
             num_nodes = movegen_test(depth - 1);
             total_nodes += num_nodes;
@@ -55,6 +67,11 @@ void run_perft(int depth){
             printf(": %ld\n", num_nodes);
 
             undo_move();
+
+            //print_bitboard(bitboards[b]);
+            //print_bitboard(board_info->occupied);
+            //print_board();
+            //getchar();
         }
 
         U64 end_time = time_in_ms();
