@@ -46,7 +46,7 @@ void make_move(const U16 move){
 
     }
     
-    //assert(p_from != p_none);
+    assert(p_from != p_none);
 
     bitboards[p_from] &= ~set_bit(s_from);
     info_n->occupied &= ~set_bit(s_from);
@@ -168,17 +168,17 @@ void undo_move(){
 
     bitboards[p_from] &= ~set_bit(s_to);
 
-    //assert(p_from != p_none);
+    assert(p_from != p_none);
 
     // promotion move or not
     if(m_type <= 5){
         castling_and_enpassant_info cep = cep_info[1 - board_info->s];
 
         if(m_type == 5){
-            castling_and_enpassant_info cep = cep_info[board_info->s];
+            //castling_and_enpassant_info cep = cep_info[board_info->s];
 
-            bitboards[board_info->captured_piece] |= set_bit(s_to - cep.ep_sq_offset); 
-            board[s_to - cep.ep_sq_offset] = board_info->captured_piece;
+            bitboards[board_info->captured_piece] |= set_bit(s_to + cep.ep_sq_offset); 
+            board[s_to + cep.ep_sq_offset] = board_info->captured_piece;
 
         } else if(m_type == 2){
             // kingside castle

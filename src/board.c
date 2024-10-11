@@ -59,7 +59,7 @@ void modify_hash_by_occupancy(info* info_n, piece p, square sq){
 
 void modify_hash_by_castling_rights(info* info_n, U16 old_castling_rights){
     info_n->hash ^= old_castling_rights;
-    info_n->hash ^= info_n->castling_rights;
+    info_n->hash ^= info_n->castling_rights;    
 }   
 
 /// @brief Populate bitboards from fen

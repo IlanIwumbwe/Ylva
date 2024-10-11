@@ -56,8 +56,6 @@ void run_perft(int depth){
             print_move(move);
             make_move(move);
 
-            //print_bitboard(bitboards[b]);
-            //print_bitboard(board_info->occupied);
             //print_board();
             //getchar();
 
@@ -68,8 +66,6 @@ void run_perft(int depth){
 
             undo_move();
 
-            //print_bitboard(bitboards[b]);
-            //print_bitboard(board_info->occupied);
             //print_board();
             //getchar();
         }

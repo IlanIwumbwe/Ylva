@@ -17,8 +17,6 @@ This is a rewrite of an older version that was in C++. A few features are missin
 
 ## Todos
 
-- [ ] Fix move generation bug 
-    - This seems to be a very subtle bug, not reproducable by many perft tests. Running `8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1` to depth 6 does.
 - [ ] Complete writing move ordering, killer move heuristic and PSQT evaluation
 - [ ] Add more UCI commands
 
