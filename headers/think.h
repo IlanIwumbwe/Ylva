@@ -4,7 +4,13 @@
 #include "movegen.h"
 #include "board.h"
 
-void think(int depth);
+typedef struct s_search_info{
+    int nodes_searched;
+    int maxdepth;
+
+} search_info;
+
+void think(search_info* info);
 
 #endif
 

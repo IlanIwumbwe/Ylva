@@ -352,7 +352,7 @@ void populate_attack_sets(){
 
 static void create_pawn_moves(dynamic_array* moves_array, U64 tos, int offset, int flag){
     square to;
-    Move m;
+    Move m = {.score = 0};
 
     while(tos){
         to = get_lsb(tos);
@@ -367,7 +367,7 @@ static void create_pawn_moves(dynamic_array* moves_array, U64 tos, int offset, i
 
 static void create_other_moves(dynamic_array* moves_array, U64 tos, square from, int flag){
     square to;
-    Move m;
+    Move m = {.score = 0};
 
     while(tos){
         to = get_lsb(tos);

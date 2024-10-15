@@ -139,6 +139,7 @@ void make_move(const U16 move){
 
     info_n->s = 1 - s;
     info_n->ply = board_info->ply + 1;
+    info_n->hisply = board_info->hisply + 1;
     info_n->moves = board_info->moves + (s == BLACK);
     info_n->move = move;
 

@@ -132,13 +132,13 @@ void process_go(const char* uci_command){
     char* cmd;
     char* arg;
     char* end;
-    int depth = 0;
 
     cmd = strtok(copy, " ");
+    search_info info;
 
     while((cmd = strtok(NULL, " ")) && (arg = strtok(NULL, " "))){
-        depth = mini(MAX_SEARCH_DEPTH, strtol(arg, &end, 10));
-        think(depth);
+        info.maxdepth = mini(MAX_SEARCH_DEPTH, strtol(arg, &end, 10));
+        think(&info);
     }
 
 }
@@ -181,4 +181,6 @@ void uci_communication(){
 
         }
     }
+
+    free_pv(&pvt);
 }

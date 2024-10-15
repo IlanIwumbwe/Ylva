@@ -10,6 +10,9 @@ U64 piece_zobrist_keys[13][64];
 U64 turn_key;
 U64 castling_key[16];
 
+U16 pv_array[MAX_SEARCH_DEPTH];
+pv_table pvt;
+
 void init_hash_keys(void){
     int i, j;
 
@@ -135,12 +138,13 @@ void setup_state_from_fen(const char* fen_string){
     }
 
 
-    board_info->ply = strtol(strtok(NULL, " "), &end, 10);
+    board_info->hisply = strtol(strtok(NULL, " "), &end, 10);
     board_info->moves = strtol(strtok(NULL, " "), &end, 10);
     board_info->captured_piece = p_none;
 
     generate_hash();
     count_material();
+    init_pv(&pvt, 5000000);
 }
 
 piece piece_on_square(square sq){
@@ -153,7 +157,7 @@ void print_board(void){
     char c; 
 
     printf("castling rights flag: %d\n", board_info->castling_rights);
-    printf("ply: %d\n", board_info->ply);
+    printf("total ply: %d\n", board_info->hisply);
     printf("moves: %d\n", board_info->moves);
     printf("previous move: ");
     print_move(board_info->move);
