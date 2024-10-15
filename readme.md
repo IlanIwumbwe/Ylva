@@ -1,7 +1,7 @@
 # ylva.c
 
 <p align="center" width="100%">
-    <img width="33%" src="ylva.jpg">
+    <img width="33%" src="ylva.jpeg">
 </p>
 
 A simple chess engine in C for educational purposes.
@@ -16,8 +16,10 @@ This is a rewrite of an older version that was in C++. A few features are missin
 - `perft n` will count nodes to depth n. Nodes per second has gone up to `~20 million nps` from `~2 million nps`. 
 
 ## Todos
-
-- [ ] Complete writing move ordering, killer move heuristic and PSQT evaluation
+- [ ] Fix movegen bug
+- [x] Complete writing move ordering 
+- [ ] Add killer move heuristic
+- [ ] Add PSQT evaluation
 - [ ] Add more UCI commands
 
 ## Acknowledgements
