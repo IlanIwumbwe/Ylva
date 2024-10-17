@@ -12,6 +12,12 @@ const int MVV_LVA[7][7] = {
     {0, 0, 0, 0, 0, 0, 0}, // victim = none
 };
 
+static void check_stop_conditions(search_info* info){
+    if((info->time_set && (time_in_ms() > info->end_time)) || input_waiting()){
+        info->stopped = 1;
+    }
+}
+
 static int eval(){
     int perspective = (board_info->s == WHITE) ? 1 : -1;
     return perspective * (board_info->material[WHITE] - board_info->material[BLACK]);
@@ -37,7 +43,7 @@ static void pick_move(dynamic_array* moves_array, int current_move_index){
 
 }
 
-/// @brief negamax without alpha beta pruning
+/// @brief plain negamax without any optimisations
 /// @param depth 
 /// @return 
 static int negamax_search(int depth){
@@ -162,7 +168,7 @@ void order_moves(dynamic_array* moves_array){
 
 }
 
-/// @brief negamax search on the position
+/// @brief negamax search on the position with alpha-beta pruning and move ordering
 /// @param depth 
 /// @param alpha 
 /// @param beta 
@@ -170,6 +176,10 @@ void order_moves(dynamic_array* moves_array){
 static int search(int depth, int alpha, int beta, search_info* info){
     if(depth == 0){
         return eval(); 
+    }
+
+    if(info->nodes_searched & 2047){
+        check_stop_conditions(info);
     }
 
     Move move;
@@ -195,6 +205,10 @@ static int search(int depth, int alpha, int beta, search_info* info){
     for(size_t i = 0; i < moves_array.used; ++i){
         pick_move(&moves_array, i);
         move = moves_array.array[i];
+
+        if(info->stopped){
+            return 0;
+        }
 
         make_move(move.move);
 
@@ -239,10 +253,6 @@ void think(search_info* info){
             pick_move(&moves_array, i);
             curr_move = moves_array.array[i];
 
-            //printf("Searching ");
-            //print_move(curr_move.move);
-            //printf(" score: %d\n", curr_move.score);
-
             make_move(curr_move.move);
 
             info->nodes_searched += 1;
@@ -258,12 +268,17 @@ void think(search_info* info){
 
         pv_len = get_pv_line(d);
 
+        printf("info depth %d nodes %d pv ", d, info->nodes_searched);
+
         for(int i = 0; i < pv_len; i++){
             print_move(pv_array[i]);
-            printf(" ");
         }
 
-        printf("nodes %d depth %d\n", info->nodes_searched, d);
+        printf("\n");
+
+        //reset_pv_entries(&pvt);
+
+        if(info->stopped){break;}
     }
 
     free_da(&moves_array);

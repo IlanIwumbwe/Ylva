@@ -26,8 +26,8 @@ extern U64 piece_zobrist_keys[13][64];
 extern U64 turn_key;
 extern U64 castling_key[16];
 
-extern U16 pv_array[MAX_SEARCH_DEPTH];
 extern pv_table pvt;
+extern U16 pv_array[MAX_SEARCH_DEPTH];
 
 void setup_state_from_fen(const char* fen_string);
 

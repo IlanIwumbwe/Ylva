@@ -106,8 +106,6 @@ U16 probe_pv_table(pv_table* pvt, U64 key){
 }
 
 void free_pv(pv_table* pvt){
-    pvt->table = NULL;
-    pvt->capacity = 0;
     free(pvt);
 }
 

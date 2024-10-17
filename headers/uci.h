@@ -11,6 +11,7 @@
 enum {
     NONE = 0,
     UCI = 127,
+    ISREADY = 113,
     GO = 11,
     UCINEWGAME = 6,
     POSITION = 17,

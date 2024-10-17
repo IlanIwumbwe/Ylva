@@ -106,6 +106,14 @@ static int get_input(char* buffer){
     return 0;
 }
 
+static void process_uci(){
+    printf("id name ylva \nid author Ilan \nuciok\n");
+}
+
+static void process_isready(){
+    printf("readyok\n");
+}
+
 static void process_position(const char* uci_command){
     char* fen_end = strstr(uci_command, "moves");
 
@@ -134,12 +142,41 @@ void process_go(const char* uci_command){
     char* end;
 
     cmd = strtok(copy, " ");
-    search_info info;
+
+    U64 time = 0, inc = 0;
+    int movestogo = 30;
+
+    search_info info = {.maxdepth = MAX_SEARCH_DEPTH};
 
     while((cmd = strtok(NULL, " ")) && (arg = strtok(NULL, " "))){
-        info.maxdepth = mini(MAX_SEARCH_DEPTH, strtol(arg, &end, 10));
-        think(&info);
+        if(!strcmp(cmd, "depth")){
+            info.maxdepth = mini(MAX_SEARCH_DEPTH, strtol(arg, &end, 10));
+        } else if (!strcmp(cmd, "wtime") && (board_info->s == WHITE)){
+            time = strtoll(arg, &end, 10);
+        } else if (!strcmp(cmd, "btime") && (board_info->s == BLACK)) {
+            time = strtoll(arg, &end, 10);
+        } else if (!strcmp(cmd, "winc") && (board_info->s == WHITE)) {
+            inc = strtoll(arg, &end, 10);
+        } else if (!strcmp(cmd, "binc") && (board_info->s == BLACK)) {
+            inc = strtoll(arg, &end, 10);
+        } else if(!strcmp(cmd, "movetime")){
+            time = strtoll(arg, &end, 10);
+            movestogo = 1;
+        } else if(!strcmp(cmd, "movestogo")){
+            movestogo = strtol(arg, &end, 10);
+        } 
     }
+
+    if(time != 0){
+        info.start_time = time_in_ms();
+        time /= movestogo;
+        info.end_time = info.start_time + inc + time;
+        info.time_set = 1;
+    }
+
+    printf("start_time %ld end_time %ld depth %d time to think %ld inc %ld timeset %d\n", info.start_time, info.end_time, info.maxdepth, time, inc, info.time_set);
+
+    think(&info);
 
 }
 
@@ -160,11 +197,13 @@ void uci_communication(){
         int h = hash_first_token(uci_command);
         char* end;
         
-        printf("%d\n", h);
+        //printf("%d\n", h);
 
         switch(h){
             case POSITION: process_position(uci_command); break;
             case GO: process_go(uci_command); break;
+            case UCI: process_uci(); break;
+            case ISREADY: process_isready(); break;
         
         #ifdef DEV
             case PERFT:

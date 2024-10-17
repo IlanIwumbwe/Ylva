@@ -34,7 +34,10 @@ void make_move(const U16 move){
     castling_and_enpassant_info opp_cep = cep_info[1-s];
     castling_and_enpassant_info ally_cep = cep_info[s];
 
-    // rook was captured, remove relevant casting rights
+    /* 
+    rook was captured, king moved, rook moved 
+    remove relevant casting rights
+    */
     if(p_to == opp_cep.rook_to_move){
         if (s_to == opp_cep.rook_kingside_sq){
             info_n->castling_rights &= ~opp_cep.kcr;
@@ -44,6 +47,11 @@ void make_move(const U16 move){
     } else if (p_from == ally_cep.ally_king){
         info_n->castling_rights &= ~(ally_cep.kcr | ally_cep.qcr);
 
+    } else if ((p_from == ally_cep.rook_to_move) && (s_from == ally_cep.rook_kingside_sq)){
+        info_n->castling_rights &= ~ally_cep.kcr;
+
+    } else if ((p_from == ally_cep.rook_to_move) && (s_from == ally_cep.rook_queenside_sq)){
+        info_n->castling_rights &= ~ally_cep.qcr;
     }
     
     assert(p_from != p_none);
@@ -57,17 +65,7 @@ void make_move(const U16 move){
     // promotion move or not
     if(m_type <= 5){
 
-        if(m_type == 0){
-             
-            if((p_from == ally_cep.rook_to_move) && (s_from == ally_cep.rook_kingside_sq)){
-                info_n->castling_rights &= ~ally_cep.kcr;
-            } else if ((p_from == ally_cep.rook_to_move) && (s_from == ally_cep.rook_queenside_sq)){
-                info_n->castling_rights &= ~ally_cep.qcr;
-            } else if (p_from == ally_cep.ally_king){
-                info_n->castling_rights &= ~(ally_cep.kcr | ally_cep.qcr);
-            }
-
-        } else if(m_type == 1){
+        if(m_type == 1){
             
             info_n->ep_square = s_to + ally_cep.ep_sq_offset;
             info_n->hash ^= piece_zobrist_keys[p_none][info_n->ep_square];
@@ -94,17 +92,17 @@ void make_move(const U16 move){
             // queenside castle
             info_n->castling_rights &= ~(ally_cep.kcr | ally_cep.qcr);
 
-            bitboards[ally_cep.rook_to_move] &= ~set_bit(s_to + 1);
-            bitboards[ally_cep.rook_to_move] |= set_bit(s_from + 2);
+            bitboards[ally_cep.rook_to_move] &= ~set_bit(s_to + 2);
+            bitboards[ally_cep.rook_to_move] |= set_bit(s_from + 1);
 
-            info_n->occupied &= ~set_bit(s_to + 1);
-            info_n->occupied |= set_bit(s_from + 2);
+            info_n->occupied &= ~set_bit(s_to + 2);
+            info_n->occupied |= set_bit(s_from + 1);
 
-            board[s_to + 1] = p_none;
-            board[s_from + 2] = ally_cep.rook_to_move;
+            board[s_to + 2] = p_none;
+            board[s_from + 1] = ally_cep.rook_to_move;
 
-            info_n->hash ^= piece_zobrist_keys[ally_cep.rook_to_move][s_to + 1];
-            info_n->hash ^= piece_zobrist_keys[ally_cep.rook_to_move][s_from + 2];
+            info_n->hash ^= piece_zobrist_keys[ally_cep.rook_to_move][s_to + 2];
+            info_n->hash ^= piece_zobrist_keys[ally_cep.rook_to_move][s_from + 1];
 
             modify_hash_by_castling_rights(info_n, board_info->castling_rights);
 
@@ -191,11 +189,11 @@ void undo_move(){
             
         } else if (m_type == 3){
             // queenside castle
-            bitboards[cep.rook_to_move] |= set_bit(s_to + 1);
-            bitboards[cep.rook_to_move] &= ~set_bit(s_from + 2);
+            bitboards[cep.rook_to_move] |= set_bit(s_to + 2);
+            bitboards[cep.rook_to_move] &= ~set_bit(s_from + 1);
 
-            board[s_to + 1] = cep.rook_to_move;
-            board[s_from + 2] = p_none;
+            board[s_to + 2] = cep.rook_to_move;
+            board[s_from + 1] = p_none;
         }
 
     } else {        

@@ -180,13 +180,13 @@ U16 move_from_str(char* move){
     if((p_from == P) || (p_from == p)){
         if(abs(square_dist) == 9 || abs(square_dist) == 7){
             m_type = 0x5;
-        } else if(square_dist == 16 || square_dist == -16){
+        } else if(abs(square_dist) == 16){
             m_type = 0x1;
         }
     } else if ((p_from == K) || (p_from == k)){
         if(square_dist == 2){
             m_type = 0x2;
-        } else if(square_dist == 3){
+        } else if(square_dist == -2){
             m_type = 0x3;
         }
     }
