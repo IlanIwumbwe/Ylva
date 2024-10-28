@@ -13,7 +13,7 @@ typedef struct sinfo{
     piece captured_piece; /// most recently captured piece
     U64 hash;
     U64 occupied;
-    int material[2];
+    int eval[2];
 } info;
 
 extern info* board_info;
@@ -43,6 +43,6 @@ void modify_hash_by_castling_rights(info* info_n, U16 old_castling_rights);
 
 void generate_hash();
 
-void count_material();
+void count_eval();
 
 #endif

@@ -170,7 +170,8 @@ void uci_communication(){
 
     populate_attack_sets();
     init_hash_keys();
-
+    init_flip();
+    
     char uci_command[INPUT_SIZE];
     int depth;
 

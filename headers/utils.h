@@ -63,7 +63,10 @@ typedef enum {
     Q_VAL = 900
 } vals;
 
-extern vals piece_values[13]; 
+// extern vals piece_values[13];
+extern const int ROOK_PSQT[64], BISHOP_PSQT[64], KNIGHT_PSQT[64], PAWN_PSQT[64], QUEEN_PSQT[64], KING_PSQT[64];
+extern const int* PIECE_VALUES[12];
+extern int FLIP[2][64];
 
 typedef struct scpe{
     int kcr, qcr; // kingside and queenside castling rights (choose correct flags based on whose turn it is)
@@ -102,5 +105,7 @@ int input_waiting();
 int maxi(int a, int b);
 
 int mini(int a, int b);
+
+void init_flip();
 
 #endif

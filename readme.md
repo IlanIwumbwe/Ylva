@@ -19,13 +19,13 @@ This is a rewrite of an older version that was in C++. A few features are missin
 
 ## Todos
 - [x] Complete writing move ordering 
-- [ ] Add killer move heuristic
-- [ ] Add PSQT evaluation
+- [ ] Taper PSQT evaluation
+- [x] Add PSQT evaluation
 
 ## Acknowledgements
 
 - Richard Allbert's, [Vice series](https://bit.ly/3XpdiKU) on his Bluefever Software channel
-- Marcel Vanthoor's [Rustic chess engine](https://rustic-chess.org)
+- Marcel Vanthoor's [Rustic chess engine](https://rustic-chess.org) for move ordering and PSQT explanation. I created my PSQT tables using a combination of Rustic's and [these](https://www.chessprogramming.org/Simplified_Evaluation_Function) psqt tables. 
 - The [Weiss](https://github.com/TerjeKir/weiss) engine
 - [Chess Programming Wiki](https://www.chessprogramming.org)
 - Oliver Brausch's [Olithink](https://github.com/olithink), specifically his method for peeking std input to check for "stop" command interrupting engine search

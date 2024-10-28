@@ -11,7 +11,7 @@ void make_move(const U16 move){
     info_n->hash = board_info->hash ^ turn_key;
     info_n->occupied = board_info->occupied;
     
-    memcpy(info_n->material, board_info->material, sizeof(board_info->material));
+    memcpy(info_n->eval, board_info->eval, sizeof(board_info->eval));
 
     side s = board_info->s;
 
@@ -29,7 +29,8 @@ void make_move(const U16 move){
     // take care of possible captures, ep capture done separately
     bitboards[p_to] &= ~set_bit(s_to);
     info_n->captured_piece = p_to;
-    info_n->material[s] -= piece_values[p_to];
+
+    if(p_to != p_none) info_n->eval[s] -= PIECE_VALUES[p_to][FLIP[1-s][s_to]];
 
     castling_and_enpassant_info opp_cep = cep_info[1-s];
     castling_and_enpassant_info ally_cep = cep_info[s];
@@ -116,22 +117,20 @@ void make_move(const U16 move){
 
             info_n->hash ^= piece_zobrist_keys[ally_cep.ep_pawn][s_to + ally_cep.ep_sq_offset];
 
-            info_n->material[s] -= piece_values[ally_cep.ep_pawn];
+            info_n->eval[s] -= PIECE_VALUES[ally_cep.ep_pawn][FLIP[1-s][s_to + ally_cep.ep_sq_offset]];
         } 
 
     } else {
         int offset = (s == BLACK) ? 8 : 2;
 
-        info_n->material[s] -= piece_values[p_from];
+        info_n->eval[s] -= PIECE_VALUES[p_from][FLIP[s][s_from]];
 
         p_from = (m_type & 0x3) + offset;
-
-        info_n->material[s] += piece_values[p_from];
-
     }
 
     bitboards[p_from] |= set_bit(s_to);
     board[s_to] = p_from;
+    info_n->eval[s] += PIECE_VALUES[p_from][FLIP[s][s_to]];
     info_n->occupied |= set_bit(s_to);
     info_n->hash ^= piece_zobrist_keys[p_from][s_to];
 

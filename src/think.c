@@ -20,7 +20,7 @@ static void check_stop_conditions(search_info* info){
 
 static int eval(){
     int perspective = (board_info->s == WHITE) ? 1 : -1;
-    return perspective * (board_info->material[WHITE] - board_info->material[BLACK]);
+    return perspective * (board_info->eval[WHITE] - board_info->eval[BLACK]);
 }
 
 /// @brief Find the move with the highest score and put it at the current iteration index

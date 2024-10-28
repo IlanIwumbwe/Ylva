@@ -143,7 +143,7 @@ void setup_state_from_fen(const char* fen_string){
     board_info->captured_piece = p_none;
 
     generate_hash();
-    count_material();
+    count_eval();
     init_pv(&pvt, 200000);
 }
 
@@ -163,7 +163,7 @@ void print_board(void){
     print_move(board_info->move);
     printf("move type: %x\n", move_type(board_info->move));
     printf("turn: %s\n", (board_info->s) ? "b" : "w");
-    printf("White mat: %d Black mat: %d \n", board_info->material[WHITE], board_info->material[BLACK]);
+    printf("White eval: %d Black eval: %d \n", board_info->eval[WHITE], board_info->eval[BLACK]);
 
     printf("----------------\n");
     for(int i = 63; i >= 0; i--){
@@ -183,18 +183,22 @@ void print_board(void){
     printf("Key: %lx \n", board_info->hash);
 }
 
-void count_material(){
+void count_eval(){
     piece pi;
 
-    board_info->material[0] = 0;
-    board_info->material[1] = 0;
+    for(int sq = 0; sq < 64; ++sq){
+        pi = board[sq];
 
-    for(pi = P; pi <= Q; ++pi){
-        board_info->material[WHITE] += count_set_bits(bitboards[pi]) * piece_values[pi];
+        if(pi != p_none){
+
+            if(pi < 6){
+                // white
+                board_info->eval[WHITE] += PIECE_VALUES[pi][FLIP[WHITE][sq]];
+            } else {
+                // black
+                board_info->eval[BLACK] += PIECE_VALUES[pi][FLIP[BLACK][sq]];
+            }
+        }
     }
-
-    for(pi = p; pi <= q; ++pi){
-        board_info->material[BLACK] += count_set_bits(bitboards[pi]) * piece_values[pi];
-    }
-
 }
+
