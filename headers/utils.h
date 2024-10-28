@@ -54,15 +54,6 @@ typedef enum {
 
 typedef enum {WHITE, BLACK} side;
 
-typedef enum {
-    P_VAL = 100,
-    K_VAL = 20000,
-    N_VAL = 320,
-    B_VAL = 330,
-    R_VAL = 500,
-    Q_VAL = 900
-} vals;
-
 // extern vals piece_values[13];
 extern const int ROOK_PSQT[64], BISHOP_PSQT[64], KNIGHT_PSQT[64], PAWN_PSQT[64], QUEEN_PSQT[64], KING_PSQT[64];
 extern const int* PIECE_VALUES[12];

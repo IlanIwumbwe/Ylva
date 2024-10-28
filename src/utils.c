@@ -9,8 +9,6 @@ struct timeval tv;
 
 char char_pieces[12] = {'P','K','N','B','R','Q','p','k','n','b','r','q'};
 
-// vals piece_values[13] = {P_VAL, K_VAL, N_VAL, B_VAL, R_VAL, Q_VAL, P_VAL, K_VAL, N_VAL, B_VAL, R_VAL, Q_VAL, 0};
-
 // psqt scores that encode base piece values as well
 
 const int PAWN_PSQT[64] = {
