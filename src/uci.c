@@ -8,32 +8,22 @@ U64 movegen_test(int depth){
 
     U16 move;
 
-    dynamic_array moves_array;
-    init_da(&moves_array, 218);
-
-    generate_moves(&moves_array, 0);
+    moves_array legal_moves = {.used = 0};
+    generate_moves(&legal_moves, 0);
 
     U64 num_nodes = 0;
 
-    for(size_t i = 0; i < moves_array.used; ++i){
-        move = moves_array.array[i].move;
+    for(size_t i = 0; i < legal_moves.used; ++i){
+        move = legal_moves.array[i].move;
 
         make_move(move);
 
-        //print_board();
-        //getchar();
-
         num_nodes += movegen_test(depth - 1);
-        undo_move();
 
-        //print_board();
-        //getchar();
+        undo_move();
     }
 
-    free_da(&moves_array);
-
     return num_nodes;
-
 }
 
 void run_perft(int depth){
@@ -43,21 +33,16 @@ void run_perft(int depth){
 
         U64 start_time = time_in_ms();
 
-        dynamic_array moves_array;
-        init_da(&moves_array, 218);
-
-        generate_moves(&moves_array, 0);
+        moves_array legal_moves = {.used = 0};
+        generate_moves(&legal_moves, 0);
 
         U64 num_nodes = 0ULL, total_nodes = 0ULL;
 
-        for(size_t i = 0; i < moves_array.used; ++i){
-            move = moves_array.array[i].move;
+        for(size_t i = 0; i < legal_moves.used; ++i){
+            move = legal_moves.array[i].move;
 
             print_move(move);
             make_move(move);
-
-            //print_board();
-            //getchar();
 
             num_nodes = movegen_test(depth - 1);
             total_nodes += num_nodes;
@@ -66,8 +51,6 @@ void run_perft(int depth){
 
             undo_move();
 
-            //print_board();
-            //getchar();
         }
 
         U64 end_time = time_in_ms();
@@ -76,8 +59,6 @@ void run_perft(int depth){
         printf("total: %ld\n", total_nodes);
 
         if(time / 1000) printf("nps: %ld\n", (total_nodes * 1000) / time);
-
-        free_da(&moves_array);
     }
 }
 #endif
@@ -146,7 +127,7 @@ void process_go(const char* uci_command){
     U64 time = 0, inc = 0;
     int movestogo = 30;
 
-    search_info info = {.maxdepth = MAX_SEARCH_DEPTH};
+    search_info info = {.maxdepth = MAX_SEARCH_DEPTH, .nodes_searched = 0};
 
     while((cmd = strtok(NULL, " ")) && (arg = strtok(NULL, " "))){
         if(!strcmp(cmd, "depth")){
@@ -162,7 +143,7 @@ void process_go(const char* uci_command){
         } else if(!strcmp(cmd, "movetime")){
             time = strtoll(arg, &end, 10);
             movestogo = 1;
-        } else if(!strcmp(cmd, "movestogo")){
+        } else if(!strcmp(cmd, "movestogo")){   
             movestogo = strtol(arg, &end, 10);
         } 
     }

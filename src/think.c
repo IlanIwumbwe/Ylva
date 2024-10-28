@@ -26,18 +26,18 @@ static int eval(){
 /// @brief Find the move with the highest score and put it at the current iteration index
 /// @param moves_array 
 /// @param current_move_index 
-static void pick_move(dynamic_array* moves_array, int current_move_index){
+static void pick_move(moves_array* legal_moves, int current_move_index){
     Move tmp;
     Move curr_move;
 
-    for(size_t i = current_move_index+1; i < moves_array->used; ++i){
-        curr_move = moves_array->array[i];
+    for(size_t i = current_move_index+1; i < legal_moves->used; ++i){
+        curr_move = legal_moves->array[i];
         
-        if(curr_move.score > moves_array->array[current_move_index].score){
+        if(curr_move.score > legal_moves->array[current_move_index].score){
             // swap
-            tmp = moves_array->array[current_move_index];
-            moves_array->array[current_move_index] = curr_move;
-            moves_array->array[i] = tmp;
+            tmp = legal_moves->array[current_move_index];
+            legal_moves->array[current_move_index] = curr_move;
+            legal_moves->array[i] = tmp;
         }
     }
 
@@ -46,7 +46,7 @@ static void pick_move(dynamic_array* moves_array, int current_move_index){
 /// @brief plain negamax without any optimisations
 /// @param depth 
 /// @return 
-static int negamax_search(int depth){
+static int negamax_search(int depth, search_info* info){
 
     if(depth == 0){
         return eval();
@@ -55,12 +55,10 @@ static int negamax_search(int depth){
     Move move;
     int eval = 0, max_eval = -INT_MAX;
 
-    dynamic_array moves_array;
-    init_da(&moves_array, 218);
+    moves_array legal_moves = {.used=0};
+    generate_moves(&legal_moves, 0);
 
-    generate_moves(&moves_array, 0);
-
-    if(moves_array.used == 0){
+    if(legal_moves.used == 0){
         if(n_checkers){
             return -INT_MAX; // checkmate
         } else {
@@ -69,12 +67,13 @@ static int negamax_search(int depth){
         
     }
 
-    for(size_t i = 0; i < moves_array.used; ++i){
-        move = moves_array.array[i];
+    for(size_t i = 0; i < legal_moves.used; ++i){
+        move = legal_moves.array[i];
 
         make_move(move.move);
+        info->nodes_searched += 1;
 
-        eval = -negamax_search(depth - 1);
+        eval = -negamax_search(depth - 1, info);
 
         undo_move();
 
@@ -82,8 +81,6 @@ static int negamax_search(int depth){
             max_eval = eval;
         }
     }
-
-    free_da(&moves_array);
     
     return max_eval;
 }
@@ -94,18 +91,14 @@ static int negamax_search(int depth){
 /// @return 
 int move_is_valid(U16 move){
 
-    dynamic_array moves_array;
-    init_da(&moves_array, 218);
+    moves_array legal_moves = {.used=0};
+    generate_moves(&legal_moves, 0);
 
-    generate_moves(&moves_array, 0);
-
-    for(size_t i = 0; i < moves_array.used; ++i){
-        if(move == moves_array.array[i].move) return 1;
+    for(size_t i = 0; i < legal_moves.used; ++i){
+        if(move == legal_moves.array[i].move) return 1;
     }
 
     return 0;
-
-    free_da(&moves_array);
 }
 
 /// @brief Get pv line to certain depth
@@ -138,26 +131,30 @@ int get_pv_line(int depth){
 
 /// @brief Score pv move very highly, set scores of all other moves to 0
 /// @param da 
-void sort_pv_move(dynamic_array* moves_array){
+void sort_pv_move(moves_array* legal_moves){
 
     Move* curr_move;
 
-    for(size_t i = 0; i < moves_array->used; ++i){
-        curr_move = moves_array->array + i;
+    for(size_t i = 0; i < legal_moves->used; ++i){
+        curr_move = legal_moves->array + i;
 
         if(curr_move->move == pv_array[board_info->ply]){ curr_move->score = 100; } 
         else { curr_move->score = 0; }
     }
 }
 
-void order_moves(dynamic_array* moves_array){
+/// @brief Contains `sort_pv_move` call to score pv move highly
+/// @param legal_moves 
+void order_moves(moves_array* legal_moves){
 
     Move* curr_move;
     piece p_to;
     piece p_from;
 
-    for(size_t i = 0; i < moves_array->used; ++i){
-        curr_move = moves_array->array + i;
+    sort_pv_move(legal_moves); // score pv move highly, also sets all other move scores to 0
+
+    for(size_t i = 0; i < legal_moves->used; ++i){
+        curr_move = legal_moves->array + i;
 
         p_to = piece_on_square(move_to_square(curr_move->move));
         p_from = piece_on_square(move_from_square(curr_move->move));
@@ -185,12 +182,10 @@ static int search(int depth, int alpha, int beta, search_info* info){
     Move move;
     int eval;
 
-    dynamic_array moves_array;
-    init_da(&moves_array, 218);
+    moves_array legal_moves = {.used=0};
+    generate_moves(&legal_moves, 0);
 
-    generate_moves(&moves_array, 0);
-
-    if(moves_array.used == 0){
+    if(legal_moves.used == 0){
         if(n_checkers){
             return -INT_MAX; // checkmate
         } else {
@@ -199,12 +194,11 @@ static int search(int depth, int alpha, int beta, search_info* info){
         
     }
 
-    sort_pv_move(&moves_array);
-    order_moves(&moves_array);  
+    order_moves(&legal_moves);  
 
-    for(size_t i = 0; i < moves_array.used; ++i){
-        pick_move(&moves_array, i);
-        move = moves_array.array[i];
+    for(size_t i = 0; i < legal_moves.used; ++i){
+        pick_move(&legal_moves, i);
+        move = legal_moves.array[i];
 
         if(info->stopped){
             return 0;
@@ -226,8 +220,6 @@ static int search(int depth, int alpha, int beta, search_info* info){
             }
         }
     }
-
-    free_da(&moves_array);
     
     return alpha;
 }
@@ -238,20 +230,15 @@ void think(search_info* info){
     int best_eval = -INT_MAX;
     int pv_len = 0;
 
-    dynamic_array moves_array;
-    init_da(&moves_array, 218);
-
-    generate_moves(&moves_array, 0);
+    moves_array legal_moves = {.used=0};
+    generate_moves(&legal_moves, 0);
 
     for(int d = 1; d <= info->maxdepth; ++d){
-        info->nodes_searched = 0;
+        order_moves(&legal_moves);        
 
-        sort_pv_move(&moves_array);
-        order_moves(&moves_array);        
-
-        for(size_t i = 0; i < moves_array.used; ++i){
-            pick_move(&moves_array, i);
-            curr_move = moves_array.array[i];
+        for(size_t i = 0; i < legal_moves.used; ++i){
+            pick_move(&legal_moves, i);
+            curr_move = legal_moves.array[i];
 
             make_move(curr_move.move);
 
@@ -276,15 +263,8 @@ void think(search_info* info){
 
         printf("\n");
 
-        //reset_pv_entries(&pvt);
-
         if(info->stopped){break;}
     }
-
-    free_da(&moves_array);
-
-    clear_pv_array(pv_array);
-
 }
 
 

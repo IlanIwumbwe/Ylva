@@ -30,6 +30,7 @@
 #define k_castle 0x2
 #define q_castle 0x1
 #define MAX_SEARCH_DEPTH 125
+#define MAX_MOVES 218
 #define STARTING_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 extern char char_pieces[12];

@@ -1,7 +1,7 @@
 #include "../headers/board.h"
 
 U64 bitboards[13] = {0ULL};
-info board_infos[MAX_SEARCH_DEPTH];
+info board_infos[MAX_SEARCH_DEPTH+10];
 info* board_info = board_infos;  // start by pointing to first element in board infos
 piece board[64];
 
@@ -10,7 +10,7 @@ U64 piece_zobrist_keys[13][64];
 U64 turn_key;
 U64 castling_key[16];
 
-U16 pv_array[MAX_SEARCH_DEPTH];
+U16 pv_array[MAX_SEARCH_DEPTH+10];
 pv_table pvt;
 
 void init_hash_keys(void){
@@ -144,7 +144,7 @@ void setup_state_from_fen(const char* fen_string){
 
     generate_hash();
     count_material();
-    init_pv(&pvt, 5000000);
+    init_pv(&pvt, 200000);
 }
 
 piece piece_on_square(square sq){

@@ -17,7 +17,7 @@ typedef struct sinfo{
 } info;
 
 extern info* board_info;
-extern info board_infos[MAX_SEARCH_DEPTH];
+extern info board_infos[MAX_SEARCH_DEPTH+10];
 
 extern U64 bitboards[13]; // last bitboard is a garbage bitboard
 extern piece board[64]; /// which piece is on each square
@@ -27,7 +27,7 @@ extern U64 turn_key;
 extern U64 castling_key[16];
 
 extern pv_table pvt;
-extern U16 pv_array[MAX_SEARCH_DEPTH];
+extern U16 pv_array[MAX_SEARCH_DEPTH+10];
 
 void setup_state_from_fen(const char* fen_string);
 

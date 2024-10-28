@@ -3,13 +3,6 @@
 
 #include "../headers/utils.h"
 
-/// @brief Dynamic array that holds moves
-typedef struct sda{
-    Move* array;
-    size_t capacity;
-    size_t used; 
-} dynamic_array;
-
 /// @brief Principal variation entry in PV table stores best move assosiated with each position
 typedef struct spv{
     U64 key;
@@ -21,11 +14,14 @@ typedef struct spvt{
     size_t capacity;
 } pv_table;
 
-void init_da(dynamic_array* da, size_t capacity);
+typedef struct sma {
+    Move array[MAX_MOVES];
+    size_t used;
+} moves_array;
 
-void da_append(dynamic_array* da, Move move);
+void ma_append(moves_array* ma, Move m);
 
-void free_da(dynamic_array* da);
+void ma_reset(moves_array* ma);
 
 void init_pv(pv_table* pvt, size_t capacity);
 

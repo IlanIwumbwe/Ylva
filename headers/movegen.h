@@ -4,7 +4,6 @@
 #include "../headers/board.h"
 #include "../headers/array.h"
 #include "../headers/move.h"
-#include "../headers/array.h"
 
 typedef struct magic_entry{
     U64 magic_num;
@@ -17,6 +16,6 @@ extern int n_checkers;
 
 void populate_attack_sets();
 
-void generate_moves(dynamic_array* moves_array, int captures_only);
+void generate_moves(moves_array* legal_moves, int captures_only);
 
 #endif

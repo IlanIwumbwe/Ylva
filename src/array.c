@@ -1,52 +1,16 @@
 #include "../headers/array.h"
 
-/// @brief Allocate memory for the dynamic array
-/// @param da Pointer to dynamic array
-/// @param capacity Number of int slots that should be allocated
-void init_da(dynamic_array* da, size_t capacity){
-    if(capacity == 0){
-        fprintf(stderr, "Cannot initialise array with capacity of 0 bytes!");
-        exit(-1);
+void ma_append(moves_array* ma, Move m){
+    if(ma->used < MAX_MOVES){
+        ma->array[ma->used++] = m;
     } else {
-        da->array = malloc(sizeof(Move) * capacity); 
-
-        if(da->array != NULL){
-            da->used = 0;
-            da->capacity = capacity;
-        } else {
-            fprintf(stderr, "Allocation of memory for dynamic array failed!");
-            exit(1);
-        }
-
-    } 
-}
-
-/// @brief Append a move to the moves array
-/// @param da 
-/// @param move 
-void da_append(dynamic_array* da, Move move){
-    if(da->used == da->capacity){
-        da->capacity = 2 * da->capacity;
-        Move* new_block = realloc(da->array, sizeof(Move) * da->capacity);
-
-        if(new_block == NULL){
-            fprintf(stderr, "Reallocation of memory for dynamic array failed!");
-            exit(1);
-            free_da(da);
-        } else {
-            da->array = new_block;
-        }
+        fprintf(stderr, "Moves array already full!");
+        exit(-1);
     }
-
-    da->array[da->used++] = move;
 }
 
-/// @brief Free memory used by the moves array
-/// @param da 
-void free_da(dynamic_array* da){
-    free(da->array);
-    da->capacity = da->used = 0;
-    da->array = NULL;
+void ma_reset(moves_array* ma){
+    ma->used = 0;
 }
 
 /// @brief Initialise pv table 
@@ -60,12 +24,12 @@ void init_pv(pv_table* pvt, size_t capacity){
 
     pvt->table = (pv_entry*) malloc(sizeof(pv_entry) * capacity);
 
-    if(pvt->table != NULL){
-        reset_pv_entries(pvt);
+    if(pvt->table != NULL){  
         pvt->capacity = capacity;
+        reset_pv_entries(pvt);
     } else {
         fprintf(stderr, "Allocation of memory for dynamic array failed!");
-        exit(1);
+        exit(-1);
     }
 }
 
@@ -86,10 +50,9 @@ void store_pv_entry(pv_table* pvt, U64 key, U16 move){
 
     int index = key % pvt->capacity;
 
-    pv_entry e = {.key = key, .move = move};
-
-    pvt->table[index] = e;
-}
+    pvt->table[index].key = key;  
+    pvt->table[index].move = move;    
+} 
 
 /// @brief index into pv table using key, if a move has been stored for this position in the pv table, return it, else return 0
 /// @param pvt 

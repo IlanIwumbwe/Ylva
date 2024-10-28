@@ -12,6 +12,8 @@ U64 PAWN_ATTACKS[64][2]; // for each square, bitboard of attacks from white / bl
 U64 ROOK_MOVES[64][4096] = {};
 U64 BISHOP_MOVES[64][4096] = {};
 
+moves_array pseudo_legal_moves;
+
 int rook_n_bits_in_span[64] = {
     12, 11, 11, 11, 11, 11, 11, 12,
     11, 10, 10, 10, 10, 10, 10, 11,
@@ -350,7 +352,7 @@ void populate_attack_sets(){
     pregenerate_slider_moves();
 }
 
-static void create_pawn_moves(dynamic_array* moves_array, U64 tos, int offset, int flag){
+static void create_pawn_moves(U64 tos, int offset, int flag){
     square to;
     Move m = {.score = 0};
 
@@ -359,13 +361,13 @@ static void create_pawn_moves(dynamic_array* moves_array, U64 tos, int offset, i
 
         m.move = (flag << 12) | ((to+offset) << 6) | to;
 
-        da_append(moves_array, m);
+        ma_append(&pseudo_legal_moves, m);
 
         tos &= tos-1;
     }
 }
 
-static void create_other_moves(dynamic_array* moves_array, U64 tos, square from, int flag){
+static void create_other_moves(U64 tos, square from, int flag){
     square to;
     Move m = {.score = 0};
 
@@ -374,7 +376,7 @@ static void create_other_moves(dynamic_array* moves_array, U64 tos, square from,
 
         m.move = (flag << 12) | (from << 6) | to;
 
-        da_append(moves_array, m);
+        ma_append(&pseudo_legal_moves, m);
 
         tos &= tos-1;   
     }
@@ -412,14 +414,14 @@ static U64 get_attackers(square sq, U64 mask){
 /// @param moves_array 
 /// @param ally_king
 /// @param ally_pieces
-static void filter_pseudo_legal_moves(dynamic_array* pseudo_legal_moves, dynamic_array* moves_array, piece ally_pawn, piece ally_king, piece ally_knight, piece ally_bishop, piece ally_rook, piece ally_queen){
+static void filter_pseudo_legal_moves(moves_array* legal_moves, piece ally_pawn, piece ally_king, piece ally_knight, piece ally_bishop, piece ally_rook, piece ally_queen){
     size_t i;
     Move move;
     square sq;
     U64 attackers;
 
-    for(i = 0; i < pseudo_legal_moves->used; ++i){
-        move = pseudo_legal_moves->array[i];
+    for(i = 0; i < pseudo_legal_moves.used; ++i){
+        move = pseudo_legal_moves.array[i];
 
         make_move(move.move);
 
@@ -427,56 +429,56 @@ static void filter_pseudo_legal_moves(dynamic_array* pseudo_legal_moves, dynamic
 
         attackers = get_attackers(sq, bitboards[ally_pawn] | bitboards[ally_king] | bitboards[ally_knight] | bitboards[ally_bishop] | bitboards[ally_rook] | bitboards[ally_queen]);
 
-        if(!attackers){da_append(moves_array, move);}
+        if(!attackers){ma_append(legal_moves, move);}
 
         undo_move();
     }
 }
 
-static void K_quiet_moves(dynamic_array* moves_array){
+static void K_quiet_moves(){
 
     square sq = get_lsb(bitboards[K]);
 
     U64 move_set = KING_ATTACKS[sq] & ~occupied;
 
-    create_other_moves(moves_array, move_set, sq, 0);
+    create_other_moves(move_set, sq, 0);
 
     if(n_checkers == 0){
         if(board_info->castling_rights & K_castle){
             if(!(set_bit(f1) & occupied) && !(set_bit(g1) & occupied) && !get_attackers(f1,whites) && !get_attackers(g1,whites)){
-                create_other_moves(moves_array, set_bit(g1), e1, 2);
+                create_other_moves(set_bit(g1), e1, 2);
             }
         }
 
         if(board_info->castling_rights & Q_castle){
             if(!(set_bit(d1) & occupied) && !(set_bit(c1) & occupied) && !(set_bit(b1) & occupied) && !get_attackers(d1,whites) && !get_attackers(c1,whites)){
-                create_other_moves(moves_array, set_bit(c1), e1, 3);
+                create_other_moves(set_bit(c1), e1, 3);
             }
         }
     }
 }
 
-static void K_captures_moves(dynamic_array* moves_array){
+static void K_captures_moves(){
 
     square sq = get_lsb(bitboards[K]);
 
     U64 move_set = KING_ATTACKS[sq] & blacks;
 
-    create_other_moves(moves_array, move_set, sq, 4);
+    create_other_moves(move_set, sq, 4);
 }
 
-static void k_quiet_moves(dynamic_array* moves_array){
+static void k_quiet_moves(){
 
     square sq = get_lsb(bitboards[k]);
 
     U64 move_set = KING_ATTACKS[sq] & ~occupied;
 
-    create_other_moves(moves_array, move_set, sq, 0);
+    create_other_moves(move_set, sq, 0);
 
     if(n_checkers == 0){
         if(board_info->castling_rights & k_castle){
             if(!(set_bit(f8) & occupied) && !(set_bit(g8) & occupied) && !get_attackers(f8,blacks) && !get_attackers(g8,blacks)){
-                create_other_moves(moves_array, set_bit(g8), e8, 2);
+                create_other_moves(set_bit(g8), e8, 2);
             }
         } else {
             board_info->castling_rights &= ~k_castle;
@@ -484,7 +486,7 @@ static void k_quiet_moves(dynamic_array* moves_array){
 
         if(board_info->castling_rights & q_castle){
             if(!(set_bit(d8) & occupied) && !(set_bit(c8) & occupied) && !(set_bit(b8) & occupied) && !get_attackers(d8,blacks) && !get_attackers(c8,blacks)){
-                create_other_moves(moves_array, set_bit(c8), e8, 3);
+                create_other_moves(set_bit(c8), e8, 3);
             }
         } else {
             board_info->castling_rights &= ~q_castle;
@@ -492,17 +494,17 @@ static void k_quiet_moves(dynamic_array* moves_array){
     }
 }
 
-static void k_captures_moves(dynamic_array* moves_array){
+static void k_captures_moves(){
 
     square sq = get_lsb(bitboards[k]);
 
     U64 move_set = KING_ATTACKS[sq] & whites;
 
-    create_other_moves(moves_array, move_set, sq, 4);
+    create_other_moves(move_set, sq, 4);
 
 }
 
-static void N_quiet_moves(dynamic_array* moves_array){ 
+static void N_quiet_moves(){ 
     U64 white_knights = bitboards[N];
     U64 tos;
     square sq;
@@ -513,11 +515,11 @@ static void N_quiet_moves(dynamic_array* moves_array){
 
         tos = KNIGHT_ATTACKS[sq] & ~occupied;
 
-        create_other_moves(moves_array,tos,sq,0);
+        create_other_moves(tos,sq,0);
     }
 }
 
-static void N_captures_moves(dynamic_array* moves_array){ 
+static void N_captures_moves(){ 
     U64 white_knights = bitboards[N];
     U64 tos;
     square sq;
@@ -528,11 +530,11 @@ static void N_captures_moves(dynamic_array* moves_array){
 
         tos = KNIGHT_ATTACKS[sq] & blacks_minus_king;
 
-        create_other_moves(moves_array,tos,sq,4);
+        create_other_moves(tos,sq,4);
     }
 }
 
-static void n_quiet_moves(dynamic_array* moves_array){ 
+static void n_quiet_moves(){ 
     U64 black_knights = bitboards[n];
     U64 tos;
     square sq;
@@ -543,11 +545,11 @@ static void n_quiet_moves(dynamic_array* moves_array){
 
         tos = KNIGHT_ATTACKS[sq] & ~occupied;
 
-        create_other_moves(moves_array,tos,sq,0);
+        create_other_moves(tos,sq,0);
     }
 }
 
-static void n_captures_moves(dynamic_array* moves_array){ 
+static void n_captures_moves(){ 
     U64 black_knights = bitboards[n];
     U64 tos;
     square sq;
@@ -558,53 +560,53 @@ static void n_captures_moves(dynamic_array* moves_array){
 
         tos = KNIGHT_ATTACKS[sq] & whites_minus_king;
 
-        create_other_moves(moves_array,tos,sq,4);
+        create_other_moves(tos,sq,4);
     }
 }
 
-static void P_quiet_moves(dynamic_array* moves_array){
+static void P_quiet_moves(){
     U64 white_pawns = bitboards[P];
     U64 tos;
 
     // forward 1
     tos = (white_pawns << 8) & ~RANK(8) & ~occupied;   
-    create_pawn_moves(moves_array, tos,-8,0);
+    create_pawn_moves(tos,-8,0);
 
     // forward 2           
     tos = ((white_pawns & RANK(2) & ~((occupied & RANK(3)) >> 8)) << 16) & ~occupied;
-    create_pawn_moves(moves_array, tos,-16,1);
+    create_pawn_moves(tos,-16,1);
 
     // promotion forward 1
     tos = (white_pawns << 8) & RANK(8) & ~occupied;
 
     for(int i = 0; i < 4; ++i){
-        create_pawn_moves(moves_array,tos,-8,i+8);
+        create_pawn_moves(tos,-8,i+8);
     }  
 }
 
-static void P_captures_moves(dynamic_array* moves_array){
+static void P_captures_moves(){
     U64 white_pawns = bitboards[P], doubly_pushed_pawn;
     U64 tos;
     int prev_move;
 
     // right captures
     tos = (white_pawns << 7) & ~RANK(8) & ~A_FILE & blacks_minus_king;
-    create_pawn_moves(moves_array,tos,-7,4); 
+    create_pawn_moves(tos,-7,4); 
 
     // left captures
     tos = (white_pawns << 9) & ~RANK(8) & ~H_FILE & blacks_minus_king;
-    create_pawn_moves(moves_array,tos,-9,4); 
+    create_pawn_moves(tos,-9,4); 
 
     // promotion right captures
     tos = (white_pawns << 7) & RANK(8) & ~A_FILE & blacks_minus_king;
     for(int i = 0; i < 4; ++i){
-        create_pawn_moves(moves_array,tos,-7, i+12);
+        create_pawn_moves(tos,-7, i+12);
     }
 
     // promotion left captures
     tos = (white_pawns << 9) & RANK(8) & ~H_FILE & blacks_minus_king;
     for(int i = 0; i < 4; ++i){
-        create_pawn_moves(moves_array,tos,-9, i+12);
+        create_pawn_moves(tos,-9, i+12);
     }
 
     // enpassant captures
@@ -618,57 +620,57 @@ static void P_captures_moves(dynamic_array* moves_array){
            
             // capture by white pawn to the right
             tos = (white_pawns & ((doubly_pushed_pawn & ~H_FILE) >> 1)) << 9;
-            create_pawn_moves(moves_array,tos,-9,5);
+            create_pawn_moves(tos,-9,5);
 
             // capture by white pawn to the left
             tos = (white_pawns & ((doubly_pushed_pawn & ~A_FILE) << 1)) << 7;
-            create_pawn_moves(moves_array,tos,-7,5);
+            create_pawn_moves(tos,-7,5);
         }
     }  
 }
 
-static void p_quiet_moves(dynamic_array* moves_array){
+static void p_quiet_moves(){
     U64 black_pawns = bitboards[p];
     U64 tos;
 
     // forward 1
     tos = (black_pawns >> 8) & ~occupied & ~RANK(1);  
-    create_pawn_moves(moves_array,tos,8,0);
+    create_pawn_moves(tos,8,0);
     
     // forward 2
     tos = ((black_pawns & RANK(7) & ~((occupied & RANK(6)) << 8)) >> 16) & ~occupied;
-    create_pawn_moves(moves_array,tos,16,1);
+    create_pawn_moves(tos,16,1);
 
     // promotion forward 1
     tos = (black_pawns >> 8) & RANK(1) & ~occupied;
     for(int i = 0; i < 4; ++i){
-        create_pawn_moves(moves_array,tos,8,i+8);
+        create_pawn_moves(tos,8,i+8);
     }
 }
 
-static void p_captures_moves(dynamic_array* moves_array){
+static void p_captures_moves(){
     U64 black_pawns = bitboards[p], doubly_pushed_pawn; 
     U64 tos;
     int prev_move;
 
     // right captures
     tos = (black_pawns >> 9) & ~RANK(1) & ~A_FILE & whites_minus_king;
-    create_pawn_moves(moves_array,tos,9,4); 
+    create_pawn_moves(tos,9,4); 
 
     // left captures
     tos = (black_pawns >> 7) & ~RANK(1) & ~H_FILE & whites_minus_king;
-    create_pawn_moves(moves_array,tos,7,4); 
+    create_pawn_moves(tos,7,4); 
 
     // promotion right captures
     tos = (black_pawns >> 9) & RANK(1) & ~A_FILE & whites_minus_king;
     for(int i = 0; i < 4; ++i){
-        create_pawn_moves(moves_array,tos,9,i+12); 
+        create_pawn_moves(tos,9,i+12); 
     }
     
     // promotion left captures
     tos = (black_pawns >> 7) & RANK(1) & ~H_FILE & whites_minus_king;
     for(int i = 0; i < 4; ++i){
-        create_pawn_moves(moves_array,tos,7,i+12); 
+        create_pawn_moves(tos,7,i+12); 
     }
 
     // enpassant captures
@@ -682,16 +684,16 @@ static void p_captures_moves(dynamic_array* moves_array){
            
             // capture by black pawn to the right
             tos = (black_pawns & ((doubly_pushed_pawn & ~H_FILE) >> 1)) >> 7;
-            create_pawn_moves(moves_array,tos,7,5);
+            create_pawn_moves(tos,7,5);
 
             // capture by white pawn to the left
             tos = (black_pawns & ((doubly_pushed_pawn & ~A_FILE) << 1)) >> 9;
-            create_pawn_moves(moves_array,tos,9,5);
+            create_pawn_moves(tos,9,5);
         }
     } 
 }
 
-static void B_captures_moves(dynamic_array* moves_array){
+static void B_captures_moves(){
     U64 white_bishops = bitboards[B];
     U64 tos;
     int key;
@@ -704,11 +706,11 @@ static void B_captures_moves(dynamic_array* moves_array){
         key = blocker_to_key(occupied, bishop_magics[sq]);
         tos = (BISHOP_MOVES[sq][key] & blacks_minus_king);
 
-        create_other_moves(moves_array, tos, sq, 4);
+        create_other_moves(tos, sq, 4);
     }
 }
 
-static void B_quiet_moves(dynamic_array* moves_array){
+static void B_quiet_moves(){
     U64 white_bishops = bitboards[B];
     U64 tos;
     int key;
@@ -721,11 +723,11 @@ static void B_quiet_moves(dynamic_array* moves_array){
         key = blocker_to_key(occupied, bishop_magics[sq]);
         tos = (BISHOP_MOVES[sq][key] & ~occupied);
 
-        create_other_moves(moves_array, tos, sq, 0);
+        create_other_moves(tos, sq, 0);
     }
 }
 
-static void b_captures_moves(dynamic_array* moves_array){
+static void b_captures_moves(){
     U64 black_bishops = bitboards[b];
     U64 tos;
     int key;
@@ -738,11 +740,11 @@ static void b_captures_moves(dynamic_array* moves_array){
         key = blocker_to_key(occupied, bishop_magics[sq]);
         tos = (BISHOP_MOVES[sq][key] & whites_minus_king);
 
-        create_other_moves(moves_array, tos, sq, 4);
+        create_other_moves(tos, sq, 4);
     }
 }
 
-static void b_quiet_moves(dynamic_array* moves_array){
+static void b_quiet_moves(){
     U64 black_bishops = bitboards[b];
     U64 tos;
     int key;
@@ -755,11 +757,11 @@ static void b_quiet_moves(dynamic_array* moves_array){
         key = blocker_to_key(occupied, bishop_magics[sq]);
         tos = (BISHOP_MOVES[sq][key] & ~occupied);
 
-        create_other_moves(moves_array, tos, sq, 0);
+        create_other_moves(tos, sq, 0);
     }
 }
 
-static void R_captures_moves(dynamic_array* moves_array){
+static void R_captures_moves(){
     U64 white_rooks = bitboards[R];
     U64 tos;
     int key;
@@ -772,11 +774,11 @@ static void R_captures_moves(dynamic_array* moves_array){
         key = blocker_to_key(occupied, rook_magics[sq]);
         tos = (ROOK_MOVES[sq][key] & blacks_minus_king);
 
-        create_other_moves(moves_array, tos, sq, 4);
+        create_other_moves(tos, sq, 4);
     }
 }
 
-static void R_quiet_moves(dynamic_array* moves_array){
+static void R_quiet_moves(){
     U64 white_rooks = bitboards[R];
     U64 tos;
     int key;
@@ -789,11 +791,11 @@ static void R_quiet_moves(dynamic_array* moves_array){
         key = blocker_to_key(occupied, rook_magics[sq]);
         tos = (ROOK_MOVES[sq][key] & ~occupied);
 
-        create_other_moves(moves_array, tos, sq, 0);
+        create_other_moves(tos, sq, 0);
     }
 }
 
-static void r_captures_moves(dynamic_array* moves_array){
+static void r_captures_moves(){
     U64 black_rooks = bitboards[r];
     U64 tos;
     int key;
@@ -806,11 +808,11 @@ static void r_captures_moves(dynamic_array* moves_array){
         key = blocker_to_key(occupied, rook_magics[sq]);
         tos = (ROOK_MOVES[sq][key] & whites_minus_king);
 
-        create_other_moves(moves_array, tos, sq, 4);
+        create_other_moves(tos, sq, 4);
     }
 }
 
-static void r_quiet_moves(dynamic_array* moves_array){
+static void r_quiet_moves(){
     U64 black_rooks = bitboards[r];
     U64 tos;
     int key;
@@ -823,11 +825,11 @@ static void r_quiet_moves(dynamic_array* moves_array){
         key = blocker_to_key(occupied, rook_magics[sq]);
         tos = (ROOK_MOVES[sq][key] & ~occupied);
 
-        create_other_moves(moves_array, tos, sq, 0);
+        create_other_moves(tos, sq, 0);
     }
 }
 
-static void Q_captures_moves(dynamic_array* moves_array){
+static void Q_captures_moves(){
     U64 white_queens = bitboards[Q];
 
     U64 tos;
@@ -846,11 +848,11 @@ static void Q_captures_moves(dynamic_array* moves_array){
         
         tos &= blacks_minus_king;
 
-        create_other_moves(moves_array, tos, sq, 4);
+        create_other_moves(tos, sq, 4);
     }
 }
 
-static void Q_quiet_moves(dynamic_array* moves_array){
+static void Q_quiet_moves(){
     U64 white_queens = bitboards[Q];
 
     U64 tos;
@@ -869,11 +871,11 @@ static void Q_quiet_moves(dynamic_array* moves_array){
         
         tos &= ~occupied;
 
-        create_other_moves(moves_array, tos, sq, 0);
+        create_other_moves(tos, sq, 0);
     }
 }
 
-static void q_captures_moves(dynamic_array* moves_array){
+static void q_captures_moves(){
     U64 black_queens = bitboards[q];
 
     U64 tos;
@@ -892,11 +894,11 @@ static void q_captures_moves(dynamic_array* moves_array){
         
         tos &= whites_minus_king;
 
-        create_other_moves(moves_array, tos, sq, 4);
+        create_other_moves(tos, sq, 4);
     }
 }
 
-static void q_quiet_moves(dynamic_array* moves_array){
+static void q_quiet_moves(){
     U64 black_queens = bitboards[q];
 
     U64 tos;
@@ -915,11 +917,11 @@ static void q_quiet_moves(dynamic_array* moves_array){
         
         tos &= ~occupied;
 
-        create_other_moves(moves_array, tos, sq, 0);
+        create_other_moves(tos, sq, 0);
     }
 }
 
-void generate_moves(dynamic_array* moves_array, int captures_only){
+void generate_moves(moves_array* legal_moves, int captures_only){
 
     whites = bitboards[P] | bitboards[K] | bitboards[N] | bitboards[B] | bitboards[R] | bitboards[Q];
     blacks = bitboards[p] | bitboards[k] | bitboards[n] | bitboards[b] | bitboards[r] | bitboards[q];
@@ -929,69 +931,68 @@ void generate_moves(dynamic_array* moves_array, int captures_only){
 
     occupied = board_info->occupied;
 
-    //assert((whites | blacks) == occupied);
+    assert((whites | blacks) == occupied);
 
-    dynamic_array pseudo_legal_moves;
-    init_da(&pseudo_legal_moves, 218);
+    pseudo_legal_moves.used = 0;
 
     if(board_info->s == BLACK){
         checkers = get_attackers(get_lsb(bitboards[k]), blacks);
         n_checkers = count_set_bits(checkers);
 
         // generate king moves
-        k_captures_moves(&pseudo_legal_moves);
-        if(!captures_only){k_quiet_moves(&pseudo_legal_moves);}
+        k_captures_moves();
+        if(!captures_only){k_quiet_moves();}
 
         // generate moves for other pieces, as there may be evasions if n_checkers is 1. If n_checkers is 0, all legal moves are valid
         if(n_checkers <= 1){
             
-            p_captures_moves(&pseudo_legal_moves);
-            n_captures_moves(&pseudo_legal_moves);
-            r_captures_moves(&pseudo_legal_moves);
-            b_captures_moves(&pseudo_legal_moves);
-            q_captures_moves(&pseudo_legal_moves);
+            p_captures_moves();
+            n_captures_moves();
+            r_captures_moves();
+            b_captures_moves();
+            q_captures_moves();
 
             if(!captures_only){
-                p_quiet_moves(&pseudo_legal_moves);
-                n_quiet_moves(&pseudo_legal_moves);
-                r_quiet_moves(&pseudo_legal_moves);
-                b_quiet_moves(&pseudo_legal_moves);
-                q_quiet_moves(&pseudo_legal_moves);
+                p_quiet_moves();
+                n_quiet_moves();
+                r_quiet_moves();
+                b_quiet_moves();
+                q_quiet_moves();
             }
 
         } 
 
-        filter_pseudo_legal_moves(&pseudo_legal_moves, moves_array, p, k, n, b, r, q);
+        filter_pseudo_legal_moves(legal_moves, p, k, n, b, r, q);
 
     } else {
         checkers = get_attackers(get_lsb(bitboards[K]), whites);
         n_checkers = count_set_bits(checkers);
 
         // generate king moves
-        K_captures_moves(&pseudo_legal_moves);
-        if(!captures_only){K_quiet_moves(&pseudo_legal_moves);}
+        K_captures_moves();
+        if(!captures_only){K_quiet_moves();}
 
         // generate moves for other pieces, as there may be evasions if n_checkers is 1. If n_checkers is 0, all legal moves are valid
         if(n_checkers <= 1){
             
-            P_captures_moves(&pseudo_legal_moves);
-            N_captures_moves(&pseudo_legal_moves);
-            R_captures_moves(&pseudo_legal_moves);
-            B_captures_moves(&pseudo_legal_moves);
-            Q_captures_moves(&pseudo_legal_moves);
+            P_captures_moves();
+            N_captures_moves();
+            R_captures_moves();
+            B_captures_moves();
+            Q_captures_moves();
 
             if(!captures_only){
-                P_quiet_moves(&pseudo_legal_moves);
-                N_quiet_moves(&pseudo_legal_moves);
-                R_quiet_moves(&pseudo_legal_moves);
-                B_quiet_moves(&pseudo_legal_moves);
-                Q_quiet_moves(&pseudo_legal_moves);
+                P_quiet_moves();
+                N_quiet_moves();
+                R_quiet_moves();
+                B_quiet_moves();
+                Q_quiet_moves();
             }
 
         } 
 
-        filter_pseudo_legal_moves(&pseudo_legal_moves, moves_array, P, K, N, B, R, Q);
+        filter_pseudo_legal_moves(legal_moves, P, K, N, B, R, Q);
     }
 
-    free_da(&pseudo_legal_moves);
+    ma_reset(&pseudo_legal_moves);
 }
