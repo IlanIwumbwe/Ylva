@@ -15,7 +15,7 @@ This is a rewrite of an older version that was in C++. A few features are missin
 - `isready`
 
 ## Other commands
-- `perft n` will count nodes to depth n
+- `perft n` will count leaf nodes at depth n
 
 ## Todos
 - [x] Complete writing move ordering 
