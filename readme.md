@@ -10,7 +10,7 @@ This is a rewrite of an older version that was in C++. A few features are missin
 
 ## Supported UCI commands
 - `go` : `wtime`, `btime`, `winc`, `binc`, `movestogo`, `movetime`, `depth`
-- `position`: all arguments
+- `position`: `fen`, `startpos `
 - `uci`
 - `isready`
 

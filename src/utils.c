@@ -313,6 +313,8 @@ int input_waiting(){
 	return (FD_ISSET(fileno(stdin), &readfds));
 }
 
+#endif
+
 void init_flip(){
     int sq;
 
@@ -325,5 +327,3 @@ void init_flip(){
     }
 
 }
-
-#endif
