@@ -4,7 +4,7 @@
     <img width="28%" src="ylva.jpeg">
 </p>
 
-A simple chess engine in C for educational purposes.
+A simple chess engine in C.
 
 This is a rewrite of an older version that was in C++. A few features are missing and some stuff needs to be fixed as shown in Todos. These will be worked on subject to time constraints.
 
