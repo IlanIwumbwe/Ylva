@@ -4,7 +4,7 @@
 #include "../headers/utils.h"
 #include "../headers/array.h"
 
-typedef struct sinfo{
+typedef struct shistory{
     square ep_square;
     char castling_rights; /// only least significant 4 bits are used for castling rights
     side s;  // 0 means white, 1 means black 
@@ -14,35 +14,46 @@ typedef struct sinfo{
     U64 hash;
     U64 occupied;
     int eval[2];
-} info;
+} history;
 
-extern info* board_info;
-extern info board_infos[MAX_SEARCH_DEPTH+10];
+/// @brief Principal variation entry in PV table stores best move assosiated with each position
+typedef struct spve{
+    U64 key;
+    U16 move;
+} pv_entry;
 
-extern U64 bitboards[13]; // last bitboard is a garbage bitboard
-extern piece board[64]; /// which piece is on each square
+typedef struct spvt{
+    pv_entry* table;
+    size_t capacity;
+} pv_table;
 
-extern U64 piece_zobrist_keys[13][64];
-extern U64 turn_key;
-extern U64 castling_key[16];
+typedef struct sboard {
+    U64 bitboards[13];
+    piece board[64];
+    history metadata[MAX_SEARCH_DEPTH + 10];
+    history* data;
+    pv_table pvt;
+    U16 pv_array[MAX_SEARCH_DEPTH+10];
+} board_state;
 
-extern pv_table pvt;
-extern U16 pv_array[MAX_SEARCH_DEPTH+10];
+void setup_state_from_fen(board_state* state, const char* fen_string);
 
-void setup_state_from_fen(const char* fen_string);
+void setup_bitboards(board_state* state, const char* fen);
 
-void setup_bitboards(const char* fen);
+void print_board(const board_state* state);
 
-void print_board(void);
+void init_eval(board_state* state);
 
-void init_hash_keys(void);
+void init_pv(board_state* state , size_t capacity);
 
-void modify_hash_by_occupancy(info* info_n, piece p, square sq);
+void reset_pv_entries(board_state* state);
 
-void modify_hash_by_castling_rights(info* info_n, U16 old_castling_rights);
+void store_pv_entry(board_state* state, U16 move);
 
-void generate_hash();
+U16 probe_pv_table(board_state* state);
 
-void count_eval();
+void free_pv(pv_table* pvt);
+
+void clear_pv_array(U16* array);
 
 #endif

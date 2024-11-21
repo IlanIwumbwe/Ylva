@@ -11,6 +11,7 @@ typedef struct s_search_info{
     U64 end_time;
     int time_set;
     int stopped;
+    board_state* state;
 } search_info;
 
 void think(search_info* info);

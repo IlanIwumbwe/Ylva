@@ -16,6 +16,7 @@ This is a rewrite of an older version that was in C++. A few features are missin
 
 ## Other commands
 - `perft n` will count leaf nodes at depth n
+- `perft` will run perft for preloaded positions comparing with expected node count
 
 ## Todos
 - [x] Complete writing move ordering 

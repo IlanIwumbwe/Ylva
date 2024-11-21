@@ -91,7 +91,7 @@ char* char_squares[64] = {
     "h7", "g7", "f7", "e7", "d7", "c7", "b7", "a7", 
     "h8", "g8", "f8", "e8", "d8", "c8", "b8", "a8", 
 };
-
+ 
 int file(char c){
     return 104 - c;
 }
@@ -103,8 +103,6 @@ int rank(char c){
 square sq(char* sq){
     return 8 * rank(sq[1]) + file(sq[0]);
 }
-
-#define rank(c) (c - '0' - 1)
 
 /// @brief Indexing matches colours (0 for white, 1 for black)
 castling_and_enpassant_info cep_info[2] = {
@@ -223,48 +221,6 @@ void set_promotion_type(char* c, int* m_type){
         }
     }
 
-}
-
-/// @brief converts str move into U16
-/// @param move 
-/// @return 
-U16 move_from_str(char* move){
-
-    square from = sq(move) & 0x3f;
-    square to = sq(move+2) & 0x3f;
-    int m_type = 0x0;
-
-    // printf("from : %d , to : %d\n", from, to);
-
-    piece p_from = piece_on_square(from);
-    piece p_to = piece_on_square(to);
-
-    set_promotion_type(move+4, &m_type);
-
-    int square_dist = from - to;
-    
-    if(p_to != p_none){
-        m_type |= 0x4;
-    }
-
-    if(m_type) goto end;
-
-    if((p_from == P) || (p_from == p)){
-        if(abs(square_dist) == 9 || abs(square_dist) == 7){
-            m_type = 0x5;
-        } else if(abs(square_dist) == 16){
-            m_type = 0x1;
-        }
-    } else if ((p_from == K) || (p_from == k)){
-        if(square_dist == 2){
-            m_type = 0x2;
-        } else if(square_dist == -2){
-            m_type = 0x3;
-        }
-    }
-
-    end:
-    return (m_type << 12) | (from << 6) | to;
 }
 
 int maxi(int a, int b){

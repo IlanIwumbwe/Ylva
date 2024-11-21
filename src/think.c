@@ -18,9 +18,9 @@ static void check_stop_conditions(search_info* info){
     }
 }
 
-static int eval(){
-    int perspective = (board_info->s == WHITE) ? 1 : -1;
-    return perspective * (board_info->eval[WHITE] - board_info->eval[BLACK]);
+static int eval(board_state* state){
+    int perspective = (state->data->s == WHITE) ? 1 : -1;
+    return perspective * (state->data->eval[WHITE] - state->data->eval[BLACK]);
 }
 
 /// @brief Find the move with the highest score and put it at the current iteration index
@@ -49,14 +49,14 @@ static void pick_move(moves_array* legal_moves, int current_move_index){
 static int negamax_search(int depth, search_info* info){
 
     if(depth == 0){
-        return eval();
+        return eval(info->state);
     }
 
     Move move;
     int eval = 0, max_eval = -INT_MAX;
 
     moves_array legal_moves = {.used=0};
-    generate_moves(&legal_moves, 0);
+    generate_moves(info->state, &legal_moves, 0);
 
     if(legal_moves.used == 0){
         if(n_checkers){
@@ -70,12 +70,12 @@ static int negamax_search(int depth, search_info* info){
     for(size_t i = 0; i < legal_moves.used; ++i){
         move = legal_moves.array[i];
 
-        make_move(move.move);
+        make_move(info->state, move.move);
         info->nodes_searched += 1;
 
         eval = -negamax_search(depth - 1, info);
 
-        undo_move();
+        undo_move(info->state);
 
         if(eval > max_eval){
             max_eval = eval;
@@ -89,10 +89,10 @@ static int negamax_search(int depth, search_info* info){
 /// @brief check whether move is valid in the current board position
 /// @param move 
 /// @return 
-int move_is_valid(U16 move){
+static int move_is_valid(board_state* state, U16 move){
 
     moves_array legal_moves = {.used=0};
-    generate_moves(&legal_moves, 0);
+    generate_moves(state, &legal_moves, 0);
 
     for(size_t i = 0; i < legal_moves.used; ++i){
         if(move == legal_moves.array[i].move) return 1;
@@ -103,27 +103,27 @@ int move_is_valid(U16 move){
 
 /// @brief Get pv line to certain depth
 /// @param depth 
-int get_pv_line(int depth){
+static int get_pv_line(board_state* state, int depth){
     assert(depth < MAX_SEARCH_DEPTH);
 
-    U16 move = probe_pv_table(&pvt, board_info->hash);
+    U16 move = probe_pv_table(state);
     int count = 0;
 
     while((move != 0) && (count < depth)){
         
-        if(move_is_valid(move)){
-            make_move(move);
-            pv_array[count++] = move;
+        if(move_is_valid(state, move)){
+            make_move(state, move);
+            state->pv_array[count++] = move;
         } else {
             break;
         }
 
-        move = probe_pv_table(&pvt, board_info->hash);
+        move = probe_pv_table(state);
     }
 
     // reset to original position
-    while(board_info->ply != 0){
-        undo_move();
+    while(state->data->ply != 0){
+        undo_move(state);
     }
 
     return count;
@@ -131,33 +131,31 @@ int get_pv_line(int depth){
 
 /// @brief Score pv move very highly, set scores of all other moves to 0
 /// @param da 
-void sort_pv_move(moves_array* legal_moves){
+static void sort_pv_move(board_state* state, moves_array* legal_moves){
 
     Move* curr_move;
 
     for(size_t i = 0; i < legal_moves->used; ++i){
         curr_move = legal_moves->array + i;
 
-        if(curr_move->move == pv_array[board_info->ply]){ curr_move->score = 100; } 
+        if(curr_move->move == state->pv_array[state->data->ply]){ curr_move->score = 100; } 
         else { curr_move->score = 0; }
     }
 }
 
-/// @brief Contains `sort_pv_move` call to score pv move highly
+/// @brief Use MVV_LVA heuristic to order moves
 /// @param legal_moves 
-void order_moves(moves_array* legal_moves){
+static void order_moves(board_state* state, moves_array* legal_moves){
 
     Move* curr_move;
     piece p_to;
     piece p_from;
 
-    sort_pv_move(legal_moves); // score pv move highly, also sets all other move scores to 0
-
     for(size_t i = 0; i < legal_moves->used; ++i){
         curr_move = legal_moves->array + i;
 
-        p_to = piece_on_square(move_to_square(curr_move->move));
-        p_from = piece_on_square(move_from_square(curr_move->move));
+        p_to = state->board[move_to_square(curr_move->move)];
+        p_from = state->board[move_from_square(curr_move->move)];
 
         // give good captures a high score than bad captures
         curr_move->score += MVV_LVA[p_to - (6 & -(p_to > 5))][p_from - (6 & -(p_from > 5))];
@@ -172,7 +170,7 @@ void order_moves(moves_array* legal_moves){
 /// @return 
 static int search(int depth, int alpha, int beta, search_info* info){
     if(depth == 0){
-        return eval(); 
+        return eval(info->state); 
     }
 
     if(info->nodes_searched & 2047){
@@ -183,7 +181,7 @@ static int search(int depth, int alpha, int beta, search_info* info){
     int eval;
 
     moves_array legal_moves = {.used=0};
-    generate_moves(&legal_moves, 0);
+    generate_moves(info->state, &legal_moves, 0);
 
     if(legal_moves.used == 0){
         if(n_checkers){
@@ -194,7 +192,8 @@ static int search(int depth, int alpha, int beta, search_info* info){
         
     }
 
-    order_moves(&legal_moves);  
+    sort_pv_move(info->state, &legal_moves); // score pv move highly, also sets all other move scores to 0
+    order_moves(info->state, &legal_moves);  
 
     for(size_t i = 0; i < legal_moves.used; ++i){
         pick_move(&legal_moves, i);
@@ -204,15 +203,15 @@ static int search(int depth, int alpha, int beta, search_info* info){
             return 0;
         }
 
-        make_move(move.move);
+        make_move(info->state, move.move);
 
         info->nodes_searched += 1;
         eval = -search(depth - 1, -beta, -alpha, info);
         
-        undo_move();
+        undo_move(info->state);
 
         if(eval > alpha){
-            store_pv_entry(&pvt, board_info->hash, move.move);
+            store_pv_entry(info->state, move.move);
             alpha = eval;
 
             if(eval >= beta){
@@ -231,34 +230,35 @@ void think(search_info* info){
     int pv_len = 0;
 
     moves_array legal_moves = {.used=0};
-    generate_moves(&legal_moves, 0);
+    generate_moves(info->state, &legal_moves, 0);
 
     for(int d = 1; d <= info->maxdepth; ++d){
-        order_moves(&legal_moves);        
+        sort_pv_move(info->state, &legal_moves); // score pv move highly, also sets all other move scores to 0
+        order_moves(info->state, &legal_moves);        
 
         for(size_t i = 0; i < legal_moves.used; ++i){
             pick_move(&legal_moves, i);
             curr_move = legal_moves.array[i];
 
-            make_move(curr_move.move);
+            make_move(info->state, curr_move.move);
 
             info->nodes_searched += 1;
             curr_move.score = -search(d-1, -INT_MAX, INT_MAX, info);  // get "true" eval from search
 
-            undo_move();
+            undo_move(info->state);
 
             if(curr_move.score > best_eval){
-                store_pv_entry(&pvt, board_info->hash, curr_move.move);
+                store_pv_entry(info->state, curr_move.move);
                 best_eval = curr_move.score;
             }
         }
 
-        pv_len = get_pv_line(d);
+        pv_len = get_pv_line(info->state, d);
 
         printf("info depth %d nodes %d pv ", d, info->nodes_searched);
 
         for(int i = 0; i < pv_len; i++){
-            print_move(pv_array[i]);
+            print_move(info->state->pv_array[i]);
         }
 
         printf("\n");

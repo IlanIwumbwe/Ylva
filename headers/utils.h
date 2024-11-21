@@ -77,7 +77,9 @@ piece char_to_piece(const char c_piece);
 
 square char_to_square(const char* c_square);
 
-piece piece_on_square(square sq);
+square sq(char* sq);
+
+void set_promotion_type(char* c, int* m_type);
 
 void print_bitboard(const U64 number);
 
@@ -86,8 +88,6 @@ int count_set_bits(U64 number);
 int tokenise(char* string, char* output[]);
 
 void print_move(U16 move);
-
-U16 move_from_str(char* move);
 
 U64 time_in_ms();
 

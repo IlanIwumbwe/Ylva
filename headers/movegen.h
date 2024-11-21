@@ -16,6 +16,6 @@ extern int n_checkers;
 
 void populate_attack_sets();
 
-void generate_moves(moves_array* legal_moves, int captures_only);
+void generate_moves(board_state* state, moves_array* legal_moves, int captures_only);
 
 #endif

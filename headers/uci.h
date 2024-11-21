@@ -4,6 +4,8 @@
 #include "../headers/movegen.h"
 #include "../headers/board.h"
 #include "../headers/think.h"
+#include "../headers/zobrist.h"
+#include "../headers/positions.h"
 
 #define INPUT_SIZE 8192
 #define UCI_TOKENS_SIZE 500

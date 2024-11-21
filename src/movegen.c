@@ -14,6 +14,8 @@ U64 BISHOP_MOVES[64][4096] = {};
 
 moves_array pseudo_legal_moves;
 
+static U64 bitboards[13];
+
 int rook_n_bits_in_span[64] = {
     12, 11, 11, 11, 11, 11, 11, 12,
     11, 10, 10, 10, 10, 10, 10, 11,
@@ -394,10 +396,10 @@ static U64 get_attackers(square sq, U64 mask){
     result = KNIGHT_ATTACKS[sq] & (bitboards[N] | bitboards[n]);
     result |= KING_ATTACKS[sq] & (bitboards[K] | bitboards[k]);
 
-    key = blocker_to_key(board_info->occupied , bishop_magics[sq]);
+    key = blocker_to_key(occupied , bishop_magics[sq]);
     bishops = BISHOP_MOVES[sq][key];
 
-    key = blocker_to_key(board_info->occupied, rook_magics[sq]);    
+    key = blocker_to_key(occupied, rook_magics[sq]);    
     rooks = ROOK_MOVES[sq][key];
 
     result |= bishops & (bitboards[B] | bitboards[b]); 
@@ -409,12 +411,36 @@ static U64 get_attackers(square sq, U64 mask){
     return result & ~mask;
 }
 
+static U64 get_attackers_during_filter(board_state* state, square sq, U64 mask){
+    U64 result;
+    int key;
+    U64 bishops, rooks;
+
+    result = KNIGHT_ATTACKS[sq] & (state->bitboards[N] | state->bitboards[n]);
+    result |= KING_ATTACKS[sq] & (state->bitboards[K] | state->bitboards[k]);
+
+    key = blocker_to_key(state->data->occupied, bishop_magics[sq]);
+    bishops = BISHOP_MOVES[sq][key];
+
+    key = blocker_to_key(state->data->occupied, rook_magics[sq]);    
+    rooks = ROOK_MOVES[sq][key];
+
+    result |= bishops & (state->bitboards[B] | state->bitboards[b]); 
+    result |= rooks & (state->bitboards[R] | state->bitboards[r]);
+    result |= (bishops | rooks) & (state->bitboards[Q] | state->bitboards[q]);
+
+    result |= (PAWN_ATTACKS[sq][WHITE] & state->bitboards[p]) | (PAWN_ATTACKS[sq][BLACK] & state->bitboards[P]);
+    
+    return result & ~mask;
+}
+
+
 /// @brief Make each pseudo legal move, if it leaves the enemy king in check, then it is illegal. Also frees memory used by the pseudo-legal array
 /// @param psuedo_legal_moves 
 /// @param moves_array 
 /// @param ally_king
 /// @param ally_pieces
-static void filter_pseudo_legal_moves(moves_array* legal_moves, piece ally_pawn, piece ally_king, piece ally_knight, piece ally_bishop, piece ally_rook, piece ally_queen){
+static void filter_pseudo_legal_moves(board_state* state, moves_array* legal_moves, piece ally_pawn, piece ally_king, piece ally_knight, piece ally_bishop, piece ally_rook, piece ally_queen){
     size_t i;
     Move move;
     square sq;
@@ -423,19 +449,20 @@ static void filter_pseudo_legal_moves(moves_array* legal_moves, piece ally_pawn,
     for(i = 0; i < pseudo_legal_moves.used; ++i){
         move = pseudo_legal_moves.array[i];
 
-        make_move(move.move);
+        make_move(state, move.move);
 
-        sq = get_lsb(bitboards[ally_king]);
+        sq = get_lsb(state->bitboards[ally_king]);
 
-        attackers = get_attackers(sq, bitboards[ally_pawn] | bitboards[ally_king] | bitboards[ally_knight] | bitboards[ally_bishop] | bitboards[ally_rook] | bitboards[ally_queen]);
+        attackers = get_attackers_during_filter(state, sq, state->bitboards[ally_pawn] | state->bitboards[ally_king] | state->bitboards[ally_knight] | state->bitboards[ally_bishop] | 
+                        state->bitboards[ally_rook] | state->bitboards[ally_queen]);
 
         if(!attackers){ma_append(legal_moves, move);}
 
-        undo_move();
+        undo_move(state);
     }
 }
 
-static void K_quiet_moves(){
+static void K_quiet_moves(board_state* state){
 
     square sq = get_lsb(bitboards[K]);
 
@@ -444,13 +471,13 @@ static void K_quiet_moves(){
     create_other_moves(move_set, sq, 0);
 
     if(n_checkers == 0){
-        if(board_info->castling_rights & K_castle){
+        if(state->data->castling_rights & K_castle){
             if(!(set_bit(f1) & occupied) && !(set_bit(g1) & occupied) && !get_attackers(f1,whites) && !get_attackers(g1,whites)){
                 create_other_moves(set_bit(g1), e1, 2);
             }
         }
 
-        if(board_info->castling_rights & Q_castle){
+        if(state->data->castling_rights & Q_castle){
             if(!(set_bit(d1) & occupied) && !(set_bit(c1) & occupied) && !(set_bit(b1) & occupied) && !get_attackers(d1,whites) && !get_attackers(c1,whites)){
                 create_other_moves(set_bit(c1), e1, 3);
             }
@@ -467,7 +494,7 @@ static void K_captures_moves(){
     create_other_moves(move_set, sq, 4);
 }
 
-static void k_quiet_moves(){
+static void k_quiet_moves(board_state* state){
 
     square sq = get_lsb(bitboards[k]);
 
@@ -476,20 +503,20 @@ static void k_quiet_moves(){
     create_other_moves(move_set, sq, 0);
 
     if(n_checkers == 0){
-        if(board_info->castling_rights & k_castle){
+        if(state->data->castling_rights & k_castle){
             if(!(set_bit(f8) & occupied) && !(set_bit(g8) & occupied) && !get_attackers(f8,blacks) && !get_attackers(g8,blacks)){
                 create_other_moves(set_bit(g8), e8, 2);
             }
         } else {
-            board_info->castling_rights &= ~k_castle;
+            state->data->castling_rights &= ~k_castle;
         }
 
-        if(board_info->castling_rights & q_castle){
+        if(state->data->castling_rights & q_castle){
             if(!(set_bit(d8) & occupied) && !(set_bit(c8) & occupied) && !(set_bit(b8) & occupied) && !get_attackers(d8,blacks) && !get_attackers(c8,blacks)){
                 create_other_moves(set_bit(c8), e8, 3);
             }
         } else {
-            board_info->castling_rights &= ~q_castle;
+            state->data->castling_rights &= ~q_castle;
         }
     }
 }
@@ -584,7 +611,7 @@ static void P_quiet_moves(){
     }  
 }
 
-static void P_captures_moves(){
+static void P_captures_moves(board_state* state){
     U64 white_pawns = bitboards[P], doubly_pushed_pawn;
     U64 tos;
     int prev_move;
@@ -610,7 +637,7 @@ static void P_captures_moves(){
     }
 
     // enpassant captures
-    prev_move = board_info->move;
+    prev_move = state->data->move;
 
     if(move_type(prev_move) == 1){
         doubly_pushed_pawn = set_bit(move_to_square(prev_move));
@@ -648,7 +675,7 @@ static void p_quiet_moves(){
     }
 }
 
-static void p_captures_moves(){
+static void p_captures_moves(board_state* state){
     U64 black_pawns = bitboards[p], doubly_pushed_pawn; 
     U64 tos;
     int prev_move;
@@ -674,7 +701,7 @@ static void p_captures_moves(){
     }
 
     // enpassant captures
-    prev_move = board_info->move;
+    prev_move = state->data->move;
 
     if(move_type(prev_move) == 1){
         doubly_pushed_pawn = set_bit(move_to_square(prev_move));
@@ -921,7 +948,8 @@ static void q_quiet_moves(){
     }
 }
 
-void generate_moves(moves_array* legal_moves, int captures_only){
+void generate_moves(board_state* state, moves_array* legal_moves, int captures_only){
+    memcpy(bitboards, state->bitboards, sizeof(state->bitboards));
 
     whites = bitboards[P] | bitboards[K] | bitboards[N] | bitboards[B] | bitboards[R] | bitboards[Q];
     blacks = bitboards[p] | bitboards[k] | bitboards[n] | bitboards[b] | bitboards[r] | bitboards[q];
@@ -929,24 +957,24 @@ void generate_moves(moves_array* legal_moves, int captures_only){
     whites_minus_king = whites & ~bitboards[K];
     blacks_minus_king = blacks & ~bitboards[k];
 
-    occupied = board_info->occupied;
+    occupied = state->data->occupied;
 
     assert((whites | blacks) == occupied);
 
     pseudo_legal_moves.used = 0;
 
-    if(board_info->s == BLACK){
+    if(state->data->s == BLACK){
         checkers = get_attackers(get_lsb(bitboards[k]), blacks);
         n_checkers = count_set_bits(checkers);
 
         // generate king moves
         k_captures_moves();
-        if(!captures_only){k_quiet_moves();}
+        if(!captures_only){k_quiet_moves(state);}
 
         // generate moves for other pieces, as there may be evasions if n_checkers is 1. If n_checkers is 0, all legal moves are valid
         if(n_checkers <= 1){
             
-            p_captures_moves();
+            p_captures_moves(state);
             n_captures_moves();
             r_captures_moves();
             b_captures_moves();
@@ -962,7 +990,7 @@ void generate_moves(moves_array* legal_moves, int captures_only){
 
         } 
 
-        filter_pseudo_legal_moves(legal_moves, p, k, n, b, r, q);
+        filter_pseudo_legal_moves(state, legal_moves, p, k, n, b, r, q);
 
     } else {
         checkers = get_attackers(get_lsb(bitboards[K]), whites);
@@ -970,12 +998,12 @@ void generate_moves(moves_array* legal_moves, int captures_only){
 
         // generate king moves
         K_captures_moves();
-        if(!captures_only){K_quiet_moves();}
+        if(!captures_only){K_quiet_moves(state);}
 
         // generate moves for other pieces, as there may be evasions if n_checkers is 1. If n_checkers is 0, all legal moves are valid
         if(n_checkers <= 1){
             
-            P_captures_moves();
+            P_captures_moves(state);
             N_captures_moves();
             R_captures_moves();
             B_captures_moves();
@@ -991,7 +1019,7 @@ void generate_moves(moves_array* legal_moves, int captures_only){
 
         } 
 
-        filter_pseudo_legal_moves(legal_moves, P, K, N, B, R, Q);
+        filter_pseudo_legal_moves(state, legal_moves, P, K, N, B, R, Q);
     }
 
     ma_reset(&pseudo_legal_moves);
