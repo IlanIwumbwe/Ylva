@@ -18,6 +18,7 @@ enum {
     UCINEWGAME = 6,
     POSITION = 17,
     STOP = 28,
+    QUIT = 29,
 
 #ifdef DEV
     PERFT = 116,

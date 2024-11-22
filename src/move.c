@@ -10,6 +10,7 @@ void make_move(board_state* state, const U16 move){
     info_n->ep_square = s_none;
     info_n->hash = state->data->hash ^ zi.turn_key;
     info_n->occupied = state->data->occupied;
+    info_n->fifty_move = state->data->fifty_move;
     
     memcpy(info_n->eval, state->data->eval, sizeof(state->data->eval));
 
@@ -26,9 +27,18 @@ void make_move(board_state* state, const U16 move){
     U64 val = -(ep != s_none);
     info_n->hash ^= (val & zi.piece_zobrist_keys[p_none][ep]);
 
-    // take care of possible captures, ep capture done separately
-    state->bitboards[p_to] &= ~set_bit(s_to);
-    info_n->captured_piece = p_to;
+    assert(p_from != p_none);
+
+    info_n->fifty_move += 1; // fifty move counter increments by defualt, if not reset, incremented value is kept
+
+    if(p_from == P || p_from == p){info_n->fifty_move = 0;} // pawn moves reset fifty move counter
+
+    // take care of normal captures, ep capture done separately
+    if(p_to != p_none){
+        state->bitboards[p_to] &= ~set_bit(s_to);
+        info_n->captured_piece = p_to;
+        info_n->fifty_move = 0;
+    }
 
     if(p_to != p_none) info_n->eval[s] -= PIECE_VALUES[p_to][FLIP[1-s][s_to]];
 
@@ -55,10 +65,8 @@ void make_move(board_state* state, const U16 move){
         info_n->castling_rights &= ~ally_cep.qcr;
     }
     
-    assert(p_from != p_none);
-
     state->bitboards[p_from] &= ~set_bit(s_from);
-    info_n->occupied &= ~set_bit(s_from);
+    info_n->occupied &= ~set_bit(s_from);assert(p_from != p_none);
     state->board[s_from] = p_none;
 
     info_n->hash ^= zi.piece_zobrist_keys[p_from][s_from];
@@ -70,6 +78,7 @@ void make_move(board_state* state, const U16 move){
             
             info_n->ep_square = s_to + ally_cep.ep_sq_offset;
             info_n->hash ^= zi.piece_zobrist_keys[p_none][info_n->ep_square];
+            info_n->fifty_move = 0;
 
         } else if(m_type == 2){
             // kingside castle
@@ -117,13 +126,14 @@ void make_move(board_state* state, const U16 move){
 
             info_n->hash ^= zi.piece_zobrist_keys[ally_cep.ep_pawn][s_to + ally_cep.ep_sq_offset];
             info_n->eval[s] -= PIECE_VALUES[ally_cep.ep_pawn][FLIP[1-s][s_to + ally_cep.ep_sq_offset]];
+            info_n->fifty_move = 0;
         } 
 
     } else {
         int offset = (s == BLACK) ? 8 : 2;
 
         info_n->eval[s] -= PIECE_VALUES[p_from][FLIP[s][s_from]];
-
+        info_n->fifty_move = 0; // promotion moves involve pawn movement so should reset fifty move counter
         p_from = (m_type & 0x3) + offset;
     }
 

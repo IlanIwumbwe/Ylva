@@ -67,6 +67,10 @@ static int negamax_search(int depth, search_info* info, board_state* state){
         
     }
 
+    if(state->data->fifty_move >= 100){
+        return 0; // stalemate by fifty move rule
+    }
+
     for(size_t i = 0; i < legal_moves.used; ++i){
         move = legal_moves.array[i];
 
@@ -177,7 +181,7 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
         check_stop_conditions(info);
     }
 
-    Move move, best_move;
+    Move move, best_move = {.move = 0, .score = 0};
     int eval;
     int old_alpha = alpha;
 
@@ -191,6 +195,10 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
             return 0;  // stalemate
         }
         
+    }
+
+    if(state->data->fifty_move >= 100){
+        return 0; // stalemate by fifty move rule
     }
 
     sort_pv_move(state, &legal_moves); // score pv move highly, also sets all other move scores to 0

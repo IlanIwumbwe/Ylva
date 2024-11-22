@@ -181,7 +181,7 @@ static void process_position(board_state* state, const char* uci_command){
     }
 }
 
-void process_go(board_state* state, const char* uci_command){
+static void process_go(board_state* state, const char* uci_command){
     
     char* copy = strdup(uci_command);
     char* cmd;
@@ -227,6 +227,10 @@ void process_go(board_state* state, const char* uci_command){
     think(&info, state);
 }
 
+static void quit_program(board_state* state){
+    free_pv(&state->pvt);
+}
+
 void uci_communication(){
     // perft 5
     // go depth 4
@@ -252,6 +256,7 @@ void uci_communication(){
             case GO: process_go(&state, uci_command); break;
             case UCI: process_uci(); break;
             case ISREADY: process_isready(); break;
+            case QUIT: quit_program(&state); goto stop;
         
         #ifdef DEV
             case PERFT:
@@ -274,4 +279,6 @@ void uci_communication(){
 
         }
     }
+
+    stop:
 }

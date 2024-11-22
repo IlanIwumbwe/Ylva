@@ -8,7 +8,8 @@ typedef struct shistory{
     square ep_square;
     char castling_rights; /// only least significant 4 bits are used for castling rights
     side s;  // 0 means white, 1 means black 
-    int ply, moves, hisply;   
+    int ply, moves, hisply;
+    int fifty_move;   
     U16 move; /// previous move that led to this state
     piece captured_piece; /// most recently captured piece
     U64 hash;

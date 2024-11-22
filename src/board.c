@@ -59,7 +59,7 @@ U16 probe_pv_table(board_state* state){
 }
 
 void free_pv(pv_table* pvt){
-    free(pvt);
+    free(pvt->table);
 }
 
 void clear_pv_array(U16* array){
@@ -127,7 +127,7 @@ void setup_state_from_fen(board_state* state, const char* fen_string){
         state->data->move = (1 << 12) | ((state->data->ep_square - cep.ep_sq_offset) << 6) | (state->data->ep_square + cep.ep_sq_offset);
     }
 
-
+    state->data->ply = 0;
     state->data->hisply = strtol(strtok(NULL, " "), &end, 10);
     state->data->moves = strtol(strtok(NULL, " "), &end, 10);
     state->data->captured_piece = p_none;
@@ -172,8 +172,8 @@ void print_board(const board_state* state){
     char c; 
 
     printf("castling rights flag: %d\n", state->data->castling_rights);
-    printf("total ply: %d\n", state->data->hisply);
-    printf("moves: %d\n", state->data->moves);
+    printf("hisply: %d\n", state->data->hisply);
+    printf("ply: %d, moves: %d fifty_move: %d\n", state->data->ply, state->data->moves, state->data->fifty_move);
     printf("previous move: ");
     print_move(state->data->move);
     printf("turn: %s\n", (state->data->s) ? "b" : "w");
@@ -196,4 +196,3 @@ void print_board(const board_state* state){
 
     printf("Key: %lx \n", state->data->hash);
 }
-
