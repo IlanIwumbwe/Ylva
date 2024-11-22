@@ -34,6 +34,7 @@ void reset_pv_entries(board_state* state){
 /// @param key 
 /// @param move 
 void store_pv_entry(board_state* state, U16 move){
+    assert(move != 0);
 
     U64 key = state->data->hash;
     int index = key % state->pvt.capacity;

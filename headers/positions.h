@@ -2,7 +2,7 @@
 #define POSITIONS_H
 
 #include "utils.h"
-#define N_POSITIONS 2
+#define N_POSITIONS 6
 
 typedef struct spos {
     char* fen;

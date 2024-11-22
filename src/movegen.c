@@ -1,8 +1,6 @@
 #include "../headers/movegen.h"
 
-int n_checkers;
-
-U64 whites, blacks, occupied, whites_minus_king, blacks_minus_king, checkers, pinned_pieces, ally_king;
+U64 whites, blacks, occupied, whites_minus_king, blacks_minus_king, ally_king;
 
 U64 KNIGHT_ATTACKS[64];
 U64 KING_ATTACKS[64];
@@ -470,7 +468,7 @@ static void K_quiet_moves(board_state* state){
 
     create_other_moves(move_set, sq, 0);
 
-    if(n_checkers == 0){
+    if(state->n_checkers == 0){
         if(state->data->castling_rights & K_castle){
             if(!(set_bit(f1) & occupied) && !(set_bit(g1) & occupied) && !get_attackers(f1,whites) && !get_attackers(g1,whites)){
                 create_other_moves(set_bit(g1), e1, 2);
@@ -502,7 +500,7 @@ static void k_quiet_moves(board_state* state){
 
     create_other_moves(move_set, sq, 0);
 
-    if(n_checkers == 0){
+    if(state->n_checkers == 0){
         if(state->data->castling_rights & k_castle){
             if(!(set_bit(f8) & occupied) && !(set_bit(g8) & occupied) && !get_attackers(f8,blacks) && !get_attackers(g8,blacks)){
                 create_other_moves(set_bit(g8), e8, 2);
@@ -964,15 +962,15 @@ void generate_moves(board_state* state, moves_array* legal_moves, int captures_o
     pseudo_legal_moves.used = 0;
 
     if(state->data->s == BLACK){
-        checkers = get_attackers(get_lsb(bitboards[k]), blacks);
-        n_checkers = count_set_bits(checkers);
+        state->checkers = get_attackers(get_lsb(bitboards[k]), blacks);
+        state->n_checkers = count_set_bits(state->checkers);
 
         // generate king moves
         k_captures_moves();
         if(!captures_only){k_quiet_moves(state);}
 
         // generate moves for other pieces, as there may be evasions if n_checkers is 1. If n_checkers is 0, all legal moves are valid
-        if(n_checkers <= 1){
+        if(state->n_checkers <= 1){
             
             p_captures_moves(state);
             n_captures_moves();
@@ -993,15 +991,15 @@ void generate_moves(board_state* state, moves_array* legal_moves, int captures_o
         filter_pseudo_legal_moves(state, legal_moves, p, k, n, b, r, q);
 
     } else {
-        checkers = get_attackers(get_lsb(bitboards[K]), whites);
-        n_checkers = count_set_bits(checkers);
+        state->checkers = get_attackers(get_lsb(bitboards[K]), whites);
+        state->n_checkers = count_set_bits(state->checkers);
 
         // generate king moves
         K_captures_moves();
         if(!captures_only){K_quiet_moves(state);}
 
         // generate moves for other pieces, as there may be evasions if n_checkers is 1. If n_checkers is 0, all legal moves are valid
-        if(n_checkers <= 1){
+        if(state->n_checkers <= 1){
             
             P_captures_moves(state);
             N_captures_moves();

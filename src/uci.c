@@ -177,7 +177,6 @@ static void process_position(board_state* state, const char* uci_command){
 
     while((t = strtok(NULL, " "))){
         move = move_from_str(state, t);
-        printf("%x\n", move);
         make_move(state, move);
     }
 }
@@ -194,7 +193,7 @@ void process_go(board_state* state, const char* uci_command){
     U64 time = 0, inc = 0;
     int movestogo = 30;
 
-    search_info info = {.maxdepth = MAX_SEARCH_DEPTH, .nodes_searched = 0, .state = state};
+    search_info info = {.maxdepth = MAX_SEARCH_DEPTH, .nodes_searched = 0};
     side s = state->data->s;
 
     while((cmd = strtok(NULL, " ")) && (arg = strtok(NULL, " "))){
@@ -225,7 +224,7 @@ void process_go(board_state* state, const char* uci_command){
 
     printf("start_time %ld end_time %ld depth %d time to think %ld inc %ld timeset %d\n", info.start_time, info.end_time, info.maxdepth, time, inc, info.time_set);
 
-    think(&info);
+    think(&info, state);
 }
 
 void uci_communication(){
@@ -247,7 +246,7 @@ void uci_communication(){
     while(!get_input(uci_command)){
         int h = hash_first_token(uci_command);
         char* end;
-        
+
         switch(h){
             case POSITION: process_position(&state, uci_command); break;
             case GO: process_go(&state, uci_command); break;
@@ -259,6 +258,7 @@ void uci_communication(){
 
                 if(!strcmp(uci_command, "perft")){
                     run_test_suite(&state);
+
                 } else {
                     depth = mini(MAX_SEARCH_DEPTH, strtol(uci_command+6, &end, 10));
                     run_perft(&state, depth);

@@ -12,7 +12,6 @@ typedef struct magic_entry{
 } magic_entry;
 
 extern U64 occupied, whites, blacks;
-extern int n_checkers;
 
 void populate_attack_sets();
 
