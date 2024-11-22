@@ -34,12 +34,12 @@ typedef struct sboard {
     history metadata[MAX_SEARCH_DEPTH + 10];
     history* data;
     pv_table pvt;
-    U16 pv_array[MAX_SEARCH_DEPTH+10];
+    U16 pv_array[MAX_SEARCH_DEPTH + 10];
     U64 checkers;
     int n_checkers;
 
-    int history_moves[13][64];
-    int killer_moves[2][MAX_SEARCH_DEPTH];
+    U16 history_moves[64][64];
+    U16 killer_moves[2][MAX_SEARCH_DEPTH];
 } board_state;
 
 void setup_state_from_fen(board_state* state, const char* fen_string);

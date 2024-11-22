@@ -4,6 +4,11 @@
 #include "movegen.h"
 #include "board.h"
 
+#define PV_SCORE 2000000
+#define CAPTURE_SCORE_OFFSET 1000000
+#define KILLER_0_SCORE 9000000
+#define KILLER_1_SCORE 8000000
+
 typedef struct s_search_info{
     int nodes_searched;
     int maxdepth;

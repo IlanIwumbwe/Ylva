@@ -133,38 +133,41 @@ static int get_pv_line(board_state* state, int depth){
     return count;
 }
 
-/// @brief Score pv move very highly, set scores of all other moves to 0
-/// @param da 
-static void sort_pv_move(board_state* state, moves_array* legal_moves){
-
-    Move* curr_move;
-
-    for(size_t i = 0; i < legal_moves->used; ++i){
-        curr_move = legal_moves->array + i;
-
-        if(curr_move->move == state->pv_array[state->data->ply]){ curr_move->score = 100; } 
-        else { curr_move->score = 0; }
-    }
-}
-
-/// @brief Use MVV_LVA heuristic to order moves
+/// @brief Give hueristic score to moves such that moves are searched in this order: pv move, good captures, killer moves, history moves
 /// @param legal_moves 
 static void order_moves(board_state* state, moves_array* legal_moves){
 
     Move* curr_move;
-    piece p_to;
-    piece p_from;
+    piece p_to, p_from;
+    square s_to, s_from;
 
     for(size_t i = 0; i < legal_moves->used; ++i){
         curr_move = legal_moves->array + i;
 
-        p_to = state->board[move_to_square(curr_move->move)];
-        p_from = state->board[move_from_square(curr_move->move)];
+        s_to = move_to_square(curr_move->move);
+        s_from = move_from_square(curr_move->move);
+        p_to = state->board[s_to];
+        p_from = state->board[s_from];
 
-        // give good captures a high score than bad captures
-        curr_move->score += MVV_LVA[p_to - (6 & -(p_to > 5))][p_from - (6 & -(p_from > 5))];
+        // if pv move, bump up score
+        if(curr_move->move == state->pv_array[state->data->ply]){ 
+            curr_move->score = PV_SCORE;
+        }
+
+        // give good captures a high score than bad captures using MVV_LVA heuristic
+        curr_move->score += MVV_LVA[p_to - (6 & -(p_to > 5))][p_from - (6 & -(p_from > 5))] + CAPTURE_SCORE_OFFSET;
+
+        // check if current move is a killer move
+        if(state->killer_moves[0][state->data->ply] == curr_move->move){
+            curr_move->score += KILLER_0_SCORE;
+        } else if(state->killer_moves[1][state->data->ply] == curr_move->move){
+            curr_move->score += KILLER_1_SCORE;
+        } else {
+            // history move
+            curr_move->score += state->history_moves[s_from][s_to];
+        }
+    
     }
-
 }
 
 /// @brief negamax search on the position with alpha-beta pruning and move ordering
@@ -201,7 +204,6 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
         return 0; // stalemate by fifty move rule
     }
 
-    sort_pv_move(state, &legal_moves); // score pv move highly, also sets all other move scores to 0
     order_moves(state, &legal_moves);  
 
     for(size_t i = 0; i < legal_moves.used; ++i){
@@ -220,12 +222,23 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
         undo_move(state);
 
         if(eval > alpha){
+
+            if(eval >= beta){
+                
+                // non-capture moves that cause beta cutoffs are killer moves
+                if(!(move.move & CAPTURE_MASK)){
+                    state->killer_moves[1][state->data->ply] = state->killer_moves[0][state->data->ply];
+                    state->killer_moves[0][state->data->ply] = move.move;
+                }
+
+                return beta; // beta cutoff
+            }
+
+            // moves that improve upon alpha increment history score
             alpha = eval;
             best_move = move;
 
-            if(eval >= beta){
-                return beta; // beta cutoff
-            }
+            state->history_moves[move_from_square(best_move.move)][move_to_square(best_move.move)] += depth;
         }
     }
 
