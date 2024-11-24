@@ -49,7 +49,7 @@ static void pick_move(moves_array* legal_moves, int current_move_index){
 static int negamax_search(int depth, search_info* info, board_state* state){
 
     if(depth == 0){
-        return eval(state);
+        return static_eval(state);
     }
 
     Move move;
@@ -183,7 +183,6 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
 
     Move move, best_move = {.move = 0, .score = 0};
     int eval;
-    int old_alpha = alpha;
 
     moves_array legal_moves = {.used=0};
     generate_moves(state, &legal_moves, 0);
@@ -255,14 +254,13 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
 
 void think(search_info* info, board_state* state){
 
-    int best_eval = -INT_MAX;
     int pv_len = 0;
 
     U16 best_move = 0;
 
     for(int d = 1; d <= info->maxdepth; ++d){  
 
-        best_eval = search(d, -AB_BOUND, AB_BOUND, info, state);
+        search(d, -AB_BOUND, AB_BOUND, info, state);
 
         if(info->stopped){break;}
 
