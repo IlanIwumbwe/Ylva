@@ -182,7 +182,7 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
     }
 
     Move move, best_move = {.move = 0, .score = 0};
-    int eval;
+    int eval, old_alpha = alpha;
 
     moves_array legal_moves = {.used=0};
     generate_moves(state, &legal_moves, 0);
@@ -229,6 +229,7 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
             alpha = eval;
             best_move = move;
 
+            // this ensures that moves that cause beta cuttoffs are stored in the pv array
             store_pv_entry(state, best_move.move);
 
             if(eval >= beta){
@@ -248,6 +249,11 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
             }
         }
     }   
+
+    // this ensures that there's always a best move at the top of the pv array
+    if(old_alpha != alpha){
+        store_pv_entry(state, best_move.move);
+    }
     
     return alpha;
 }
