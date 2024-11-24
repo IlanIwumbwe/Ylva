@@ -68,6 +68,16 @@ void clear_pv_array(U16* array){
     }
 }
 
+/// @brief Reset board state to prepare for new search
+/// @param state 
+void reset_state(board_state* state){
+    memset(state->history_moves, 0, sizeof(state->history_moves));
+    memset(state->killer_moves, 0, sizeof(state->killer_moves));
+
+    reset_pv_entries(state);
+    clear_pv_array(state->pv_array);
+}
+
 void init_eval(board_state* state){
     piece pi;
 
@@ -176,9 +186,8 @@ void print_board(const board_state* state){
     printf("ply: %d, moves: %d fifty_move: %d\n", state->data->ply, state->data->moves, state->data->fifty_move);
     printf("previous move: ");
     print_move(state->data->move);
-    printf("turn: %s\n", (state->data->s) ? "b" : "w");
-    printf("White eval: %d Black eval: %d \n", state->data->eval[WHITE], state->data->eval[BLACK]);
-
+    printf("\nturn: %s\n\n", (state->data->s) ? "b" : "w");
+   
     printf("----------------\n");
     for(int i = 63; i >= 0; i--){
         p = state->board[i];
@@ -195,4 +204,14 @@ void print_board(const board_state* state){
     printf("a b c d e f g h\n\n");
 
     printf("Key: %lx \n", state->data->hash);
+    printf("Static eval: [White]: %d [Black]: %d \n", state->data->eval[WHITE], state->data->eval[BLACK]);
+    
+    U64 checkers = state->checkers;
+    
+    printf("Checkers: ");
+    while(checkers){
+        printf("%s ", char_squares[get_lsb(checkers)]);
+        checkers &= (checkers - 1);
+    }
+    printf("\n");
 }

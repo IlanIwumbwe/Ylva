@@ -8,6 +8,7 @@
 #define CAPTURE_SCORE_OFFSET 1000000
 #define KILLER_0_SCORE 9000000
 #define KILLER_1_SCORE 8000000
+#define AB_BOUND 1000000
 
 typedef struct s_search_info{
     int nodes_searched;

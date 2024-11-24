@@ -31,10 +31,13 @@ typedef struct spvt{
 typedef struct sboard {
     U64 bitboards[13];
     piece board[64];
+    
     history metadata[MAX_SEARCH_DEPTH + 10];
     history* data;
+
     pv_table pvt;
     U16 pv_array[MAX_SEARCH_DEPTH + 10];
+
     U64 checkers;
     int n_checkers;
 
@@ -61,5 +64,7 @@ U16 probe_pv_table(board_state* state);
 void free_pv(pv_table* pvt);
 
 void clear_pv_array(U16* array);
+
+void reset_state(board_state* state);
 
 #endif

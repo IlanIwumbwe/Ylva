@@ -18,7 +18,7 @@ static void check_stop_conditions(search_info* info){
     }
 }
 
-static int eval(board_state* state){
+static int static_eval(board_state* state){
     int perspective = (state->data->s == WHITE) ? 1 : -1;
     return perspective * (state->data->eval[WHITE] - state->data->eval[BLACK]);
 }
@@ -112,6 +112,7 @@ static int get_pv_line(board_state* state, int depth){
 
     U16 move = probe_pv_table(state);
     int count = 0;
+    int old_ply = state->data->ply;
 
     while((move != 0) && (count < depth)){
         
@@ -126,7 +127,7 @@ static int get_pv_line(board_state* state, int depth){
     }
 
     // reset to original position
-    while(state->data->ply != 0){
+    while(state->data->ply != old_ply){
         undo_move(state);
     }
 
@@ -135,7 +136,7 @@ static int get_pv_line(board_state* state, int depth){
 
 /// @brief Give hueristic score to moves such that moves are searched in this order: pv move, good captures, killer moves, history moves
 /// @param legal_moves 
-static void order_moves(board_state* state, moves_array* legal_moves){
+static void order_moves(const board_state* state, moves_array* legal_moves){
 
     Move* curr_move;
     piece p_to, p_from;
@@ -176,10 +177,6 @@ static void order_moves(board_state* state, moves_array* legal_moves){
 /// @param beta 
 /// @return 
 static int search(int depth, int alpha, int beta, search_info* info, board_state* state){
-    if(depth == 0){
-        return eval(state); 
-    }
-
     if(info->nodes_searched & 2047){
         check_stop_conditions(info);
     }
@@ -204,6 +201,10 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
         return 0; // stalemate by fifty move rule
     }
 
+    if(depth == 0){
+        return static_eval(state); 
+    }
+
     order_moves(state, &legal_moves);  
 
     for(size_t i = 0; i < legal_moves.used; ++i){
@@ -222,6 +223,14 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
         undo_move(state);
 
         if(eval > alpha){
+            //printf("move ");
+            //print_move(move.move);
+            //printf(", eval %d, alpha %d\n", eval, alpha);
+
+            alpha = eval;
+            best_move = move;
+
+            store_pv_entry(state, best_move.move);
 
             if(eval >= beta){
                 
@@ -234,17 +243,12 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
                 return beta; // beta cutoff
             }
 
-            // moves that improve upon alpha increment history score
-            alpha = eval;
-            best_move = move;
-
-            state->history_moves[move_from_square(best_move.move)][move_to_square(best_move.move)] += depth;
+            // non-capture moves that improve upon alpha increment history score
+            if(!(move.move & CAPTURE_MASK)){
+                state->history_moves[move_from_square(best_move.move)][move_to_square(best_move.move)] += depth;
+            }
         }
-    }
-
-    if(old_alpha != alpha){
-        store_pv_entry(state, best_move.move);
-    }
+    }   
     
     return alpha;
 }
@@ -258,7 +262,7 @@ void think(search_info* info, board_state* state){
 
     for(int d = 1; d <= info->maxdepth; ++d){  
 
-        best_eval = search(d, -INT_MAX, INT_MAX, info, state);
+        best_eval = search(d, -AB_BOUND, AB_BOUND, info, state);
 
         if(info->stopped){break;}
 
@@ -271,6 +275,7 @@ void think(search_info* info, board_state* state){
         }
 
         printf("\n");
+        info->nodes_searched = 0;
     }
 
     if(pv_len){
@@ -280,8 +285,7 @@ void think(search_info* info, board_state* state){
         printf("\n");
     }
 
-    reset_pv_entries(state);
-    clear_pv_array(state->pv_array);
+    reset_state(state);
 }
 
 
