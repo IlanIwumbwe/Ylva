@@ -6,6 +6,7 @@
 #include "../headers/think.h"
 #include "../headers/zobrist.h"
 #include "../headers/positions.h"
+#include "../headers/perft.h"
 
 #define INPUT_SIZE 8192
 #define UCI_TOKENS_SIZE 500

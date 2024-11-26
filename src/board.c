@@ -81,6 +81,9 @@ void reset_state(board_state* state){
 void init_eval(board_state* state){
     piece pi;
 
+    state->data->eval[WHITE] = 0;
+    state->data->eval[BLACK] = 0;
+
     for(int sq = 0; sq < 64; ++sq){
         pi = state->board[sq];
 
@@ -180,13 +183,22 @@ void setup_bitboards(board_state* state, const char* fen){
 void print_board(const board_state* state){
     piece p;
     char c; 
+    int perspective, score;
+
+    if(state->data == WHITE){
+        c = 'w';
+        perspective = 1;
+    } else {
+        c = 'b';
+        perspective = -1;
+    }
 
     printf("castling rights flag: %d\n", state->data->castling_rights);
     printf("hisply: %d\n", state->data->hisply);
     printf("ply: %d, moves: %d fifty_move: %d\n", state->data->ply, state->data->moves, state->data->fifty_move);
     printf("previous move: ");
     print_move(state->data->move);
-    printf("\nturn: %s\n\n", (state->data->s) ? "b" : "w");
+    printf("\nturn: %c\n\n", c);
    
     printf("----------------\n");
     for(int i = 63; i >= 0; i--){
@@ -204,14 +216,10 @@ void print_board(const board_state* state){
     printf("a b c d e f g h\n\n");
 
     printf("Key: %lx \n", state->data->hash);
-    printf("Static eval: [White]: %d [Black]: %d \n", state->data->eval[WHITE], state->data->eval[BLACK]);
-    
-    U64 checkers = state->checkers;
-    
-    printf("Checkers: ");
-    while(checkers){
-        printf("%s ", char_squares[get_lsb(checkers)]);
-        checkers &= (checkers - 1);
-    }
-    printf("\n");
+
+    // printf("%d %d\n", state->data->eval[WHITE], state->data->eval[BLACK]);
+
+    score = (state->data->eval[WHITE] - state->data->eval[BLACK]) / 100;
+
+    printf("Score %d \n", score);
 }

@@ -18,20 +18,17 @@
 #define move_from_square(move) ((move & 0xfc0) >> 6)
 #define move_to_square(move) (move & 0x3f)
 #define move_type(move) ((move & 0xf000) >> 12)
-#define RANK(rank_num) ((uint64_t)0xff << (rank_num-1)*8)
-#define RAND64 ((U64)(random() & 0xffff) | ((U64)(random() & 0xffff) << 16) | ((U64)(random() & 0xffff) << 32) | ((U64)(random() & 0xffff) << 48))
-    
-#define A_FILE 0x8080808080808080
-#define B_FILE 0x4040404040404040
-#define G_FILE 0x0202020202020202
-#define H_FILE 0x0101010101010101   
+
+#define RAND64 ((U64)(random() & 0xffff) | ((U64)(random() & 0xffff) << 16) | ((U64)(random() & 0xffff) << 32) | ((U64)(random() & 0xffff) << 48))    
+
+#define MAX_SEARCH_DEPTH 125
+#define MAX_MOVES 218
+#define STARTING_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
 #define K_castle 0x8
 #define Q_castle 0x4
 #define k_castle 0x2
 #define q_castle 0x1
-#define MAX_SEARCH_DEPTH 125
-#define MAX_MOVES 218
-#define STARTING_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 extern char char_pieces[12];
 extern char* char_squares[64];

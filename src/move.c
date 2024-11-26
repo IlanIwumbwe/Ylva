@@ -11,6 +11,9 @@ void make_move(board_state* state, const U16 move){
     info_n->hash = state->data->hash ^ zi.turn_key;
     info_n->occupied = state->data->occupied;
     info_n->fifty_move = state->data->fifty_move;
+    info_n->ply = state->data->ply;
+    info_n->hisply = state->data->hisply;
+    info_n->moves = state->data->moves;
     
     memcpy(info_n->eval, state->data->eval, sizeof(state->data->eval));
 
@@ -144,9 +147,9 @@ void make_move(board_state* state, const U16 move){
     info_n->hash ^= zi.piece_zobrist_keys[p_from][s_to];
 
     info_n->s = 1 - s;
-    info_n->ply = state->data->ply + 1;
-    info_n->hisply = state->data->hisply + 1;
-    info_n->moves = state->data->moves + (s == BLACK);
+    info_n->ply += 1;
+    info_n->hisply += 1;
+    info_n->moves += (s == BLACK);
     info_n->move = move;
 
     state->data = info_n; // move board info pointer to point to next available memory location

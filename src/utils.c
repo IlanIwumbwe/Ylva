@@ -9,7 +9,12 @@ struct timeval tv;
 
 char char_pieces[12] = {'P','K','N','B','R','Q','p','k','n','b','r','q'};
 
-// psqt scores that encode base piece values as well
+/// psqt scores encoding piece placement and base piece values
+/// pawn = 100
+/// rook = 500
+/// knight = bishop = 300
+/// queen = 900
+/// king = add no evaluation base value, add value only in better placement (this will be tapered in the future to taken endgame positions into account)
 
 const int PAWN_PSQT[64] = {
     100,   100,   100,  100,   100,    100,  100,   100,
@@ -67,14 +72,14 @@ const int QUEEN_PSQT[64] = {
 };
 
 const int KING_PSQT[64] = {
-    4970,  4960,   4960,   4950,   4950,   4960,   4960,   4970,
-    4970,  4960,   4960,   4950,   4950,   4960,   4960,   4970,
-    4970,  4960,   4960,   4950,   4950,   4960,   4960,   4970,
-    4970,  4960,   4960,   4950,   4950,   4960,   4960,   4970,
-    4980,  4970,   4970,   4960,   4960,   4970,   4970,   4980,
-    4990,  4980,   4980,   4980,   4980,   4980,   4980,   4990,
-    5020,  5020,   5000,   5000,   5000,   5000,   5020,   5020,
-    5020,  5030,   5010,   5000,   5000,   5010,   5030,   5020
+    -30,  -40,   -40,   -50,   -50,   -40,   -40,   -30,
+    -30,  -40,   -40,   -50,   -50,   -40,   -40,   -30,
+    -30,  -40,   -40,   -50,   -50,   -40,   -40,   -30,
+    -30,  -40,   -40,   -50,   -50,   -40,   -40,   -30,
+    -20,  -30,   -30,   -40,   -40,   -30,   -30,   -20,
+    -10,  -20,   -20,   -20,   -20,   -20,   -20,   -10,
+     20,   20,     0,     0,     0,     0,    20,    20,
+     20,   30,    10,     0,     0,    10,    30,    20
 };
 
 const int* PIECE_VALUES[12] = {PAWN_PSQT, KING_PSQT, KNIGHT_PSQT, BISHOP_PSQT, ROOK_PSQT, QUEEN_PSQT, PAWN_PSQT, KING_PSQT, KNIGHT_PSQT, BISHOP_PSQT, ROOK_PSQT, QUEEN_PSQT};

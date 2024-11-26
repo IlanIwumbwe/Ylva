@@ -112,7 +112,6 @@ static int get_pv_line(board_state* state, int depth){
 
     U16 move = probe_pv_table(state);
     int count = 0;
-    int old_ply = state->data->ply;
 
     while((move != 0) && (count < depth)){
         
@@ -127,7 +126,7 @@ static int get_pv_line(board_state* state, int depth){
     }
 
     // reset to original position
-    while(state->data->ply != old_ply){
+    while(state->data->ply != 0){
         undo_move(state);
     }
 
@@ -167,9 +166,17 @@ static void order_moves(const board_state* state, moves_array* legal_moves){
             // history move
             curr_move->score += state->history_moves[s_from][s_to];
         }
-    
+
     }
 }
+
+/// @brief Look for quiet positions on which to make final evaluation
+/// @param alpha 
+/// @param beta 
+/// @param info 
+/// @param state 
+/// @return 
+static int quiescence(int alpha, int beta, search_info* info, board_state* state){}
 
 /// @brief negamax search on the position with alpha-beta pruning and move ordering
 /// @param depth 
@@ -261,18 +268,18 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
 void think(search_info* info, board_state* state){
 
     int pv_len = 0;
-
+    int score = 0;
     U16 best_move = 0;
 
     for(int d = 1; d <= info->maxdepth; ++d){  
 
-        search(d, -AB_BOUND, AB_BOUND, info, state);
+        score = search(d, -AB_BOUND, AB_BOUND, info, state);
 
         if(info->stopped){break;}
 
         pv_len = get_pv_line(state, d);
 
-        printf("info depth %d nodes %d pv ", d, info->nodes_searched);
+        printf("info depth %d score %d nodes %d pv ", d, score / 100, info->nodes_searched);
 
         for(int i = 0; i < pv_len; i++){
             print_move(state->pv_array[i]);
