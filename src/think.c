@@ -176,7 +176,76 @@ static void order_moves(const board_state* state, moves_array* legal_moves){
 /// @param info 
 /// @param state 
 /// @return 
-static int quiescence(int alpha, int beta, search_info* info, board_state* state){}
+static int quiescence(int alpha, int beta, search_info* info, board_state* state){
+
+    if(info->nodes_searched & 2047){
+        check_stop_conditions(info);
+    }
+
+    if(state->data->fifty_move >= 100){
+        return 0; // stalemate by fifty move rule
+    }
+
+    if(state->data->ply > MAX_SEARCH_DEPTH-1){
+        return static_eval(state);
+    }
+
+    int eval = static_eval(state);
+
+    if(eval >= beta){
+        return beta;
+    }
+
+    if(eval > alpha){
+        alpha = eval;
+    }
+
+    int old_alpha = alpha;
+    
+    Move move, best_move = {.move = 0, .score = 0};
+    moves_array legal_moves = {.used=0};
+    generate_moves(state, &legal_moves, 1); // generate only capture moves  
+
+    order_moves(state, &legal_moves);
+
+    for(size_t i = 0; i < legal_moves.used; ++i){
+        pick_move(&legal_moves, i);
+        move = legal_moves.array[i];
+
+        if(info->stopped){
+            return 0;
+        }
+
+        make_move(state, move.move);
+
+        info->nodes_searched += 1;
+        eval = -quiescence(-beta, -alpha, info, state);
+        
+        undo_move(state);
+
+        if(eval > alpha){
+            alpha = eval;
+            best_move = move;
+
+            // this ensures that moves that cause beta cuttoffs are stored in the pv array
+            store_pv_entry(state, best_move.move);
+
+            if(eval >= beta){
+        
+                return beta; // beta cutoff
+            }
+
+        }
+    } 
+
+    // this ensures that there's always a best move at the top of the pv array
+    if(old_alpha != alpha){
+        store_pv_entry(state, best_move.move);
+    }
+
+    return alpha;
+
+}
 
 /// @brief negamax search on the position with alpha-beta pruning and move ordering
 /// @param depth 
@@ -200,7 +269,6 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
         } else {
             return 0;  // stalemate
         }
-        
     }
 
     if(state->data->fifty_move >= 100){
@@ -208,10 +276,10 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
     }
 
     if(depth == 0){
-        return static_eval(state); 
+        return quiescence(alpha, beta, info, state); 
     }
 
-    order_moves(state, &legal_moves);  
+    order_moves(state, &legal_moves);
 
     for(size_t i = 0; i < legal_moves.used; ++i){
         pick_move(&legal_moves, i);
@@ -229,10 +297,6 @@ static int search(int depth, int alpha, int beta, search_info* info, board_state
         undo_move(state);
 
         if(eval > alpha){
-            //printf("move ");
-            //print_move(move.move);
-            //printf(", eval %d, alpha %d\n", eval, alpha);
-
             alpha = eval;
             best_move = move;
 
@@ -279,7 +343,7 @@ void think(search_info* info, board_state* state){
 
         pv_len = get_pv_line(state, d);
 
-        printf("info depth %d score %d nodes %d pv ", d, score / 100, info->nodes_searched);
+        printf("info depth %d score cp %d nodes %d pv ", d, score / 100, info->nodes_searched);
 
         for(int i = 0; i < pv_len; i++){
             print_move(state->pv_array[i]);
@@ -291,7 +355,7 @@ void think(search_info* info, board_state* state){
 
     if(pv_len){
         best_move = state->pv_array[0];
-        printf("best move ");
+        printf("bestmove ");
         print_move(best_move);
         printf("\n");
     }

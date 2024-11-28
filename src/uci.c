@@ -37,6 +37,7 @@ static int hash_first_token(const char* uci_command){
 
 static int get_input(char* buffer){
     memset(buffer, 0, INPUT_SIZE);
+    fflush(stdout);
 
     if(fgets(buffer, INPUT_SIZE, stdin) == NULL){
         return -1;
@@ -116,7 +117,7 @@ static void process_position(board_state* state, const char* uci_command){
         move = move_from_str(state, t);
         make_move(state, move);
     }
-    
+
     state->data->ply = 0; // reset ply to zero such that it is always zero even if moves arg is passed via uci command. hisply has the total ply
 }
 
@@ -190,7 +191,7 @@ void uci_communication(){
         int h = hash_first_token(uci_command);
         char* end;
 
-        switch(h){
+        switch(h){\
             case POSITION: process_position(&state, uci_command); break;
             case GO: process_go(&state, uci_command); break;
             case UCI: process_uci(); break;

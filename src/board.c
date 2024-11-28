@@ -183,15 +183,9 @@ void setup_bitboards(board_state* state, const char* fen){
 void print_board(const board_state* state){
     piece p;
     char c; 
-    int perspective, score;
+    int score;
 
-    if(state->data == WHITE){
-        c = 'w';
-        perspective = 1;
-    } else {
-        c = 'b';
-        perspective = -1;
-    }
+    c = (state->data == WHITE) ? 'w' : 'b';
 
     printf("castling rights flag: %d\n", state->data->castling_rights);
     printf("hisply: %d\n", state->data->hisply);
@@ -216,8 +210,6 @@ void print_board(const board_state* state){
     printf("a b c d e f g h\n\n");
 
     printf("Key: %lx \n", state->data->hash);
-
-    // printf("%d %d\n", state->data->eval[WHITE], state->data->eval[BLACK]);
 
     score = (state->data->eval[WHITE] - state->data->eval[BLACK]) / 100;
 
