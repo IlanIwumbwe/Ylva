@@ -139,7 +139,7 @@ static void order_moves(const board_state* state, moves_array* legal_moves){
 
     Move* curr_move;
     piece p_to, p_from;
-    square s_to, s_from;
+    square s_to, s_from;    
 
     for(size_t i = 0; i < legal_moves->used; ++i){
         curr_move = legal_moves->array + i;

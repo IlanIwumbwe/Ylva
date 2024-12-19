@@ -33,7 +33,7 @@ typedef struct sboard {
     piece board[64];
     
     history metadata[MAX_SEARCH_DEPTH + 10];
-    history* data;
+    history* data; // pointer to current state metadata
 
     pv_table pvt;
     U16 pv_array[MAX_SEARCH_DEPTH + 10];

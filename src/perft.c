@@ -26,7 +26,7 @@ U64 movegen_test(board_state* state, int depth){
     return num_nodes;
 }
 
-void run_perft(board_state* state, int depth){
+void run_perft(board_state* state, int depth, int only_captures){
 
     if(depth){
         U16 move;
@@ -34,7 +34,7 @@ void run_perft(board_state* state, int depth){
         U64 start_time = time_in_ms();
 
         moves_array legal_moves = {.used = 0};
-        generate_moves(state, &legal_moves, 0);
+        generate_moves(state, &legal_moves, only_captures);
 
         U64 num_nodes = 0ULL, total_nodes = 0ULL;
 

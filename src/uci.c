@@ -12,7 +12,7 @@ static void run_test_suite(board_state* state){
         while((d < MAX_SEARCH_DEPTH) && (result = ts[i].results[d])){
             printf("Perft test to depth %d\n", d);
             printf("================================\n");
-            run_perft(state, d);
+            run_perft(state, d, 0);
             printf("Expected nodes %d\n", result);
             d++;
         }
@@ -191,7 +191,7 @@ void uci_communication(){
         int h = hash_first_token(uci_command);
         char* end;
 
-        switch(h){\
+        switch(h){
             case POSITION: process_position(&state, uci_command); break;
             case GO: process_go(&state, uci_command); break;
             case UCI: process_uci(); break;
@@ -204,9 +204,12 @@ void uci_communication(){
                 if(!strcmp(uci_command, "perft")){
                     run_test_suite(&state);
 
+                } else if (!strncmp(uci_command, "perft c", 7)){
+                    depth = mini(MAX_SEARCH_DEPTH, strtol(uci_command+8, &end, 10));
+                    run_perft(&state, depth, 1);
                 } else {
                     depth = mini(MAX_SEARCH_DEPTH, strtol(uci_command+6, &end, 10));
-                    run_perft(&state, depth);
+                    run_perft(&state, depth, 0);
                 }
                 break;
 

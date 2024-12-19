@@ -9,10 +9,8 @@
 #ifdef DEV
 U64 movegen_test(board_state* state, int depth);
 
-void run_perft(board_state* state, int depth);
+void run_perft(board_state* state, int depth, int only_captures);
 
 #endif
-
-
 
 #endif
