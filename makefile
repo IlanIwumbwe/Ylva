@@ -12,7 +12,10 @@ $(TARGET) : $(OBJS)
 
 all: $(TARGET)
 
-.PHONY: clean
+.PHONY: clean release
+
+release:
+	$(MAKE) FLAGS="-Wall -Wextra -g -O3 -DDEV"
 
 clean:	
 	rm -rf $(OBJS) $(TARGET)

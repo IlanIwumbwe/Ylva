@@ -8,7 +8,7 @@ static void run_test_suite(board_state* state){
 
         d = 0;
         print_board(state);
-        
+
         while((d < MAX_SEARCH_DEPTH) && (result = ts[i].results[d])){
             printf("Perft test to depth %d\n", d);
             printf("================================\n");
@@ -49,8 +49,8 @@ static int get_input(char* buffer){
 }
 
 /// @brief converts str move into U16
-/// @param move 
-/// @return 
+/// @param move
+/// @return
 static U16 move_from_str(board_state* state, char* move){
 
     square from = sq(move) & 0x3f;
@@ -63,7 +63,7 @@ static U16 move_from_str(board_state* state, char* move){
     set_promotion_type(move+4, &m_type);
 
     int square_dist = from - to;
-    
+
     if(p_to != p_none){
         m_type |= 0x4;
     }
@@ -122,7 +122,7 @@ static void process_position(board_state* state, const char* uci_command){
 }
 
 static void process_go(board_state* state, const char* uci_command){
-    
+
     char* copy = strdup(uci_command);
     char* cmd;
     char* arg;
@@ -134,6 +134,10 @@ static void process_go(board_state* state, const char* uci_command){
     int movestogo = 30;
 
     search_info info = {.maxdepth = MAX_SEARCH_DEPTH, .nodes_searched = 0};
+
+    assert(state != NULL);
+    assert(state->data != NULL);
+
     side s = state->data->s;
 
     while((cmd = strtok(NULL, " ")) && (arg = strtok(NULL, " "))){
@@ -150,9 +154,9 @@ static void process_go(board_state* state, const char* uci_command){
         } else if(!strcmp(cmd, "movetime")){
             time = strtoll(arg, &end, 10);
             movestogo = 1;
-        } else if(!strcmp(cmd, "movestogo")){   
+        } else if(!strcmp(cmd, "movestogo")){
             movestogo = strtol(arg, &end, 10);
-        } 
+        }
     }
 
     if(time != 0){
@@ -183,7 +187,7 @@ void uci_communication(){
     populate_attack_sets();
     init_hash_keys();
     init_flip();
-    
+
     char uci_command[INPUT_SIZE];
     int depth;
 
@@ -197,7 +201,7 @@ void uci_communication(){
             case UCI: process_uci(); break;
             case ISREADY: process_isready(); break;
             case QUIT: quit_program(&state); goto stop;
-        
+
         #ifdef DEV
             case PERFT:
 
