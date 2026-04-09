@@ -1,4 +1,4 @@
-# ylva.c
+# [Ylva](https://vinlandsaga.fandom.com/wiki/Ylva)
 
 <p align="center" width="100%">
     <img width="28%" src="ylva.jpeg">
